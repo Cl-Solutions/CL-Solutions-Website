@@ -24,11 +24,27 @@ const TOTAL  = 8;        // total sections
 const VH_PER = 400;      // viewport-heights per section (breathing room)
 const SPAN   = 1 / TOTAL; // 0.125 per section
 
-// 3D depth constants — CSS inline perspective approach
-// perspective(PERSP) translateZ(z):  scale = PERSP / (PERSP + |z|)
-// Z_FAR = -5400 with PERSP=600 → starting scale ≈ 10%
+// 3D depth constants
+// perspective(PERSP) translateZ(z): scale = PERSP / (PERSP + |z|)
+// Z_FAR = -2100 with PERSP=600 → starting scale ≈ 22%
 const PERSP = 600;
-const Z_FAR = -5400;
+const Z_FAR = -2100;
+
+// ── Section timing (as fraction of SPAN) ─────────────────
+// Each section uses exactly one SPAN. No overlaps between sections.
+//
+//   [entryStart → entryFull]  zoom-in: section flies from Z_FAR to z=0
+//   [entryFull  → exitStart]  dwell:   section at full size, readable
+//   [exitStart  → exitEnd  ]  exit:    camera flies through (z→+300, opacity→0)
+//   [exitEnd    → next entryStart] GAP: pure starfield only, no panels
+//
+// Gap = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN
+// With EXIT_END_FRAC=0.58 and ENTRY_SPAN=0.15: gap = 0.27 × SPAN ≈ 108 vh
+const ENTRY_SPAN     = 0.15;  // zoom-in window as fraction of SPAN
+const DWELL_END_FRAC = 0.45;  // dwell ends at (i + 0.45) × SPAN
+const EXIT_END_FRAC  = 0.58;  // exit ends at  (i + 0.58) × SPAN
+// → next section's entryStart = (i + 1 - ENTRY_SPAN) × SPAN = (i + 0.85) × SPAN
+// → gap = (i+0.85 - i-0.58) × SPAN = 0.27 × SPAN ≈ 108 vh of pure starfield
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
@@ -73,22 +89,13 @@ const faqs = [
 
 // ─── 3D Section Panel ────────────────────────────────────
 //
-// CORE CONCEPT — "Camera flying through space":
+// Timeline per section:
+//   GAP (pure starfield)  →  section materialises at ~22% scale
+//     →  zooms to 100%  →  dwell (readable)
+//     →  camera flies through (grows + fades)  →  GAP again
 //
-//   • Incoming section: starts at Z_FAR (≈10% scale), ALWAYS opacity=1,
-//     zooms toward z=0 (100%) — crisp the entire time, no blur.
-//
-//   • Dwell: section sits at z=0, full-screen, readable.
-//
-//   • Exit (camera flies through): z goes 0 → +300 (section grows past 1×)
-//     while opacity drops 1 → 0 over a short scroll window.
-//     Simulates the camera passing straight through the section.
-//
-//   • zIndex: the currently-active section is always rendered on top,
-//     so tiny incoming sections never visually intrude on the active one.
-//
-//   • No blur, no simultaneous fades — both sections are never semi-transparent
-//     at the same time.
+// Sections are NEVER simultaneously visible. The gap between
+// exitEnd(i) and entryStart(i+1) is ~108 vh of pure starfield.
 
 function Panel({
   children,
@@ -105,22 +112,19 @@ function Panel({
 }) {
   const isHero = index === 0;
 
-  // ── Entry keypoints ──────────────────────────────────
-  // Hero starts already at z=0 (no approach animation needed).
-  // All others fly in from Z_FAR.
-  const entryStart = isHero ? 0     : Math.max(0.005, (index - 0.65) * SPAN);
-  const entryPop   = isHero ? 0.001 : Math.min(entryStart + 0.008, index * SPAN * 0.9);
+  // ── Keypoints ────────────────────────────────────────
+  // Hero is already at z=0 from the start (no approach needed).
+  // All others enter from Z_FAR inside their entry window.
+  const entryStart = isHero ? 0     : Math.max(0.005, (index - ENTRY_SPAN) * SPAN);
+  const entryMid   = isHero ? 0.001 : (entryStart + Math.min(index * SPAN, 0.990)) / 2;
   const entryFull  = isHero ? 0.001 : Math.min(index * SPAN, 0.990);
 
-  // ── Exit keypoints ───────────────────────────────────
-  // Last section never exits (stays readable).
-  const exitStart = isLast ? 1.05 : (index + 0.60) * SPAN;
-  const exitEnd   = isLast ? 1.10 : Math.min((index + 0.73) * SPAN, 0.999);
+  const exitStart  = isLast ? 1.05 : (index + DWELL_END_FRAC) * SPAN;
+  const exitEnd    = isLast ? 1.10 : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
 
   // ── Z animation ──────────────────────────────────────
-  // Entry: Z_FAR → 0  (section rushes toward camera)
-  // Dwell: stays at 0
-  // Exit:  0 → +300   (camera flies THROUGH the section — it grows, then fades)
+  // Section rushes from Z_FAR → 0 (entry), sits at 0 (dwell),
+  // then flies forward (0 → +300) as camera passes through it.
   const z = useTransform(
     scrollYProgress,
     [entryStart, entryFull, exitStart, exitEnd],
@@ -128,18 +132,18 @@ function Panel({
   );
 
   // ── Opacity animation ────────────────────────────────
-  // Incoming: pops to opacity=1 nearly instantly at entryStart (section is
-  // still tiny so the snap is invisible), then stays at 1 the entire approach.
-  // Exit: fades 1 → 0 while z goes positive (camera flythrough).
-  // NO simultaneous fade — the incoming is always at full opacity while approaching.
+  // Entry: fades from 0 → 1 over the first half of the entry window
+  //   (section is small but materialising out of the void)
+  // Dwell: stays at 1 — fully readable
+  // Exit: 1 → 0 while z grows (camera flythrough)
+  // Between sections: opacity=0 → pure starfield visible
   const opacity = useTransform(
     scrollYProgress,
-    [entryStart, entryPop,    exitStart, exitEnd],
+    [entryStart, entryMid,    exitStart, exitEnd],
     [isHero ? 1 : 0,    1,    1,         isLast ? 1 : 0]
   );
 
   // ── CSS transform ────────────────────────────────────
-  // Pure translateZ drives all depth — no blur, no separate scale.
   const transform = useMotionTemplate`perspective(${PERSP}px) translateZ(${z}px)`;
 
   return (
