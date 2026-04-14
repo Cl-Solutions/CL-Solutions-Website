@@ -739,21 +739,46 @@ function ContactPanel() {
 export function Home() {
   const { scrollY, scrollYProgress } = useScroll();
 
+  // ── Readiness gate ──────────────────────────────────────
+  // Chrome 115+ uses a native ScrollTimeline for scroll-linked WAAPI animations.
+  // If the timeline is created before the page is fully laid out (fonts, images,
+  // external scripts all loaded), the scroll extents can be wrong and all panels
+  // stay frozen at progress=0. Fix: hold a stable zero-value placeholder until
+  // window.load fires and one more rAF confirms the first paint is done.
+  const zeroProgress = useMotionValue(0);
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    const markReady = () => requestAnimationFrame(() => setIsReady(true));
+    if (document.readyState === 'complete') {
+      markReady();
+    } else {
+      window.addEventListener('load', markReady, { once: true });
+    }
+    return () => window.removeEventListener('load', markReady);
+  }, []);
+
+  // Before ready: use a stable zero MotionValue so panels render in their
+  // initial state (hero visible, rest zoomed-out) without binding to any
+  // ScrollTimeline. After ready: switch to the real scrollYProgress.
+  const activeProgress = isReady ? scrollYProgress : zeroProgress;
+
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
   useEffect(() => {
+    if (!isReady) return;
     return scrollYProgress.on('change', (v) => {
       setActiveSectionIdx(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
     });
-  }, [scrollYProgress]);
+  }, [scrollYProgress, isReady]);
 
   const [numbersActive, setNumbersActive] = useState(false);
   useEffect(() => {
+    if (!isReady) return;
     const s4enter = Math.min(4 * SPAN, 0.990);
     const s4exit  = (4 + DWELL_END_FRAC) * SPAN;
     return scrollYProgress.on('change', (v) => {
       setNumbersActive(v >= s4enter && v <= s4exit);
     });
-  }, [scrollYProgress]);
+  }, [scrollYProgress, isReady]);
 
   // Spring-smoothed mouse for StarField parallax
   const rawMouseX = useMotionValue(0);
@@ -785,9 +810,9 @@ export function Home() {
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
       <MouseGlow />
-      <ScrollArrow scrollYProgress={scrollYProgress} />
+      <ScrollArrow scrollYProgress={activeProgress} />
       <Nav goTo={goTo} />
-      <Dots scrollYProgress={scrollYProgress} goTo={goTo} />
+      <Dots scrollYProgress={activeProgress} goTo={goTo} />
 
       <div style={{ height: `${TOTAL * VH_PER}vh` }} className="relative">
         <div className="sticky top-0 h-screen overflow-hidden">
@@ -798,7 +823,7 @@ export function Home() {
 
           <div className="absolute inset-0 z-20">
             {sections.map((content, i) => (
-              <Panel key={i} scrollYProgress={scrollYProgress} index={i}
+              <Panel key={i} scrollYProgress={activeProgress} index={i}
                 isActive={i === activeSectionIdx} isLast={i === TOTAL - 1}>
                 {content}
               </Panel>
