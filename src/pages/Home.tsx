@@ -377,18 +377,14 @@ function ScrollArrow({ scrollYProgress }: { scrollYProgress: MotionValue<number>
       className="fixed bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center gap-0.5"
       style={{ opacity }}
     >
-      <motion.div
-        animate={{ y: [0, 6, 0] }}
-        transition={{ duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
-        className="flex flex-col items-center"
-      >
+      <div className="animate-scroll-bounce flex flex-col items-center">
         <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
           <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style={{ marginTop: '-5px' }}>
           <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
