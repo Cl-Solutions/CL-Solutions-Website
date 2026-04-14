@@ -109,7 +109,7 @@ export function Hero() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
-  const headline = "Wir automatisieren. Ihr Wettbewerb schläft noch.";
+  const headline = "wir automatisieren. Ihr Wettbewerb schläft noch.";
   const words = headline.split(' ');
 
   return (
