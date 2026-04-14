@@ -1,8 +1,11 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   motion,
   useScroll,
   useTransform,
+  useMotionTemplate,
+  useMotionValue,
+  useSpring,
   AnimatePresence,
   MotionValue,
 } from 'framer-motion';
@@ -17,10 +20,15 @@ import {
 import { StarField } from '../components/StarField';
 
 // ─── Layout constants ────────────────────────────────────
-const TOTAL = 8;           // total sections
-const SPAN = 1 / TOTAL;    // 0.125 per section
-const ENTER = SPAN * 0.18; // fade-in window
-const EXIT  = SPAN * 0.18; // fade-out window
+const TOTAL  = 8;        // total sections
+const VH_PER = 400;      // viewport-heights per section (breathing room)
+const SPAN   = 1 / TOTAL; // 0.125 per section
+
+// 3D depth constants — CSS inline perspective approach
+// perspective(PERSP) translateZ(z):  scale = PERSP / (PERSP + |z|)
+// Z_FAR = -5400 with PERSP=600 → starting scale ≈ 10%
+const PERSP = 600;
+const Z_FAR = -5400;
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
@@ -30,10 +38,10 @@ const problems = [
 ];
 
 const services = [
-  { icon: Globe,      title: 'Website',                desc: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen. SEO-optimiert, responsive, conversion-stark.' },
-  { icon: MessageSquare, title: 'KI-Chatbot',          desc: 'Ihr digitaler Mitarbeiter beantwortet Fragen, qualifiziert Leads und bucht Termine automatisch ein — rund um die Uhr.' },
-  { icon: Phone,      title: 'Voice Agent',            desc: 'Automatisierte Telefongespräche für Terminvereinbarungen, Erinnerungen und Kundenservice mit natürlicher Sprachverarbeitung.' },
-  { icon: Workflow,   title: 'Prozessautomatisierung', desc: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett — von Rechnungsstellung bis E-Mail-Workflows.' },
+  { icon: Globe,         title: 'Website',                desc: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen. SEO-optimiert, responsive, conversion-stark.' },
+  { icon: MessageSquare, title: 'KI-Chatbot',             desc: 'Ihr digitaler Mitarbeiter beantwortet Fragen, qualifiziert Leads und bucht Termine automatisch ein — rund um die Uhr.' },
+  { icon: Phone,         title: 'Voice Agent',            desc: 'Automatisierte Telefongespräche für Terminvereinbarungen, Erinnerungen und Kundenservice mit natürlicher Sprachverarbeitung.' },
+  { icon: Workflow,      title: 'Prozessautomatisierung', desc: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett — von Rechnungsstellung bis E-Mail-Workflows.' },
 ];
 
 const steps = [
@@ -55,39 +63,95 @@ const highlights = [
 ];
 
 const faqs = [
-  { q: 'Was kostet das?',                       a: 'Jede Leistung ist einzeln buchbar. Unsere Preise bestehen aus einer einmaligen Setup-Gebühr und einem optionalen monatlichen Support-Paket. Buchen Sie ein kostenloses Erstgespräch für ein unverbindliches Angebot.' },
-  { q: 'Wie lange dauert die Umsetzung?',        a: 'Die meisten Projekte sind innerhalb von 2–4 Wochen einsatzbereit. Kleinere Automatisierungen können in wenigen Tagen umgesetzt werden.' },
-  { q: 'Brauche ich technisches Wissen?',        a: 'Nein. Wir kümmern uns um alles Technische. Sie müssen nur wissen, welche Prozesse Sie verbessern möchten — wir zeigen Ihnen die Möglichkeiten.' },
+  { q: 'Was kostet das?',                         a: 'Jede Leistung ist einzeln buchbar. Unsere Preise bestehen aus einer einmaligen Setup-Gebühr und einem optionalen monatlichen Support-Paket. Buchen Sie ein kostenloses Erstgespräch für ein unverbindliches Angebot.' },
+  { q: 'Wie lange dauert die Umsetzung?',          a: 'Die meisten Projekte sind innerhalb von 2–4 Wochen einsatzbereit. Kleinere Automatisierungen können in wenigen Tagen umgesetzt werden.' },
+  { q: 'Brauche ich technisches Wissen?',          a: 'Nein. Wir kümmern uns um alles Technische. Sie müssen nur wissen, welche Prozesse Sie verbessern möchten — wir zeigen Ihnen die Möglichkeiten.' },
   { q: 'Funktioniert das auch für meine Branche?', a: 'Ja. Unsere Lösungen sind branchenunabhängig und werden individuell angepasst. Ob Handwerk, Dienstleistung oder E-Commerce.' },
-  { q: 'Ist das DSGVO-konform?',                 a: 'Absolut. Als deutsches Unternehmen legen wir großen Wert auf Datenschutz. Alle Lösungen sind DSGVO-konform.' },
-  { q: 'Was passiert nach der Umsetzung?',       a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
+  { q: 'Ist das DSGVO-konform?',                   a: 'Absolut. Als deutsches Unternehmen legen wir großen Wert auf Datenschutz. Alle Lösungen sind DSGVO-konform.' },
+  { q: 'Was passiert nach der Umsetzung?',         a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
 ];
 
-// ─── Section wrapper with scroll-driven transitions ──────
+// ─── 3D Section Panel ────────────────────────────────────
+//
+// CORE CONCEPT — "Camera flying through space":
+//
+//   • Incoming section: starts at Z_FAR (≈10% scale), ALWAYS opacity=1,
+//     zooms toward z=0 (100%) — crisp the entire time, no blur.
+//
+//   • Dwell: section sits at z=0, full-screen, readable.
+//
+//   • Exit (camera flies through): z goes 0 → +300 (section grows past 1×)
+//     while opacity drops 1 → 0 over a short scroll window.
+//     Simulates the camera passing straight through the section.
+//
+//   • zIndex: the currently-active section is always rendered on top,
+//     so tiny incoming sections never visually intrude on the active one.
+//
+//   • No blur, no simultaneous fades — both sections are never semi-transparent
+//     at the same time.
+
 function Panel({
   children,
   scrollYProgress,
   index,
+  isActive,
+  isLast = false,
 }: {
   children: React.ReactNode;
   scrollYProgress: MotionValue<number>;
   index: number;
+  isActive: boolean;
+  isLast?: boolean;
 }) {
-  const start = index * SPAN;
-  const end   = start + SPAN;
-  const s0 = index === 0 ? -0.02 : start;
-  const s1 = index === 0 ? 0 : start + ENTER;
-  const s2 = end - EXIT;
-  const s3 = end;
+  const isHero = index === 0;
 
-  const opacity = useTransform(scrollYProgress, [s0, s1, s2, s3], [index === 0 ? 1 : 0, 1, 1, 0]);
-  const scale   = useTransform(scrollYProgress, [s0, s1, s2, s3], [0.94, 1, 1, 1.04]);
-  const y       = useTransform(scrollYProgress, [s0, s1, s2, s3], [index === 0 ? 0 : 48, 0, 0, -32]);
+  // ── Entry keypoints ──────────────────────────────────
+  // Hero starts already at z=0 (no approach animation needed).
+  // All others fly in from Z_FAR.
+  const entryStart = isHero ? 0     : Math.max(0.005, (index - 0.65) * SPAN);
+  const entryPop   = isHero ? 0.001 : Math.min(entryStart + 0.008, index * SPAN * 0.9);
+  const entryFull  = isHero ? 0.001 : Math.min(index * SPAN, 0.990);
+
+  // ── Exit keypoints ───────────────────────────────────
+  // Last section never exits (stays readable).
+  const exitStart = isLast ? 1.05 : (index + 0.60) * SPAN;
+  const exitEnd   = isLast ? 1.10 : Math.min((index + 0.73) * SPAN, 0.999);
+
+  // ── Z animation ──────────────────────────────────────
+  // Entry: Z_FAR → 0  (section rushes toward camera)
+  // Dwell: stays at 0
+  // Exit:  0 → +300   (camera flies THROUGH the section — it grows, then fades)
+  const z = useTransform(
+    scrollYProgress,
+    [entryStart, entryFull, exitStart, exitEnd],
+    [isHero ? 0 : Z_FAR, 0, 0, isLast ? 0 : 300]
+  );
+
+  // ── Opacity animation ────────────────────────────────
+  // Incoming: pops to opacity=1 nearly instantly at entryStart (section is
+  // still tiny so the snap is invisible), then stays at 1 the entire approach.
+  // Exit: fades 1 → 0 while z goes positive (camera flythrough).
+  // NO simultaneous fade — the incoming is always at full opacity while approaching.
+  const opacity = useTransform(
+    scrollYProgress,
+    [entryStart, entryPop,    exitStart, exitEnd],
+    [isHero ? 1 : 0,    1,    1,         isLast ? 1 : 0]
+  );
+
+  // ── CSS transform ────────────────────────────────────
+  // Pure translateZ drives all depth — no blur, no separate scale.
+  const transform = useMotionTemplate`perspective(${PERSP}px) translateZ(${z}px)`;
 
   return (
     <motion.div
       className="absolute inset-0 flex items-center justify-center px-6 py-24 overflow-hidden"
-      style={{ opacity, scale, y }}
+      style={{
+        opacity,
+        transform,
+        // Active section always renders on top — tiny incoming sections
+        // are visually behind the current one even if they appear small.
+        zIndex: isActive ? 20 : 10,
+      }}
     >
       {children}
     </motion.div>
@@ -136,7 +200,7 @@ const NAV_ITEMS = [
 
 function Nav({ goTo }: { goTo: (i: number) => void }) {
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open,     setOpen]     = useState(false);
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 60);
@@ -226,10 +290,9 @@ function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>;
   const [cur, setCur] = useState(0);
 
   useEffect(() => {
-    const unsub = scrollYProgress.on('change', (v) => {
-      setCur(Math.min(TOTAL - 1, Math.floor(v * TOTAL + 0.5)));
+    return scrollYProgress.on('change', (v) => {
+      setCur(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
     });
-    return unsub;
   }, [scrollYProgress]);
 
   return (
@@ -249,7 +312,7 @@ function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>;
   );
 }
 
-// ─── Section content ─────────────────────────────────────
+// ─── Section content components ──────────────────────────
 
 function HeroPanel() {
   const words = 'Wir automatisieren. Ihr Wettbewerb schläft noch.'.split(' ');
@@ -330,11 +393,8 @@ function ProblemPanel() {
       </div>
       <div className="grid md:grid-cols-3 gap-6">
         {problems.map((p, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.12, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             className="p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-accent/30 transition-colors"
           >
             <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
@@ -342,7 +402,7 @@ function ProblemPanel() {
             </div>
             <h3 className="font-syne font-semibold text-xl text-white mb-3">{p.title}</h3>
             <p className="font-inter text-gray-400 leading-relaxed">{p.desc}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -360,11 +420,8 @@ function ServicesPanel() {
       </div>
       <div className="grid sm:grid-cols-2 gap-6">
         {services.map((s, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.09, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             className="group p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-accent/30 transition-colors"
           >
             <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
@@ -372,7 +429,7 @@ function ServicesPanel() {
             </div>
             <h3 className="font-syne font-bold text-2xl text-white mb-3">{s.title}</h3>
             <p className="font-inter text-gray-400 leading-relaxed">{s.desc}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -390,11 +447,8 @@ function ProcessPanel() {
       </div>
       <div className="grid lg:grid-cols-3 gap-8">
         {steps.map((step, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="relative p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl"
           >
             <span className="absolute -top-5 -left-2 font-syne font-bold text-8xl text-accent/10 leading-none select-none">
@@ -407,7 +461,7 @@ function ProcessPanel() {
               <h3 className="font-syne font-semibold text-xl text-white mb-3">{step.title}</h3>
               <p className="font-inter text-gray-400 leading-relaxed">{step.desc}</p>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -425,14 +479,9 @@ function NumbersPanel({ active }: { active: boolean }) {
       </div>
       <div className="grid md:grid-cols-3 gap-12">
         {stats.map((s, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
+          <div key={i}>
             <Counter end={s.end} suffix={s.suffix} label={s.label} active={active} />
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
@@ -443,11 +492,7 @@ function AboutPanel() {
   return (
     <div className="max-w-6xl mx-auto w-full">
       <div className="grid lg:grid-cols-2 gap-16 items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <div>
           <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
             Über uns
           </span>
@@ -464,14 +509,9 @@ function AboutPanel() {
               Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.
             </p>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           {highlights.map((h, i) => (
             <div key={i} className="flex items-start gap-4 p-5 bg-white/[0.03] border border-white/[0.08] rounded-xl">
               <div className="w-11 h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -494,7 +534,7 @@ function AboutPanel() {
               <p className="font-inter text-gray-500 text-xs">Gründer, CL-Solutions</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -548,7 +588,7 @@ function FAQPanel() {
 function ContactPanel() {
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://tally.so/widgets/embed.js';
+    script.src   = 'https://tally.so/widgets/embed.js';
     script.async = true;
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
@@ -617,27 +657,50 @@ function ContactPanel() {
 // ─── Home ────────────────────────────────────────────────
 export function Home() {
   const { scrollY, scrollYProgress } = useScroll();
-  const [numbersActive, setNumbersActive] = useState(false);
 
-  // Track when Numbers section (index 4) is active for counter animation
+  // Track which section is currently "active" (at z≈0, full size).
+  // The active section gets zIndex:20 so tiny incoming sections never
+  // visually intrude on the readable content.
+  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
+
   useEffect(() => {
-    const s4start = 4 * SPAN + ENTER;
-    const s4end   = 5 * SPAN - EXIT;
-    const unsub = scrollYProgress.on('change', (v) => {
-      setNumbersActive(v >= s4start && v <= s4end);
+    return scrollYProgress.on('change', (v) => {
+      setActiveSectionIdx(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
     });
-    return unsub;
   }, [scrollYProgress]);
 
-  // Scroll to section by index
+  // Numbers section counter fires when section 4 is the active one
+  const [numbersActive, setNumbersActive] = useState(false);
+  useEffect(() => {
+    const s4enter = Math.min(4 * SPAN, 0.990);
+    const s4exit  = (4 + 0.55) * SPAN;
+    return scrollYProgress.on('change', (v) => {
+      setNumbersActive(v >= s4enter && v <= s4exit);
+    });
+  }, [scrollYProgress]);
+
+  // ── Mouse parallax ────────────────────────────────────
+  // Raw mouse position (normalized -1 to +1), spring-smoothed for inertia
+  const rawMouseX = useMotionValue(0);
+  const rawMouseY = useMotionValue(0);
+  const mouseX    = useSpring(rawMouseX, { stiffness: 60, damping: 25 });
+  const mouseY    = useSpring(rawMouseY, { stiffness: 60, damping: 25 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Map mouse position to ±60px range for StarField parallax
+    rawMouseX.set(((e.clientX / window.innerWidth)  - 0.5) * 60);
+    rawMouseY.set(((e.clientY / window.innerHeight) - 0.5) * 60);
+  };
+
+  // ── Section → scroll target ───────────────────────────
+  // Aims at the dwell midpoint of the target section, not the start.
   const goTo = (index: number) => {
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
-    const target = (index / TOTAL) * totalH;
+    const target = Math.max(0, (index * SPAN + 0.05) * totalH);
     window.scrollTo({ top: target, behavior: 'smooth' });
   };
 
-  // Footer stays outside the scroll-pinned area — render normally below
-  const sections = [
+  const sections: React.ReactNode[] = [
     <HeroPanel />,
     <ProblemPanel />,
     <ServicesPanel />,
@@ -649,27 +712,37 @@ export function Home() {
   ];
 
   return (
-    <div className="bg-[#0a0a0a]">
+    <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
       <Nav goTo={goTo} />
       <Dots scrollYProgress={scrollYProgress} goTo={goTo} />
 
-      {/* Scroll container — defines total scroll height */}
-      <div style={{ height: `${TOTAL * 150}vh` }} className="relative">
-        {/* Sticky viewport */}
-        <div className="sticky top-0 h-screen overflow-hidden">
-          {/* Starfield canvas */}
-          <StarField scrollY={scrollY} />
+      {/* ── Scroll container — total height ─────────────── */}
+      <div style={{ height: `${TOTAL * VH_PER}vh` }} className="relative">
 
-          {/* Vignette */}
+        {/* ── Sticky viewport ──────────────────────────── */}
+        <div className="sticky top-0 h-screen overflow-hidden">
+
+          {/* Starfield — persistent 3D warp background */}
+          <StarField scrollY={scrollY} mouseX={mouseX} mouseY={mouseY} />
+
+          {/* Radial vignette — darkens edges */}
           <div
             className="absolute inset-0 z-10 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(10,10,10,0.75) 100%)' }}
+            style={{
+              background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)',
+            }}
           />
 
-          {/* Section panels */}
+          {/* ── 3D section panels ───────────────────────── */}
           <div className="absolute inset-0 z-20">
             {sections.map((content, i) => (
-              <Panel key={i} scrollYProgress={scrollYProgress} index={i}>
+              <Panel
+                key={i}
+                scrollYProgress={scrollYProgress}
+                index={i}
+                isActive={i === activeSectionIdx}
+                isLast={i === TOTAL - 1}
+              >
                 {content}
               </Panel>
             ))}
@@ -677,7 +750,7 @@ export function Home() {
         </div>
       </div>
 
-      {/* Footer — below scroll area */}
+      {/* ── Footer — below the scroll area ─────────────── */}
       <footer className="bg-[#0a0a0a] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
