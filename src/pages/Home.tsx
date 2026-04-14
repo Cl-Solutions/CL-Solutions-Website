@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   motion,
   useScroll,
@@ -20,31 +20,23 @@ import {
 import { StarField } from '../components/StarField';
 
 // ─── Layout constants ────────────────────────────────────
-const TOTAL  = 8;        // total sections
-const VH_PER = 400;      // viewport-heights per section (breathing room)
-const SPAN   = 1 / TOTAL; // 0.125 per section
+const TOTAL  = 8;
+const VH_PER = 200;       // ↓ from 400 — snappier scroll feel
+const SPAN   = 1 / TOTAL;
 
-// 3D depth constants
-// perspective(PERSP) translateZ(z): scale = PERSP / (PERSP + |z|)
-// Z_FAR = -2100 with PERSP=600 → starting scale ≈ 22%
-const PERSP = 600;
-const Z_FAR = -2100;
+// 3D depth constants — inline perspective per panel (avoids stacking-context
+// conflicts that container-level perspective causes with overflow:hidden).
+// PERSP=1200, Z_FAR=-22800 → scale = 1200/(1200+22800) ≈ 0.05 (tiny dot)
+// PERSP=1200, EXIT_Z=533   → scale = 1200/(1200−533)   ≈ 1.80 (flies past)
+const PERSP  = 1200;
+const Z_FAR  = -22800;
+const EXIT_Z = 533;
 
-// ── Section timing (as fraction of SPAN) ─────────────────
-// Each section uses exactly one SPAN. No overlaps between sections.
-//
-//   [entryStart → entryFull]  zoom-in: section flies from Z_FAR to z=0
-//   [entryFull  → exitStart]  dwell:   section at full size, readable
-//   [exitStart  → exitEnd  ]  exit:    camera flies through (z→+300, opacity→0)
-//   [exitEnd    → next entryStart] GAP: pure starfield only, no panels
-//
-// Gap = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN
-// With EXIT_END_FRAC=0.58 and ENTRY_SPAN=0.15: gap = 0.27 × SPAN ≈ 108 vh
-const ENTRY_SPAN     = 0.15;  // zoom-in window as fraction of SPAN
-const DWELL_END_FRAC = 0.45;  // dwell ends at (i + 0.45) × SPAN
-const EXIT_END_FRAC  = 0.58;  // exit ends at  (i + 0.58) × SPAN
-// → next section's entryStart = (i + 1 - ENTRY_SPAN) × SPAN = (i + 0.85) × SPAN
-// → gap = (i+0.85 - i-0.58) × SPAN = 0.27 × SPAN ≈ 108 vh of pure starfield
+// Section timing fractions (of SPAN)
+const ENTRY_SPAN     = 0.15;
+const DWELL_END_FRAC = 0.45;
+const EXIT_END_FRAC  = 0.58;
+// Gap between sections = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN ≈ 54 vh
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
@@ -53,11 +45,60 @@ const problems = [
   { icon: Clock,  title: 'Manuelle Prozesse & Zeitverlust', desc: 'Stundenlange Routinearbeit frisst wertvolle Zeit. Excel-Listen, Copy-Paste — während Wachstumschancen ungenutzt bleiben.' },
 ];
 
+// Services with full feature lists (matching main branch Services component)
 const services = [
-  { icon: Globe,         title: 'Website',                desc: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen. SEO-optimiert, responsive, conversion-stark.' },
-  { icon: MessageSquare, title: 'KI-Chatbot',             desc: 'Ihr digitaler Mitarbeiter beantwortet Fragen, qualifiziert Leads und bucht Termine automatisch ein — rund um die Uhr.' },
-  { icon: Phone,         title: 'Voice Agent',            desc: 'Automatisierte Telefongespräche für Terminvereinbarungen, Erinnerungen und Kundenservice mit natürlicher Sprachverarbeitung.' },
-  { icon: Workflow,      title: 'Prozessautomatisierung', desc: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett — von Rechnungsstellung bis E-Mail-Workflows.' },
+  {
+    id: 'website',
+    icon: Globe,
+    title: 'Website',
+    shortDesc: 'Professionelle Präsenz',
+    description: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen.',
+    features: [
+      'Professionelles, individuelles Design',
+      'Schnelle Ladezeiten & SEO-optimiert',
+      'Responsive für alle Geräte',
+      'Kontaktformulare & Lead-Capture',
+    ],
+  },
+  {
+    id: 'chatbot',
+    icon: MessageSquare,
+    title: 'KI-Chatbot',
+    shortDesc: '24/7 Kundenservice',
+    description: 'Ihr digitaler Mitarbeiter beantwortet Fragen, qualifiziert Leads und bucht Termine automatisch ein.',
+    features: [
+      'Sofortige Antworten rund um die Uhr',
+      'Automatische Lead-Qualifizierung & Terminbuchung',
+      'Nahtlose Integration & lernfähig',
+      'Testen Sie unseren KI-Experten rechts unten',
+    ],
+  },
+  {
+    id: 'voice',
+    icon: Phone,
+    title: 'Voice Agent',
+    shortDesc: 'Telefonische KI',
+    description: 'Automatisierte Telefongespräche für Terminvereinbarungen, Erinnerungen und Kundenservice.',
+    features: [
+      'Natürliche Sprachverarbeitung',
+      'Terminbestätigungen per Anruf',
+      '24/7-Verfügbarkeit',
+      'CRM-Integration',
+    ],
+  },
+  {
+    id: 'automation',
+    icon: Workflow,
+    title: 'Prozessautomatisierung',
+    shortDesc: 'Workflows optimieren',
+    description: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett.',
+    features: [
+      'Datenübertragung zwischen Systemen',
+      'Automatische Rechnungsstellung',
+      'E-Mail-Workflows',
+      'Benutzerdefinierte Integrationen',
+    ],
+  },
 ];
 
 const steps = [
@@ -87,16 +128,68 @@ const faqs = [
   { q: 'Was passiert nach der Umsetzung?',         a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
 ];
 
-// ─── 3D Section Panel ────────────────────────────────────
-//
-// Timeline per section:
-//   GAP (pure starfield)  →  section materialises at ~22% scale
-//     →  zooms to 100%  →  dwell (readable)
-//     →  camera flies through (grows + fades)  →  GAP again
-//
-// Sections are NEVER simultaneously visible. The gap between
-// exitEnd(i) and entryStart(i+1) is ~108 vh of pure starfield.
+// ─── Mouse glow cursor ────────────────────────────────────
+// Scroll-reactive: large+dim at rest, tight+bright while scrolling.
+// Position is set via direct DOM transform (no React state) for 60fps.
+// Size crossfades between two CSS layers via opacity transitions.
+function MouseGlow() {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [scrolling, setScrolling] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (outerRef.current) {
+        outerRef.current.style.transform =
+          `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`;
+      }
+    };
+    const onScroll = () => {
+      setScrolling(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setScrolling(false), 150);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={outerRef}
+      className="fixed pointer-events-none z-[60] hidden lg:block"
+      style={{ width: '300px', height: '300px', top: 0, left: 0, willChange: 'transform' }}
+    >
+      {/* Resting state: large, low-opacity glow */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0) 70%)',
+          opacity: scrolling ? 0 : 1,
+          transition: 'opacity 300ms ease',
+        }}
+      />
+      {/* Warp state: small tight glow pulled toward centre */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: '150px', height: '150px',
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0) 70%)',
+          opacity: scrolling ? 1 : 0,
+          transition: 'opacity 300ms ease',
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── 3D Section Panel ────────────────────────────────────
 function Panel({
   children,
   scrollYProgress,
@@ -112,50 +205,32 @@ function Panel({
 }) {
   const isHero = index === 0;
 
-  // ── Keypoints ────────────────────────────────────────
-  // Hero is already at z=0 from the start (no approach needed).
-  // All others enter from Z_FAR inside their entry window.
   const entryStart = isHero ? 0     : Math.max(0.005, (index - ENTRY_SPAN) * SPAN);
   const entryMid   = isHero ? 0.001 : (entryStart + Math.min(index * SPAN, 0.990)) / 2;
   const entryFull  = isHero ? 0.001 : Math.min(index * SPAN, 0.990);
+  const exitStart  = isLast ? 1.05  : (index + DWELL_END_FRAC) * SPAN;
+  const exitEnd    = isLast ? 1.10  : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
 
-  const exitStart  = isLast ? 1.05 : (index + DWELL_END_FRAC) * SPAN;
-  const exitEnd    = isLast ? 1.10 : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
-
-  // ── Z animation ──────────────────────────────────────
-  // Section rushes from Z_FAR → 0 (entry), sits at 0 (dwell),
-  // then flies forward (0 → +300) as camera passes through it.
   const z = useTransform(
     scrollYProgress,
     [entryStart, entryFull, exitStart, exitEnd],
-    [isHero ? 0 : Z_FAR, 0, 0, isLast ? 0 : 300]
+    [isHero ? 0 : Z_FAR, 0, 0, isLast ? 0 : EXIT_Z]
   );
 
-  // ── Opacity animation ────────────────────────────────
-  // Entry: fades from 0 → 1 over the first half of the entry window
-  //   (section is small but materialising out of the void)
-  // Dwell: stays at 1 — fully readable
-  // Exit: 1 → 0 while z grows (camera flythrough)
-  // Between sections: opacity=0 → pure starfield visible
   const opacity = useTransform(
     scrollYProgress,
     [entryStart, entryMid,    exitStart, exitEnd],
     [isHero ? 1 : 0,    1,    1,         isLast ? 1 : 0]
   );
 
-  // ── CSS transform ────────────────────────────────────
+  // Inline perspective per panel — avoids container stacking-context issues.
+  // No blur at any point; sharpness is maintained throughout.
   const transform = useMotionTemplate`perspective(${PERSP}px) translateZ(${z}px)`;
 
   return (
     <motion.div
       className="absolute inset-0 flex items-center justify-center px-6 py-24 overflow-hidden"
-      style={{
-        opacity,
-        transform,
-        // Active section always renders on top — tiny incoming sections
-        // are visually behind the current one even if they appear small.
-        zIndex: isActive ? 20 : 10,
-      }}
+      style={{ opacity, transform, zIndex: isActive ? 20 : 10 }}
     >
       {children}
     </motion.div>
@@ -165,24 +240,20 @@ function Panel({
 // ─── Animated counter ────────────────────────────────────
 function Counter({ end, suffix, label, active }: { end: number; suffix: string; label: string; active: boolean }) {
   const [count, setCount] = useState(0);
-
   useEffect(() => {
     if (!active) return;
     let startTs: number | null = null;
     let raf: number;
-    const dur = 2200;
     const tick = (ts: number) => {
       if (!startTs) startTs = ts;
-      const p = Math.min((ts - startTs) / dur, 1);
-      const e = 1 - Math.pow(1 - p, 4);
-      setCount(Math.floor(e * end));
+      const p = Math.min((ts - startTs) / 2200, 1);
+      setCount(Math.floor((1 - Math.pow(1 - p, 4)) * end));
       if (p < 1) raf = requestAnimationFrame(tick);
       else setCount(end);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [active, end]);
-
   return (
     <div className="text-center">
       <div className="font-syne font-bold text-7xl md:text-8xl text-white tabular-nums">
@@ -205,13 +276,11 @@ const NAV_ITEMS = [
 function Nav({ goTo }: { goTo: (i: number) => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [open,     setOpen]     = useState(false);
-
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', h, { passive: true });
     return () => window.removeEventListener('scroll', h);
   }, []);
-
   return (
     <>
       <motion.nav
@@ -227,25 +296,18 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
             <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />
             <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
           </button>
-
           <div className="hidden md:flex items-center gap-8">
             {NAV_ITEMS.map((item) => (
-              <button
-                key={item.idx}
-                onClick={() => goTo(item.idx)}
-                className="font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150"
-              >
+              <button key={item.idx} onClick={() => goTo(item.idx)}
+                className="font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
                 {item.label}
               </button>
             ))}
-            <button
-              onClick={() => goTo(7)}
-              className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors"
-            >
+            <button onClick={() => goTo(7)}
+              className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors">
               Erstgespräch buchen
             </button>
           </div>
-
           <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -255,31 +317,24 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-40 bg-[#0a0a0a] pt-24 flex flex-col items-center gap-6 p-8 md:hidden"
           >
             {NAV_ITEMS.map((item, i) => (
-              <motion.button
-                key={item.idx}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
+              <motion.button key={item.idx}
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => { goTo(item.idx); setOpen(false); }}
-                className="font-inter text-white text-xl"
-              >
+                className="font-inter text-white text-xl">
                 {item.label}
               </motion.button>
             ))}
             <motion.button
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: NAV_ITEMS.length * 0.05 }}
               onClick={() => { goTo(7); setOpen(false); }}
-              className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg"
-            >
+              className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg">
               Erstgespräch buchen
             </motion.button>
           </motion.div>
@@ -289,34 +344,65 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
   );
 }
 
-// ─── Section dot navigation ──────────────────────────────
+// ─── Dot navigation ──────────────────────────────────────
 function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>; goTo: (i: number) => void }) {
   const [cur, setCur] = useState(0);
-
   useEffect(() => {
     return scrollYProgress.on('change', (v) => {
       setCur(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
     });
   }, [scrollYProgress]);
-
   return (
     <div className="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
       {Array.from({ length: TOTAL }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => goTo(i)}
+        <button key={i} onClick={() => goTo(i)}
           className={`rounded-full transition-all duration-300 ${
-            i === cur
-              ? 'w-2 h-4 bg-accent'
-              : 'w-2 h-2 bg-white/20 hover:bg-white/50'
-          }`}
-        />
+            i === cur ? 'w-2 h-4 bg-accent' : 'w-2 h-2 bg-white/20 hover:bg-white/50'
+          }`} />
       ))}
     </div>
   );
 }
 
-// ─── Section content components ──────────────────────────
+// ─── Persistent scroll indicator ─────────────────────────
+// Stays fixed at the bottom-centre throughout the scroll journey,
+// fading out as the user approaches the final section.
+function ScrollArrow({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
+  const fadeStart = (TOTAL - 1.8) * SPAN;
+  const fadeEnd   = (TOTAL - 0.6) * SPAN;
+  const opacity   = useTransform(scrollYProgress, [fadeStart, fadeEnd], [1, 0]);
+
+  return (
+    <motion.div
+      className="fixed bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center gap-0.5"
+      style={{ opacity }}
+    >
+      <motion.div
+        animate={{ y: [0, 6, 0] }}
+        transition={{ duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
+        className="flex flex-col items-center"
+      >
+        <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
+          <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style={{ marginTop: '-5px' }}>
+          <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Shared card class ───────────────────────────────────
+// Premium hover: lift + cyan glow + subtle scale
+const CARD = `
+  bg-white/[0.03] border border-white/[0.08] rounded-2xl
+  hover:border-accent/40 hover:-translate-y-1.5 hover:scale-[1.02]
+  hover:shadow-[0_8px_32px_rgba(0,212,255,0.12)]
+  transition-all duration-300 ease-out
+`.replace(/\s+/g, ' ').trim();
+
+// ─── Section content ─────────────────────────────────────
 
 function HeroPanel() {
   const words = 'Wir automatisieren. Ihr Wettbewerb schläft noch.'.split(' ');
@@ -324,61 +410,25 @@ function HeroPanel() {
     <div className="max-w-5xl mx-auto text-center w-full">
       <h1 className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8">
         {words.map((word, i) => (
-          <motion.span
-            key={i}
-            className="inline-block mr-[0.25em]"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <motion.span key={i} className="inline-block mr-[0.25em]"
+            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}>
             {word}
           </motion.span>
         ))}
       </h1>
-
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.05 }}
-        className="font-inter text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12"
-      >
+        className="font-inter text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12">
         Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.<br />
         Mehr Zeit. Mehr Umsatz. Weniger Stress.
       </motion.p>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.3 }}
-      >
-        <a
-          href="https://cal.eu/cl-solutions/30min"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-8 py-4 bg-accent text-dark font-inter font-semibold text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow"
-        >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 1.3 }}>
+        <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+          className="inline-block px-8 py-4 bg-accent text-dark font-inter font-semibold text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
           Kostenloses Erstgespräch
         </a>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
-      >
-        <span className="font-inter text-[10px] text-gray-600 uppercase tracking-[0.2em]">Scroll</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-gray-700 rounded-full flex justify-center"
-        >
-          <motion.div
-            animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-1.5 h-3 bg-accent rounded-full mt-2"
-          />
-        </motion.div>
       </motion.div>
     </div>
   );
@@ -397,10 +447,7 @@ function ProblemPanel() {
       </div>
       <div className="grid md:grid-cols-3 gap-6">
         {problems.map((p, i) => (
-          <div
-            key={i}
-            className="p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-accent/30 transition-colors"
-          >
+          <div key={i} className={`${CARD} p-8`}>
             <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
               <p.icon className="w-7 h-7 text-accent" />
             </div>
@@ -413,27 +460,86 @@ function ProblemPanel() {
   );
 }
 
+// Services section rebuilt to match main branch tab + detail + mini-cards layout
 function ServicesPanel() {
+  const [activeService, setActiveService] = useState(services[0]);
+
+  const goToContact = () => {
+    const totalH = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: (7 * SPAN + 0.05) * totalH, behavior: 'smooth' });
+  };
+
   return (
     <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-12">
+      <div className="text-center mb-10">
         <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
           Unsere Leistungen
         </span>
         <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
       </div>
-      <div className="grid sm:grid-cols-2 gap-6">
-        {services.map((s, i) => (
-          <div
-            key={i}
-            className="group p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-accent/30 transition-colors"
-          >
-            <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-accent/20 transition-colors">
-              <s.icon className="w-7 h-7 text-accent" />
+
+      {/* Pill tabs */}
+      <div className="flex flex-wrap justify-center gap-3 mb-8">
+        {services.map((s) => (
+          <button key={s.id} onClick={() => setActiveService(s)}
+            className={`px-6 py-2.5 rounded-full font-inter text-sm transition-all duration-300 ${
+              activeService.id === s.id
+                ? 'bg-accent text-dark font-medium'
+                : 'bg-white/[0.05] border border-white/[0.08] text-gray-400 hover:border-accent/50 hover:text-white'
+            }`}>
+            {s.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Detail panel */}
+      <AnimatePresence mode="wait">
+        <motion.div key={activeService.id}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}
+          className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-7 lg:p-10 mb-8">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-5">
+                <activeService.icon className="w-7 h-7 text-accent" />
+              </div>
+              <h3 className="font-syne font-bold text-2xl lg:text-3xl text-white mb-4">{activeService.title}</h3>
+              <p className="font-inter text-gray-400 text-lg leading-relaxed mb-7">{activeService.description}</p>
+              <button onClick={goToContact}
+                className="px-6 py-3 bg-accent text-dark font-inter font-medium rounded-lg hover:bg-accent/90 transition-colors">
+                Jetzt anfragen
+              </button>
             </div>
-            <h3 className="font-syne font-bold text-2xl text-white mb-3">{s.title}</h3>
-            <p className="font-inter text-gray-400 leading-relaxed">{s.desc}</p>
+            <div className="space-y-3">
+              {activeService.features.map((feat, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="flex items-center gap-4 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                  <div className="w-2 h-2 bg-accent rounded-full flex-shrink-0" />
+                  <span className="font-inter text-gray-300">{feat}</span>
+                </motion.div>
+              ))}
+            </div>
           </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Mini cards */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {services.map((s) => (
+          <button key={s.id} onClick={() => setActiveService(s)}
+            className={`group text-left p-5 rounded-2xl border transition-all duration-300 ${
+              activeService.id === s.id
+                ? 'bg-accent/10 border-accent/50'
+                : 'bg-white/[0.02] border-white/[0.06] hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_6px_20px_rgba(0,212,255,0.1)]'
+            }`}>
+            <s.icon className={`w-7 h-7 mb-3 transition-colors ${
+              activeService.id === s.id ? 'text-accent' : 'text-gray-500 group-hover:text-accent'
+            }`} />
+            <h4 className="font-syne font-semibold text-white mb-1 text-sm">{s.title}</h4>
+            <p className="font-inter text-xs text-gray-500">{s.shortDesc}</p>
+          </button>
         ))}
       </div>
     </div>
@@ -451,10 +557,7 @@ function ProcessPanel() {
       </div>
       <div className="grid lg:grid-cols-3 gap-8">
         {steps.map((step, i) => (
-          <div
-            key={i}
-            className="relative p-8 bg-white/[0.03] border border-white/[0.08] rounded-2xl"
-          >
+          <div key={i} className={`${CARD} relative p-8`}>
             <span className="absolute -top-5 -left-2 font-syne font-bold text-8xl text-accent/10 leading-none select-none">
               {step.num}
             </span>
@@ -483,9 +586,7 @@ function NumbersPanel({ active }: { active: boolean }) {
       </div>
       <div className="grid md:grid-cols-3 gap-12">
         {stats.map((s, i) => (
-          <div key={i}>
-            <Counter end={s.end} suffix={s.suffix} label={s.label} active={active} />
-          </div>
+          <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
         ))}
       </div>
     </div>
@@ -497,27 +598,16 @@ function AboutPanel() {
     <div className="max-w-6xl mx-auto w-full">
       <div className="grid lg:grid-cols-2 gap-16 items-center">
         <div>
-          <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
-            Über uns
-          </span>
-          <h2 className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">
-            Wir sind CL-Solutions
-          </h2>
+          <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Über uns</span>
+          <h2 className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">Wir sind CL-Solutions</h2>
           <div className="space-y-5 font-inter text-gray-400 text-lg leading-relaxed">
-            <p>
-              Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner
-              KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.
-            </p>
-            <p>
-              Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches
-              Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.
-            </p>
+            <p>Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.</p>
+            <p>Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.</p>
           </div>
         </div>
-
         <div className="space-y-4">
           {highlights.map((h, i) => (
-            <div key={i} className="flex items-start gap-4 p-5 bg-white/[0.03] border border-white/[0.08] rounded-xl">
+            <div key={i} className={`${CARD} flex items-start gap-4 p-5`}>
               <div className="w-11 h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
                 <h.icon className="w-5 h-5 text-accent" />
               </div>
@@ -527,7 +617,6 @@ function AboutPanel() {
               </div>
             </div>
           ))}
-
           <div className="flex items-center gap-4 p-5">
             <div className="flex -space-x-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
@@ -555,29 +644,17 @@ function FAQPanel() {
       <div>
         {faqs.map((faq, i) => (
           <div key={i} className="border-b border-white/[0.07]">
-            <button
-              onClick={() => setOpen(open === i ? null : i)}
-              className="w-full py-5 flex items-center justify-between text-left group"
-            >
-              <span className="font-syne font-semibold text-white group-hover:text-accent transition-colors pr-8">
-                {faq.q}
-              </span>
+            <button onClick={() => setOpen(open === i ? null : i)}
+              className="w-full py-5 flex items-center justify-between text-left group">
+              <span className="font-syne font-semibold text-white group-hover:text-accent transition-colors pr-8">{faq.q}</span>
               <div className="w-9 h-9 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
-                {open === i
-                  ? <Minus className="w-4 h-4 text-accent" />
-                  : <Plus className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />
-                }
+                {open === i ? <Minus className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />}
               </div>
             </button>
             <AnimatePresence>
               {open === i && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="overflow-hidden"
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
                   <p className="font-inter text-gray-400 leading-relaxed pb-5 text-sm">{faq.a}</p>
                 </motion.div>
               )}
@@ -592,7 +669,7 @@ function FAQPanel() {
 function ContactPanel() {
   useEffect(() => {
     const script = document.createElement('script');
-    script.src   = 'https://tally.so/widgets/embed.js';
+    script.src = 'https://tally.so/widgets/embed.js';
     script.async = true;
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
@@ -609,8 +686,7 @@ function ContactPanel() {
           <p className="font-inter text-gray-400 text-lg leading-relaxed mb-8">
             Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
           </p>
-
-          <div className="p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl">
+          <div className={`${CARD} p-6`}>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-accent" />
@@ -620,38 +696,40 @@ function ContactPanel() {
                 <p className="font-inter text-gray-500 text-sm">30 Min., kostenlos &amp; unverbindlich</p>
               </div>
             </div>
-            <a
-              href="https://cal.eu/cl-solutions/30min"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow"
-            >
+            <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+              className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
               Jetzt Termin buchen
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
           </div>
         </div>
 
-        <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-8">
-          <h3 className="font-syne font-bold text-2xl text-white mb-3">Erstberatung anfragen</h3>
-          <p className="font-inter text-gray-400 text-base mb-6">
-            Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.
-          </p>
-          <div className="space-y-3 mb-8">
-            {['Kostenlose Analyse Ihrer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
-                <span className="font-inter text-gray-300 text-sm">{item}</span>
-              </div>
-            ))}
+        <div>
+          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-8 mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300">
+            <h3 className="font-syne font-bold text-2xl text-white mb-3">Erstberatung anfragen</h3>
+            <p className="font-inter text-gray-400 text-base mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
+            <div className="space-y-3 mb-8">
+              {['Kostenlose Analyse Ihrer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                  <span className="font-inter text-gray-300 text-sm">{item}</span>
+                </div>
+              ))}
+            </div>
+            <button data-tally-open="2Evere"
+              className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
+              Jetzt Anfrage stellen
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
-          <button
-            data-tally-open="2Evere"
-            className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group"
-          >
-            Jetzt Anfrage stellen
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+
+          {/* Chatbot hint */}
+          <div className="flex items-center gap-3 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+            <MessageSquare className="w-5 h-5 text-accent flex-shrink-0" />
+            <p className="font-inter text-gray-400 text-sm">
+              Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -662,46 +740,36 @@ function ContactPanel() {
 export function Home() {
   const { scrollY, scrollYProgress } = useScroll();
 
-  // Track which section is currently "active" (at z≈0, full size).
-  // The active section gets zIndex:20 so tiny incoming sections never
-  // visually intrude on the readable content.
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
-
   useEffect(() => {
     return scrollYProgress.on('change', (v) => {
       setActiveSectionIdx(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
     });
   }, [scrollYProgress]);
 
-  // Numbers section counter fires when section 4 is the active one
   const [numbersActive, setNumbersActive] = useState(false);
   useEffect(() => {
     const s4enter = Math.min(4 * SPAN, 0.990);
-    const s4exit  = (4 + 0.55) * SPAN;
+    const s4exit  = (4 + DWELL_END_FRAC) * SPAN;
     return scrollYProgress.on('change', (v) => {
       setNumbersActive(v >= s4enter && v <= s4exit);
     });
   }, [scrollYProgress]);
 
-  // ── Mouse parallax ────────────────────────────────────
-  // Raw mouse position (normalized -1 to +1), spring-smoothed for inertia
+  // Spring-smoothed mouse for StarField parallax
   const rawMouseX = useMotionValue(0);
   const rawMouseY = useMotionValue(0);
   const mouseX    = useSpring(rawMouseX, { stiffness: 60, damping: 25 });
   const mouseY    = useSpring(rawMouseY, { stiffness: 60, damping: 25 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Map mouse position to ±60px range for StarField parallax
     rawMouseX.set(((e.clientX / window.innerWidth)  - 0.5) * 60);
     rawMouseY.set(((e.clientY / window.innerHeight) - 0.5) * 60);
   };
 
-  // ── Section → scroll target ───────────────────────────
-  // Aims at the dwell midpoint of the target section, not the start.
   const goTo = (index: number) => {
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
-    const target = Math.max(0, (index * SPAN + 0.05) * totalH);
-    window.scrollTo({ top: target, behavior: 'smooth' });
+    window.scrollTo({ top: Math.max(0, (index * SPAN + 0.05) * totalH), behavior: 'smooth' });
   };
 
   const sections: React.ReactNode[] = [
@@ -717,36 +785,22 @@ export function Home() {
 
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
+      <MouseGlow />
+      <ScrollArrow scrollYProgress={scrollYProgress} />
       <Nav goTo={goTo} />
       <Dots scrollYProgress={scrollYProgress} goTo={goTo} />
 
-      {/* ── Scroll container — total height ─────────────── */}
       <div style={{ height: `${TOTAL * VH_PER}vh` }} className="relative">
-
-        {/* ── Sticky viewport ──────────────────────────── */}
         <div className="sticky top-0 h-screen overflow-hidden">
-
-          {/* Starfield — persistent 3D warp background */}
           <StarField scrollY={scrollY} mouseX={mouseX} mouseY={mouseY} />
 
-          {/* Radial vignette — darkens edges */}
-          <div
-            className="absolute inset-0 z-10 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)',
-            }}
-          />
+          <div className="absolute inset-0 z-10 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
 
-          {/* ── 3D section panels ───────────────────────── */}
           <div className="absolute inset-0 z-20">
             {sections.map((content, i) => (
-              <Panel
-                key={i}
-                scrollYProgress={scrollYProgress}
-                index={i}
-                isActive={i === activeSectionIdx}
-                isLast={i === TOTAL - 1}
-              >
+              <Panel key={i} scrollYProgress={scrollYProgress} index={i}
+                isActive={i === activeSectionIdx} isLast={i === TOTAL - 1}>
                 {content}
               </Panel>
             ))}
@@ -754,7 +808,6 @@ export function Home() {
         </div>
       </div>
 
-      {/* ── Footer — below the scroll area ─────────────── */}
       <footer className="bg-[#0a0a0a] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
@@ -767,23 +820,19 @@ export function Home() {
                 KI-Automatisierung für deutsche Unternehmen. Wir machen Technologie nutzbar – ohne Buzzwords.
               </p>
             </div>
-
             <div>
               <h4 className="font-syne font-semibold text-white mb-4">Navigation</h4>
               <ul className="space-y-3">
                 {NAV_ITEMS.map((item) => (
                   <li key={item.idx}>
-                    <button
-                      onClick={() => goTo(item.idx)}
-                      className="font-inter text-gray-500 hover:text-accent transition-colors text-sm"
-                    >
+                    <button onClick={() => goTo(item.idx)}
+                      className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
                       {item.label}
                     </button>
                   </li>
                 ))}
               </ul>
             </div>
-
             <div>
               <h4 className="font-syne font-semibold text-white mb-4">Rechtliches</h4>
               <ul className="space-y-3">
@@ -792,11 +841,8 @@ export function Home() {
               </ul>
             </div>
           </div>
-
           <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="font-inter text-gray-600 text-sm">
-              {new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.
-            </p>
+            <p className="font-inter text-gray-600 text-sm">{new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
             <p className="font-inter text-gray-600 text-sm">Made with precision in Germany</p>
           </div>
         </div>
