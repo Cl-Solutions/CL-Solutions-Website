@@ -1,0 +1,121 @@
+import { useEffect, useRef } from 'react';
+import { MotionValue } from 'framer-motion';
+
+const NUM_STARS = 320;
+const DEPTH = 1000;
+const FOCAL = 420;
+
+interface Star {
+  x: number;
+  y: number;
+  z: number;
+}
+
+function makeStar(w: number, h: number, zOverride?: number): Star {
+  return {
+    x: (Math.random() - 0.5) * w * 2.8,
+    y: (Math.random() - 0.5) * h * 2.8,
+    z: zOverride ?? Math.random() * DEPTH,
+  };
+}
+
+export function StarField({ scrollY }: { scrollY: MotionValue<number> }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let raf: number;
+    let stars: Star[] = [];
+    let prevScrollY = 0;
+    let speed = 1.8;
+    let targetSpeed = 1.8;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      stars = Array.from({ length: NUM_STARS }, () =>
+        makeStar(canvas.width, canvas.height)
+      );
+    };
+
+    const frame = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      const sy = scrollY.get();
+      const delta = Math.abs(sy - prevScrollY);
+      prevScrollY = sy;
+
+      targetSpeed = 1.8 + delta * 1.4;
+      speed += (targetSpeed - speed) * 0.1;
+      speed = Math.min(speed, 40);
+
+      // Motion-blur trail
+      ctx.fillStyle = 'rgba(10,10,10,0.28)';
+      ctx.fillRect(0, 0, w, h);
+
+      for (const star of stars) {
+        // Previous projected position (for streaks)
+        const ppx = (star.x / star.z) * FOCAL + cx;
+        const ppy = (star.y / star.z) * FOCAL + cy;
+        const prevZ = star.z;
+
+        star.z -= speed;
+
+        if (star.z <= 1) {
+          const ns = makeStar(w, h, DEPTH);
+          star.x = ns.x;
+          star.y = ns.y;
+          star.z = DEPTH;
+          continue;
+        }
+
+        const px = (star.x / star.z) * FOCAL + cx;
+        const py = (star.y / star.z) * FOCAL + cy;
+        const t = 1 - star.z / DEPTH;
+        const size = Math.max(0.15, t * 3.2);
+        const opacity = t * 0.92;
+
+        // Draw streak when warping
+        if (speed > 4 && prevZ < DEPTH * 0.92) {
+          ctx.beginPath();
+          ctx.moveTo(ppx, ppy);
+          ctx.lineTo(px, py);
+          ctx.strokeStyle = `rgba(160,230,255,${opacity * 0.55})`;
+          ctx.lineWidth = size * 0.55;
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(210,242,255,${opacity})`;
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(frame);
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
+    frame();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, [scrollY]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.82 }}
+    />
+  );
+}
