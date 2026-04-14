@@ -208,8 +208,11 @@ function Panel({
   const entryStart = isHero ? 0     : Math.max(0.005, (index - ENTRY_SPAN) * SPAN);
   const entryMid   = isHero ? 0.001 : (entryStart + Math.min(index * SPAN, 0.990)) / 2;
   const entryFull  = isHero ? 0.001 : Math.min(index * SPAN, 0.990);
-  const exitStart  = isLast ? 1.05  : (index + DWELL_END_FRAC) * SPAN;
-  const exitEnd    = isLast ? 1.10  : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
+  // exitStart/exitEnd must stay ≤ 1.0 — Chrome's ScrollTimeline API propagates the
+  // useTransform input range directly as WAAPI keyframe offsets in bindToMotionValue.
+  // Values > 1 crash with "Offsets must be null or in the range [0,1]" (no try/catch).
+  const exitStart  = isLast ? 0.991 : (index + DWELL_END_FRAC) * SPAN;
+  const exitEnd    = isLast ? 0.999 : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
 
   const z = useTransform(
     scrollYProgress,
