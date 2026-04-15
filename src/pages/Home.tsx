@@ -9,6 +9,7 @@ import {
   useMotionTemplate,
   useMotionValue,
   useSpring,
+  useInView,
   AnimatePresence,
   MotionValue,
 } from 'framer-motion';
@@ -249,6 +250,45 @@ function Panel({
     >
       {children}
     </motion.div>
+  );
+}
+
+// ─── Mobile detection ────────────────────────────────────
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return mobile;
+}
+
+// ─── Mobile section wrapper ───────────────────────────────
+// Uses IntersectionObserver (via useInView) to trigger isActive
+// when a section scrolls into view — replaces scroll-progress activation.
+function MobileSection({
+  id,
+  onView,
+  children,
+}: {
+  id: string;
+  onView?: (v: boolean) => void;
+  children: (isActive: boolean) => React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+
+  useEffect(() => {
+    if (inView) onView?.(true);
+  }, [inView, onView]);
+
+  return (
+    <div ref={ref} id={id} className="relative px-4 sm:px-6 py-14 sm:py-20">
+      {children(inView)}
+    </div>
   );
 }
 
@@ -947,7 +987,14 @@ export function Home() {
     rawMouseY.set(((e.clientY / window.innerHeight) - 0.5) * 60);
   };
 
+  const isMobile = useIsMobile();
+  const [mobileNumActive, setMobileNumActive] = useState(false);
+
   const goTo = (index: number) => {
+    if (isMobile) {
+      document.getElementById(`ms-${index}`)?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo({ top: Math.max(0, (index * SPAN + 0.05) * totalH), behavior: 'smooth' });
   };
@@ -966,6 +1013,89 @@ export function Home() {
     }
   }, [numbersActive]);
 
+  // Shared footer — same on mobile and desktop
+  const footer = (
+    <footer className="bg-[#0a0a0a] border-t border-white/5 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 sm:py-16">
+        <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" />
+              <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
+            </div>
+            <p className="font-inter text-gray-500 leading-relaxed max-w-sm">
+              KI-Automatisierung für deutsche Unternehmen. Wir machen Technologie nutzbar – ohne Buzzwords.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-syne font-semibold text-white mb-4">Navigation</h4>
+            <ul className="space-y-3">
+              {NAV_ITEMS.map((item) => (
+                <li key={item.idx}>
+                  <button onClick={() => goTo(item.idx)}
+                    className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-syne font-semibold text-white mb-4">Rechtliches</h4>
+            <ul className="space-y-3">
+              <li><Link to="/impressum" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Impressum</Link></li>
+              <li><Link to="/datenschutz" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Datenschutz</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="font-inter text-gray-600 text-sm">{new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
+          <p className="font-inter text-gray-600 text-sm">Made with precision in Germany</p>
+        </div>
+      </div>
+    </footer>
+  );
+
+  // ── MOBILE: normal stacked page, no 3D transforms ─────
+  if (isMobile) {
+    return (
+      <div className="bg-[#0a0a0a]">
+        {/* Fixed starfield + vignette as page background */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <StarField mouseX={mouseX} mouseY={mouseY} />
+          <div className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
+        </div>
+
+        <CustomCursor />
+        <Nav goTo={goTo} />
+
+        <div className="relative z-10">
+          {/* Hero — fills first viewport, content vertically centred */}
+          <div id="ms-0" className="min-h-screen flex items-center justify-center px-4 pt-20 pb-12">
+            <div className="w-full max-w-5xl">
+              <HeroPanel isActive={true} />
+            </div>
+          </div>
+
+          {/* Sections 1–7: auto height, activated when scrolled into view */}
+          <MobileSection id="ms-1">{(a) => <ProblemPanel   isActive={a} />}</MobileSection>
+          <MobileSection id="ms-2">{(a) => <ServicesPanel  isActive={a} />}</MobileSection>
+          <MobileSection id="ms-3">{(a) => <ProcessPanel   isActive={a} />}</MobileSection>
+          <MobileSection id="ms-4" onView={setMobileNumActive}>
+            {(a) => <NumbersPanel active={mobileNumActive} isActive={a} />}
+          </MobileSection>
+          <MobileSection id="ms-5">{(a) => <AboutPanel     isActive={a} />}</MobileSection>
+          <MobileSection id="ms-6">{(a) => <FAQPanel       isActive={a} />}</MobileSection>
+          <MobileSection id="ms-7">{(a) => <ContactPanel   isActive={a} />}</MobileSection>
+        </div>
+
+        {footer}
+      </div>
+    );
+  }
+
+  // ── DESKTOP: existing 3D scroll-zoom animation ────────
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
       <CustomCursor />
@@ -992,45 +1122,7 @@ export function Home() {
         </div>
       </div>
 
-      <footer className="bg-[#0a0a0a] border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 sm:py-16">
-          <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" />
-                <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
-              </div>
-              <p className="font-inter text-gray-500 leading-relaxed max-w-sm">
-                KI-Automatisierung für deutsche Unternehmen. Wir machen Technologie nutzbar – ohne Buzzwords.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-syne font-semibold text-white mb-4">Navigation</h4>
-              <ul className="space-y-3">
-                {NAV_ITEMS.map((item) => (
-                  <li key={item.idx}>
-                    <button onClick={() => goTo(item.idx)}
-                      className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-syne font-semibold text-white mb-4">Rechtliches</h4>
-              <ul className="space-y-3">
-                <li><Link to="/impressum" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Impressum</Link></li>
-                <li><Link to="/datenschutz" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Datenschutz</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="font-inter text-gray-600 text-sm">{new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
-            <p className="font-inter text-gray-600 text-sm">Made with precision in Germany</p>
-          </div>
-        </div>
-      </footer>
+      {footer}
     </div>
   );
 }
