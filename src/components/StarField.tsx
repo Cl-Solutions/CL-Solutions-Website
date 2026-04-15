@@ -176,7 +176,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           const grad = ctx.createLinearGradient(
             first.x + mx, first.y + my, nx, ny
           );
-          const headAlpha = Math.min(warpFactor * 0.65, 0.6);
+          const headAlpha = Math.min(warpFactor * 0.12, 0.05);
           grad.addColorStop(0, 'rgba(0,229,255,0)');
           grad.addColorStop(1, `rgba(0,229,255,${headAlpha})`);
 
