@@ -1,5 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { getPostBySlug, formatDate } from '../data/blogPosts';
+import { CustomCursor } from '../components/CustomCursor';
 
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -11,6 +12,7 @@ export function BlogPost() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <CustomCursor />
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.95)] backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
