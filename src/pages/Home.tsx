@@ -800,7 +800,7 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
       <div className="glass-card rounded-2xl p-6 sm:p-10">
-        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
           {stats.map((s, i) => (
             <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
           ))}
