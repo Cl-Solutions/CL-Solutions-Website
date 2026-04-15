@@ -60,6 +60,31 @@
   }
 }
 
+/* ── Navbar link animated underline ─────────────────────────────────────────
+   On hover: cyan line slides in from the left.
+   On leave:  line slides out to the right.
+   transform-origin toggles between 'left' (enter) and 'right' (leave)
+   so the direction is preserved correctly for each transition.         */
+.nav-item {
+  position: relative;
+}
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background-color: #00E5FF;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+.nav-item:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
 /* Hide scrollbar on the services scroll container while keeping functionality */
 [data-scroll-no-bar]::-webkit-scrollbar {
   display: none;

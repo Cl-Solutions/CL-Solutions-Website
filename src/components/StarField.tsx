@@ -170,16 +170,19 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
         const ny = node.y + my;
 
         // ── Warp streak (trail) ────────────────────────────────
+        // 'screen' compositing prevents overlapping streaks from additively
+        // stacking into bright blocks — each streak is capped at 0.2 alpha
+        // and screen blending keeps their union below saturating white.
         if (node.trail.length > 1) {
           const first = node.trail[0];
-          // Linear gradient: transparent at the tail, opaque at the head
           const grad = ctx.createLinearGradient(
             first.x + mx, first.y + my, nx, ny
           );
-          const headAlpha = Math.min(warpFactor * 0.65, 0.4);
+          const headAlpha = Math.min(warpFactor * 0.65, 0.2);
           grad.addColorStop(0, 'rgba(0,229,255,0)');
           grad.addColorStop(1, `rgba(0,229,255,${headAlpha})`);
 
+          ctx.globalCompositeOperation = 'screen';
           ctx.beginPath();
           ctx.moveTo(first.x + mx, first.y + my);
           for (let t = 1; t < node.trail.length; t++) {
@@ -189,6 +192,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           ctx.strokeStyle = grad;
           ctx.lineWidth   = node.size * 0.8;
           ctx.stroke();
+          ctx.globalCompositeOperation = 'source-over';
         }
 
         // ── Node dot ──────────────────────────────────────────
