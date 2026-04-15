@@ -37,10 +37,10 @@ const Z_FAR  = -22800;
 const EXIT_Z = 533;
 
 // Section timing fractions (of SPAN)
-const ENTRY_SPAN     = 0.15;
+const ENTRY_SPAN     = 0.38;  // ↑ from 0.15 — next slide visible earlier, longer fly-in (~76 vh)
 const DWELL_END_FRAC = 0.45;
 const EXIT_END_FRAC  = 0.58;
-// Gap between sections = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN ≈ 54 vh
+// Gap between sections = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN ≈ 8 vh
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
