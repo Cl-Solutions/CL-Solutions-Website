@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Impressum } from './pages/Impressum';
 import { Datenschutz } from './pages/Datenschutz';
+import { Blog } from './pages/Blog';
+import { BlogPost } from './pages/BlogPost';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -70,6 +72,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

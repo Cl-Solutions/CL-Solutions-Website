@@ -320,11 +320,12 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
 }
 
 // ─── Navigation ──────────────────────────────────────────
-const NAV_ITEMS = [
+const NAV_ITEMS: { label: string; idx?: number; href?: string }[] = [
   { label: 'Leistungen', idx: 2 },
   { label: 'Prozess',    idx: 3 },
   { label: 'Über uns',   idx: 5 },
   { label: 'FAQ',        idx: 6 },
+  { label: 'Blog',       href: '/blog' },
   { label: 'Kontakt',    idx: 7 },
 ];
 
@@ -355,10 +356,15 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
           </button>
           <div className="hidden md:flex items-center gap-8">
             {NAV_ITEMS.map((item) => (
-              <button key={item.idx} onClick={() => goTo(item.idx)}
-                className="nav-item font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
-                {item.label}
-              </button>
+              item.href
+                ? <Link key={item.href} to={item.href}
+                    className="nav-item font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
+                    {item.label}
+                  </Link>
+                : <button key={item.idx} onClick={() => goTo(item.idx!)}
+                    className="nav-item font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
+                    {item.label}
+                  </button>
             ))}
             <button onClick={() => goTo(7)}
               className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors">
@@ -379,13 +385,22 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
             className="fixed inset-0 z-40 bg-[#0a0a0a] pt-24 flex flex-col items-center gap-6 p-8 md:hidden"
           >
             {NAV_ITEMS.map((item, i) => (
-              <motion.button key={item.idx}
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => { goTo(item.idx); setOpen(false); }}
-                className="font-inter text-white text-xl">
-                {item.label}
-              </motion.button>
+              item.href
+                ? <motion.div key={item.href}
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}>
+                    <Link to={item.href} onClick={() => setOpen(false)}
+                      className="font-inter text-white text-xl">
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                : <motion.button key={item.idx}
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => { goTo(item.idx!); setOpen(false); }}
+                    className="font-inter text-white text-xl">
+                    {item.label}
+                  </motion.button>
             ))}
             <motion.button
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -1031,11 +1046,17 @@ export function Home() {
             <h4 className="font-syne font-semibold text-white mb-4">Navigation</h4>
             <ul className="space-y-3">
               {NAV_ITEMS.map((item) => (
-                <li key={item.idx}>
-                  <button onClick={() => goTo(item.idx)}
-                    className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
-                    {item.label}
-                  </button>
+                <li key={item.href ?? item.idx}>
+                  {item.href
+                    ? <Link to={item.href}
+                        className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
+                        {item.label}
+                      </Link>
+                    : <button onClick={() => goTo(item.idx!)}
+                        className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
+                        {item.label}
+                      </button>
+                  }
                 </li>
               ))}
             </ul>
