@@ -18,6 +18,7 @@ import {
   UserX, Clock, Plus, Minus, Menu, X,
 } from 'lucide-react';
 import { StarField } from '../components/StarField';
+import { CustomCursor } from '../components/CustomCursor';
 
 // ─── Layout constants ────────────────────────────────────
 const TOTAL  = 8;
@@ -709,7 +710,7 @@ function ContactPanel() {
           <p className="font-inter text-gray-400 text-lg leading-relaxed mb-8">
             Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
           </p>
-          <div className={`${CARD} p-6`}>
+          <div className={`${CARD} p-6`} data-cursor-card>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-accent" />
@@ -728,7 +729,7 @@ function ContactPanel() {
         </div>
 
         <div>
-          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-8 mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300">
+          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-8 mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300" data-cursor-card>
             <h3 className="font-syne font-bold text-2xl text-white mb-3">Erstberatung anfragen</h3>
             <p className="font-inter text-gray-400 text-base mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
             <div className="space-y-3 mb-8">
@@ -833,6 +834,7 @@ export function Home() {
 
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
+      <CustomCursor />
       <MouseGlow />
       <ScrollArrow scrollYProgress={activeProgress} />
       <Nav goTo={goTo} />

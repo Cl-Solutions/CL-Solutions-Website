@@ -11,6 +11,10 @@
     @apply bg-dark text-white font-inter antialiased;
   }
 
+  @media (min-width: 1024px) {
+    body { cursor: none; }
+  }
+
   ::selection {
     @apply bg-accent/30 text-white;
   }
