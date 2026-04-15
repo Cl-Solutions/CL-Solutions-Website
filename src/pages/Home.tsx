@@ -472,7 +472,7 @@ function ServicesPanel() {
   const scrollToService = (idx: number) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTo({ top: idx * el.clientHeight, behavior: 'smooth' });
+    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
     setActiveIdx(idx);
   };
 
@@ -480,7 +480,7 @@ function ServicesPanel() {
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
-      const idx = Math.round(el.scrollTop / el.clientHeight);
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
       setActiveIdx(Math.min(idx, services.length - 1));
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -514,17 +514,19 @@ function ServicesPanel() {
         ))}
       </div>
 
-      {/* Vertical scroll container — each service gets one full panel */}
+      {/* Horizontal scroll container — each service gets one full panel */}
       <div
         ref={scrollRef}
         data-scroll-no-bar
         className="rounded-3xl"
         style={{
           height: 'clamp(280px, 36vh, 360px)',
-          overflowY: 'scroll',
-          scrollSnapType: 'y mandatory',
+          overflowX: 'scroll',
+          scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
+          display: 'flex',
+          flexDirection: 'row',
         }}
       >
         {services.map((s) => (
@@ -532,7 +534,8 @@ function ServicesPanel() {
             key={s.id}
             className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-6 lg:p-8"
             style={{
-              height: 'clamp(280px, 36vh, 360px)',
+              minWidth: '100%',
+              width: '100%',
               scrollSnapAlign: 'start',
               flexShrink: 0,
               boxSizing: 'border-box',
