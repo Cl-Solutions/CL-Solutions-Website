@@ -7,7 +7,7 @@ export function Blog() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <CustomCursor />
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.95)] backdrop-blur-md border-b border-white/5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.7)] backdrop-blur-[16px] border-b border-[rgba(0,229,255,0.08)]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-3">
             <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />
@@ -56,7 +56,7 @@ export function Blog() {
           {blogPosts.map((post) => (
             <article
               key={post.slug}
-              className="group bg-white/[0.03] border border-white/10 rounded-2xl p-7 hover:border-[#00E5FF]/30 hover:bg-white/[0.05] transition-all duration-300"
+              className="group glass-card glass-card-interactive rounded-2xl p-7 hover:-translate-y-1 transition-all duration-300"
             >
               <div className="flex items-center gap-3 mb-4">
                 <span className="font-inter text-xs font-medium text-[#00E5FF] bg-[#00E5FF]/10 px-3 py-1 rounded-full">

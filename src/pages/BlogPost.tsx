@@ -14,7 +14,7 @@ export function BlogPost() {
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <CustomCursor />
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.95)] backdrop-blur-md border-b border-white/5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.7)] backdrop-blur-[16px] border-b border-[rgba(0,229,255,0.08)]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-3">
             <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />

@@ -343,10 +343,10 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color] duration-300 border-b border-white/5 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
           scrolled
-            ? 'bg-[#0a0a0a]/90 backdrop-blur-md'
-            : 'bg-[rgba(10,10,10,0.95)] md:bg-transparent md:border-transparent'
+            ? 'bg-[rgba(10,10,10,0.75)] backdrop-blur-[16px] border-[rgba(0,229,255,0.08)]'
+            : 'bg-[rgba(10,10,10,0.5)] backdrop-blur-[16px] border-[rgba(0,229,255,0.05)] md:bg-[rgba(10,10,10,0.4)]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
@@ -464,11 +464,10 @@ function ScrollArrow({ scrollYProgress }: { scrollYProgress: MotionValue<number>
 }
 
 // ─── Shared card class ───────────────────────────────────
-// Premium hover: lift + cyan glow + subtle scale
+// Glass surface + lift/scale on hover
 const CARD = `
-  bg-white/[0.03] border border-white/[0.08] rounded-2xl
-  hover:border-accent/40 hover:-translate-y-1.5 hover:scale-[1.02]
-  hover:shadow-[0_8px_32px_rgba(0,212,255,0.12)]
+  glass-card glass-card-interactive rounded-2xl
+  hover:-translate-y-1.5 hover:scale-[1.02]
   transition-all duration-300 ease-out
 `.replace(/\s+/g, ' ').trim();
 
@@ -679,8 +678,9 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
             className={`text-left p-3 lg:p-4 rounded-2xl border transition-all duration-300 ${
               activeIdx === i
                 ? 'bg-accent/10 border-accent/60'
-                : 'bg-white/[0.02] border-white/[0.06] hover:border-accent/30 hover:bg-white/[0.04]'
-            }`}>
+                : 'glass-card glass-card-interactive'
+            }`}
+            style={activeIdx === i ? { backdropFilter: 'blur(12px) saturate(1.4)' } : undefined}>
             <s.icon className={`w-5 h-5 mb-2 transition-colors ${
               activeIdx === i ? 'text-accent' : 'text-gray-500'
             }`} />
@@ -708,7 +708,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
         {services.map((s) => (
           <div
             key={s.id}
-            className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-4 sm:p-6 lg:p-8"
+            className="glass-card rounded-3xl p-4 sm:p-6 lg:p-8"
             style={{
               minWidth: '100%',
               width: '100%',
@@ -736,7 +736,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
                 {s.features.map((feat, i) => (
-                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl">
                     <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0 mt-1" />
                     <span className="font-inter text-gray-300 text-xs sm:text-sm leading-tight">{feat}</span>
                   </div>
@@ -791,10 +791,12 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
         </span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
-      <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 md:gap-12">
-        {stats.map((s, i) => (
-          <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
-        ))}
+      <div className="glass-card rounded-2xl p-6 sm:p-10">
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 md:gap-12">
+          {stats.map((s, i) => (
+            <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -850,9 +852,9 @@ function FAQPanel({ isActive }: { isActive: boolean }) {
         <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">FAQ</span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Häufige Fragen</h2>
       </div>
-      <div>
+      <div className="space-y-2">
         {faqs.map((faq, i) => (
-          <div key={i} className="border-b border-white/[0.07]">
+          <div key={i} className="glass-card glass-card-interactive rounded-xl px-4">
             <button onClick={() => setOpen(open === i ? null : i)}
               className="w-full py-4 sm:py-5 flex items-center justify-between text-left group">
               <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6 sm:pr-8">{faq.q}</span>
@@ -915,7 +917,7 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
         </div>
 
         <div>
-          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-5 sm:p-8 mb-3 sm:mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300" data-cursor-card>
+          <div className="glass-card glass-card-interactive rounded-2xl p-5 sm:p-8 mb-3 sm:mb-4" data-cursor-card>
             <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3">Erstberatung anfragen</h3>
             <p className="font-inter text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
             <div className="space-y-3 mb-8">
@@ -934,7 +936,7 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
           </div>
 
           {/* Chatbot hint */}
-          <div className="flex items-center gap-3 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+          <div className="flex items-center gap-3 p-4 glass-card rounded-xl">
             <MessageSquare className="w-5 h-5 text-accent flex-shrink-0" />
             <p className="font-inter text-gray-400 text-sm">
               Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
