@@ -66,7 +66,7 @@ export function Services() {
   const scrollToService = (idx: number) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTo({ top: idx * el.clientHeight, behavior: 'smooth' });
+    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
     setActiveIdx(idx);
   };
 
@@ -74,7 +74,7 @@ export function Services() {
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
-      const idx = Math.round(el.scrollTop / el.clientHeight);
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
       setActiveIdx(Math.min(idx, services.length - 1));
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -130,10 +130,12 @@ export function Services() {
           data-scroll-no-bar
           style={{
             height: 'clamp(280px, 36vh, 360px)',
-            overflowY: 'scroll',
-            scrollSnapType: 'y mandatory',
+            overflowX: 'scroll',
+            scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
+            display: 'flex',
+            flexDirection: 'row',
           } as React.CSSProperties}
           className="rounded-2xl border border-dark-border bg-dark-lighter/50"
         >
@@ -143,7 +145,8 @@ export function Services() {
               <div
                 key={service.id}
                 style={{
-                  height: 'clamp(280px, 36vh, 360px)',
+                  minWidth: '100%',
+                  width: '100%',
                   scrollSnapAlign: 'start',
                   flexShrink: 0,
                 }}
