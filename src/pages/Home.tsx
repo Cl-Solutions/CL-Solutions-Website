@@ -478,6 +478,39 @@ function MagneticButton({ children, className, onClick, href, target, rel, ...re
   );
 }
 
+// ─── Typewriter hook ─────────────────────────────────────
+const TW_WORDS = ['Prozesse.', 'Leads.', 'Kommunikation.', 'Zukunft.'];
+
+function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
+  const [display, setDisplay] = useState('');
+  const [wordIdx, setWordIdx] = useState(0);
+  const [phase,   setPhase]   = useState<'typing' | 'pausing' | 'deleting'>('typing');
+
+  useEffect(() => {
+    const word = words[wordIdx];
+    let t: ReturnType<typeof setTimeout>;
+    if (phase === 'typing') {
+      if (display.length < word.length) {
+        t = setTimeout(() => setDisplay(word.slice(0, display.length + 1)), typeMs);
+      } else {
+        setPhase('pausing');
+      }
+    } else if (phase === 'pausing') {
+      t = setTimeout(() => setPhase('deleting'), pauseMs);
+    } else {
+      if (display.length > 0) {
+        t = setTimeout(() => setDisplay(display.slice(0, -1)), deleteMs);
+      } else {
+        setWordIdx((wordIdx + 1) % words.length);
+        setPhase('typing');
+      }
+    }
+    return () => clearTimeout(t);
+  }, [display, phase, wordIdx, words, typeMs, deleteMs, pauseMs]);
+
+  return display;
+}
+
 // ─── GSAP headline split animation ───────────────────────
 // Splits h2/h1 text into words and drops them in from above.
 // Subheading slides in from the left. Runs once per mount.
@@ -519,14 +552,30 @@ function useSplitHeadline(active: boolean) {
 // ─── Section content ─────────────────────────────────────
 
 function HeroPanel({ isActive }: { isActive: boolean }) {
-  const { headRef } = useSplitHeadline(isActive);
+  const word = useTypewriter(TW_WORDS);
+  const staticRef = useRef<HTMLSpanElement>(null);
+  const gsapDone  = useRef(false);
+
+  useEffect(() => {
+    if (!isActive || gsapDone.current || !staticRef.current) return;
+    gsapDone.current = true;
+    const split = new SplitText(staticRef.current, { type: 'words' });
+    gsap.from(split.words, {
+      y: -60,
+      opacity: 0,
+      duration: 0.7,
+      stagger: 0.08,
+      ease: 'power3.out',
+    });
+  }, [isActive]);
+
   return (
     <div className="max-w-5xl mx-auto text-center w-full">
-      <h1
-        ref={headRef as React.RefObject<HTMLHeadingElement>}
-        className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8"
-      >
-        Wir automatisieren. Ihr Wettbewerb schläft noch.
+      <h1 className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8">
+        <span ref={staticRef}>Wir automatisieren. Ihre </span>
+        <span style={{ color: '#00E5FF', whiteSpace: 'nowrap' }}>
+          {word}<span className="tw-cursor">|</span>
+        </span>
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.85 }}
