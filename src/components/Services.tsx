@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { Globe, MessageSquare, Phone, Workflow } from 'lucide-react';
 
 const services = [
@@ -58,9 +58,28 @@ const services = [
 ];
 
 export function Services() {
-  const [activeService, setActiveService] = useState(services[0]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  const scrollToService = (idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: idx * el.clientHeight, behavior: 'smooth' });
+    setActiveIdx(idx);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const idx = Math.round(el.scrollTop / el.clientHeight);
+      setActiveIdx(Math.min(idx, services.length - 1));
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <section id="leistungen" className="py-24 lg:py-32 bg-dark">
@@ -79,98 +98,91 @@ export function Services() {
           </h2>
         </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {services.map((service, index) => (
-            <motion.button
-              key={service.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              onClick={() => setActiveService(service)}
-              className={`px-6 py-3 rounded-full font-inter text-sm transition-all duration-300 ${
-                activeService.id === service.id
-                  ? 'bg-accent text-dark font-medium'
-                  : 'bg-dark-lighter border border-dark-border text-gray-400 hover:border-accent/50 hover:text-white'
-              }`}
-            >
-              {service.title}
-            </motion.button>
-          ))}
+        {/* Nav cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          {services.map((service, idx) => {
+            const Icon = service.icon;
+            const isActive = activeIdx === idx;
+            return (
+              <motion.button
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                onClick={() => scrollToService(idx)}
+                className={`flex flex-col items-start p-3 lg:p-4 rounded-xl border transition-all duration-300 text-left ${
+                  isActive
+                    ? 'bg-accent/10 border-accent/60 text-white'
+                    : 'bg-dark-lighter/30 border-dark-border text-gray-400 hover:border-accent/30 hover:text-gray-200'
+                }`}
+              >
+                <Icon className={`w-5 h-5 mb-2 transition-colors ${isActive ? 'text-accent' : 'text-gray-500'}`} />
+                <span className="font-syne font-semibold text-sm leading-tight">{service.title}</span>
+                <span className="font-inter text-xs text-gray-500 mt-0.5">{service.shortDesc}</span>
+              </motion.button>
+            );
+          })}
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeService.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-dark-lighter/50 border border-dark-border rounded-3xl p-8 lg:p-12"
-          >
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mb-6">
-                  <activeService.icon className="w-8 h-8 text-accent" />
+        {/* Scroll-snap container */}
+        <div
+          ref={scrollRef}
+          data-scroll-no-bar
+          style={{
+            height: 'clamp(280px, 36vh, 360px)',
+            overflowY: 'scroll',
+            scrollSnapType: 'y mandatory',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          } as React.CSSProperties}
+          className="rounded-2xl border border-dark-border bg-dark-lighter/50"
+        >
+          {services.map((service) => {
+            const Icon = service.icon;
+            return (
+              <div
+                key={service.id}
+                style={{
+                  height: 'clamp(280px, 36vh, 360px)',
+                  scrollSnapAlign: 'start',
+                  flexShrink: 0,
+                }}
+                className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-center p-6 lg:p-10"
+              >
+                {/* Left: icon, title, desc, CTA */}
+                <div className="flex flex-col justify-center">
+                  <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-accent" />
+                  </div>
+                  <h3 className="font-syne font-bold text-xl lg:text-2xl text-white mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="font-inter text-gray-400 text-sm leading-relaxed mb-4">
+                    {service.description}
+                  </p>
+                  <button
+                    onClick={() => document.querySelector('#kontakt')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="self-start px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors"
+                  >
+                    Jetzt anfragen
+                  </button>
                 </div>
 
-                <h3 className="font-syne font-bold text-2xl lg:text-3xl text-white mb-4">
-                  {activeService.title}
-                </h3>
-
-                <p className="font-inter text-gray-400 text-lg leading-relaxed mb-8">
-                  {activeService.description}
-                </p>
-
-                <button
-                  onClick={() => document.querySelector('#kontakt')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="px-6 py-3 bg-accent text-dark font-inter font-medium rounded-lg hover:bg-accent/90 transition-colors"
-                >
-                  Jetzt anfragen
-                </button>
+                {/* Right: features */}
+                <div className="space-y-2.5">
+                  {service.features.map((feature, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 px-4 py-2.5 bg-dark/50 rounded-lg border border-dark-border"
+                    >
+                      <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0" />
+                      <span className="font-inter text-sm text-gray-300">{feature}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <div className="space-y-4">
-                {activeService.features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-4 p-4 bg-dark/50 rounded-xl border border-dark-border"
-                  >
-                    <div className="w-2 h-2 bg-accent rounded-full flex-shrink-0" />
-                    <span className="font-inter text-gray-300">{feature}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-          {services.map((service, index) => (
-            <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-              whileHover={{ y: -8 }}
-              onClick={() => setActiveService(service)}
-              className={`group cursor-pointer p-6 rounded-2xl border transition-all duration-300 ${
-                activeService.id === service.id
-                  ? 'bg-accent/10 border-accent/50'
-                  : 'bg-dark-lighter/30 border-dark-border hover:border-accent/30'
-              }`}
-            >
-              <service.icon
-                className={`w-8 h-8 mb-4 transition-colors ${
-                  activeService.id === service.id ? 'text-accent' : 'text-gray-500 group-hover:text-accent'
-                }`}
-              />
-              <h4 className="font-syne font-semibold text-white mb-2">{service.title}</h4>
-              <p className="font-inter text-sm text-gray-500">{service.shortDesc}</p>
-            </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
