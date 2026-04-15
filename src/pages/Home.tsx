@@ -461,84 +461,105 @@ function ProblemPanel() {
 
 // Services section rebuilt to match main branch tab + detail + mini-cards layout
 function ServicesPanel() {
-  const [activeService, setActiveService] = useState(services[0]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const goToContact = () => {
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo({ top: (7 * SPAN + 0.05) * totalH, behavior: 'smooth' });
   };
 
+  const scrollToService = (idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: idx * el.clientHeight, behavior: 'smooth' });
+    setActiveIdx(idx);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const idx = Math.round(el.scrollTop / el.clientHeight);
+      setActiveIdx(Math.min(idx, services.length - 1));
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-10">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+      <div className="text-center mb-6">
+        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3">
           Unsere Leistungen
         </span>
         <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
       </div>
 
-      {/* Pill tabs */}
-      <div className="flex flex-wrap justify-center gap-3 mb-8">
-        {services.map((s) => (
-          <button key={s.id} onClick={() => setActiveService(s)}
-            className={`px-6 py-2.5 rounded-full font-inter text-sm transition-all duration-300 ${
-              activeService.id === s.id
-                ? 'bg-accent text-dark font-medium'
-                : 'bg-white/[0.05] border border-white/[0.08] text-gray-400 hover:border-accent/50 hover:text-white'
+      {/* Nav cards — compact, above the scroll content */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {services.map((s, i) => (
+          <button key={s.id} onClick={() => scrollToService(i)}
+            className={`text-left p-3 lg:p-4 rounded-2xl border transition-all duration-300 ${
+              activeIdx === i
+                ? 'bg-accent/10 border-accent/60'
+                : 'bg-white/[0.02] border-white/[0.06] hover:border-accent/30 hover:bg-white/[0.04]'
             }`}>
-            {s.title}
+            <s.icon className={`w-5 h-5 mb-2 transition-colors ${
+              activeIdx === i ? 'text-accent' : 'text-gray-500'
+            }`} />
+            <div className="font-syne font-semibold text-white text-sm leading-tight">{s.title}</div>
+            <div className="font-inter text-xs text-gray-500 mt-0.5 leading-tight">{s.shortDesc}</div>
           </button>
         ))}
       </div>
 
-      {/* Detail panel */}
-      <AnimatePresence mode="wait">
-        <motion.div key={activeService.id}
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}
-          className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-7 lg:p-10 mb-8">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <div>
-              <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-5">
-                <activeService.icon className="w-7 h-7 text-accent" />
+      {/* Vertical scroll container — each service gets one full panel */}
+      <div
+        ref={scrollRef}
+        data-scroll-no-bar
+        className="rounded-3xl"
+        style={{
+          height: 'clamp(280px, 36vh, 360px)',
+          overflowY: 'scroll',
+          scrollSnapType: 'y mandatory',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
+        {services.map((s) => (
+          <div
+            key={s.id}
+            className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-6 lg:p-8"
+            style={{
+              height: 'clamp(280px, 36vh, 360px)',
+              scrollSnapAlign: 'start',
+              flexShrink: 0,
+              boxSizing: 'border-box',
+            }}
+          >
+            <div className="grid lg:grid-cols-2 gap-8 h-full items-center">
+              <div>
+                <div className="w-11 h-11 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                  <s.icon className="w-5 h-5 text-accent" />
+                </div>
+                <h3 className="font-syne font-bold text-xl lg:text-2xl text-white mb-3">{s.title}</h3>
+                <p className="font-inter text-gray-400 leading-relaxed mb-5 text-sm lg:text-base">{s.description}</p>
+                <button onClick={goToContact}
+                  className="px-5 py-2.5 bg-accent text-dark font-inter font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors">
+                  Jetzt anfragen
+                </button>
               </div>
-              <h3 className="font-syne font-bold text-2xl lg:text-3xl text-white mb-4">{activeService.title}</h3>
-              <p className="font-inter text-gray-400 text-lg leading-relaxed mb-7">{activeService.description}</p>
-              <button onClick={goToContact}
-                className="px-6 py-3 bg-accent text-dark font-inter font-medium rounded-lg hover:bg-accent/90 transition-colors">
-                Jetzt anfragen
-              </button>
-            </div>
-            <div className="space-y-3">
-              {activeService.features.map((feat, i) => (
-                <motion.div key={i}
-                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className="flex items-center gap-4 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                  <div className="w-2 h-2 bg-accent rounded-full flex-shrink-0" />
-                  <span className="font-inter text-gray-300">{feat}</span>
-                </motion.div>
-              ))}
+              <div className="space-y-2">
+                {s.features.map((feat, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                    <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0" />
+                    <span className="font-inter text-gray-300 text-sm">{feat}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Mini cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {services.map((s) => (
-          <button key={s.id} onClick={() => setActiveService(s)}
-            className={`group text-left p-5 rounded-2xl border transition-all duration-300 ${
-              activeService.id === s.id
-                ? 'bg-accent/10 border-accent/50'
-                : 'bg-white/[0.02] border-white/[0.06] hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_6px_20px_rgba(0,212,255,0.1)]'
-            }`}>
-            <s.icon className={`w-7 h-7 mb-3 transition-colors ${
-              activeService.id === s.id ? 'text-accent' : 'text-gray-500 group-hover:text-accent'
-            }`} />
-            <h4 className="font-syne font-semibold text-white mb-1 text-sm">{s.title}</h4>
-            <p className="font-inter text-xs text-gray-500">{s.shortDesc}</p>
-          </button>
         ))}
       </div>
     </div>

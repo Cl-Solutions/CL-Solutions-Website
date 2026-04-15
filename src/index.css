@@ -56,6 +56,11 @@
   }
 }
 
+/* Hide scrollbar on the services scroll container while keeping functionality */
+[data-scroll-no-bar]::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes scroll-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(6px); }
