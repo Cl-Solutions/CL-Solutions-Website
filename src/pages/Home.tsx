@@ -236,7 +236,7 @@ function Panel({
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center px-6 py-24 overflow-hidden"
+      className="absolute inset-0 flex items-center justify-center px-4 sm:px-6 py-20 sm:py-20 md:py-24 overflow-hidden"
       style={{ opacity, transform, zIndex: isActive ? 20 : 10 }}
     >
       {children}
@@ -263,7 +263,7 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
   }, [active, end]);
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-7xl md:text-8xl text-white tabular-nums">
+      <div className="font-syne font-bold text-6xl sm:text-7xl md:text-8xl text-white tabular-nums">
         {count}<span className="text-accent">{suffix}</span>
       </div>
       <p className="font-inter text-gray-400 text-lg mt-4">{label}</p>
@@ -360,11 +360,13 @@ function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>;
     });
   }, [scrollYProgress]);
   return (
-    <div className="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
+    <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 sm:gap-3">
       {Array.from({ length: TOTAL }, (_, i) => (
         <button key={i} onClick={() => goTo(i)}
           className={`rounded-full transition-all duration-300 ${
-            i === cur ? 'w-2 h-4 bg-accent' : 'w-2 h-2 bg-white/20 hover:bg-white/50'
+            i === cur
+              ? 'w-1.5 h-3 sm:w-2 sm:h-4 bg-accent'
+              : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/20 hover:bg-white/50'
           }`} />
       ))}
     </div>
@@ -516,7 +518,7 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         changing the typewriter word length never causes the static
         words to reflow/jump.
       */}
-      <h1 className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8">
+      <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
         <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Ihre</span>
         <span style={{ display: 'block', color: '#00E5FF' }}>
           {word}<span className="tw-cursor">|</span>
@@ -524,14 +526,14 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.85 }}
-        className="font-inter text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12">
-        Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.<br />
+        className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-12">
+        Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.<br className="hidden sm:inline" />
         Mehr Zeit. Mehr Umsatz. Weniger Stress.
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.1 }}>
         <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-          className="inline-block px-8 py-4 bg-accent text-dark font-inter font-semibold text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
+          className="inline-block px-6 py-3 sm:px-8 sm:py-4 bg-accent text-dark font-inter font-semibold text-base sm:text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
           Kostenloses Erstgespräch
         </a>
       </motion.div>
@@ -543,22 +545,22 @@ function ProblemPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-12">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+      <div className="text-center mb-8 sm:mb-12">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           Ihr unsichtbarer Umsatzverlust
         </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white leading-tight">
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white leading-tight">
           Während Sie warten, kauft Ihr Kunde woanders
         </h2>
       </div>
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
         {problems.map((p, i) => (
-          <div key={i} className={`${CARD} p-8`}>
-            <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
-              <p.icon className="w-7 h-7 text-accent" />
+          <div key={i} className={`${CARD} p-5 sm:p-8`}>
+            <div className="w-11 h-11 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
+              <p.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
             </div>
-            <h3 className="font-syne font-semibold text-xl text-white mb-3">{p.title}</h3>
-            <p className="font-inter text-gray-400 leading-relaxed">{p.desc}</p>
+            <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{p.title}</h3>
+            <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{p.desc}</p>
           </div>
         ))}
       </div>
@@ -598,11 +600,11 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
 
   return (
     <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-6">
-        <span ref={svcSubRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3">
+      <div className="text-center mb-4 sm:mb-6">
+        <span ref={svcSubRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-2 sm:mb-3">
           Unsere Leistungen
         </span>
-        <h2 ref={svcHeadRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
+        <h2 ref={svcHeadRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
       </div>
 
       {/* Nav cards — compact, above the scroll content */}
@@ -629,7 +631,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
         data-scroll-no-bar
         className="rounded-3xl"
         style={{
-          height: 'clamp(280px, 36vh, 360px)',
+          height: 'clamp(300px, 42vh, 380px)',
           overflowX: 'scroll',
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
@@ -641,7 +643,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
         {services.map((s) => (
           <div
             key={s.id}
-            className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-6 lg:p-8"
+            className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-4 sm:p-6 lg:p-8"
             style={{
               minWidth: '100%',
               width: '100%',
@@ -650,23 +652,28 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               boxSizing: 'border-box',
             }}
           >
-            <div className="grid lg:grid-cols-2 gap-8 h-full items-center">
+            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-start lg:items-center">
               <div>
-                <div className="w-11 h-11 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
+                {/* Icon hidden on small screens to save vertical space */}
+                <div className="hidden sm:flex w-11 h-11 bg-accent/10 rounded-xl items-center justify-center mb-3 sm:mb-4">
                   <s.icon className="w-5 h-5 text-accent" />
                 </div>
-                <h3 className="font-syne font-bold text-xl lg:text-2xl text-white mb-3">{s.title}</h3>
-                <p className="font-inter text-gray-400 leading-relaxed mb-5 text-sm lg:text-base">{s.description}</p>
+                <div className="flex items-center gap-2 mb-2 sm:hidden">
+                  <s.icon className="w-4 h-4 text-accent" />
+                  <h3 className="font-syne font-bold text-lg text-white">{s.title}</h3>
+                </div>
+                <h3 className="hidden sm:block font-syne font-bold text-xl lg:text-2xl text-white mb-2 sm:mb-3">{s.title}</h3>
+                <p className="font-inter text-gray-400 leading-relaxed mb-3 sm:mb-5 text-xs sm:text-sm lg:text-base">{s.description}</p>
                 <button onClick={goToContact}
-                  className="px-5 py-2.5 bg-accent text-dark font-inter font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors">
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 bg-accent text-dark font-inter font-medium rounded-lg text-xs sm:text-sm hover:bg-accent/90 transition-colors">
                   Jetzt anfragen
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
                 {s.features.map((feat, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                    <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0" />
-                    <span className="font-inter text-gray-300 text-sm">{feat}</span>
+                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0 mt-1" />
+                    <span className="font-inter text-gray-300 text-xs sm:text-sm leading-tight">{feat}</span>
                   </div>
                 ))}
               </div>
@@ -682,24 +689,30 @@ function ProcessPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
-      <div className="text-center mb-14">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+      <div className="text-center mb-6 sm:mb-10 lg:mb-14">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           Unser Prozess
         </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
       </div>
-      <div className="grid lg:grid-cols-3 gap-8">
+      {/* Mobile: horizontal scroll with snap; desktop: 3-column grid */}
+      <div
+        className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-8 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0"
+        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        data-scroll-no-bar
+      >
         {steps.map((step, i) => (
-          <div key={i} className={`${CARD} relative p-8`}>
-            <span className="absolute -top-5 -left-2 font-syne font-bold text-8xl text-accent/10 leading-none select-none">
+          <div key={i} className={`${CARD} relative p-5 sm:p-8 flex-shrink-0 w-[78vw] sm:w-[55vw] lg:w-auto`}
+            style={{ scrollSnapAlign: 'start' }}>
+            <span className="absolute -top-4 -left-1 font-syne font-bold text-6xl sm:text-8xl text-accent/10 leading-none select-none">
               {step.num}
             </span>
-            <div className="relative pt-10">
-              <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
-                <step.icon className="w-7 h-7 text-accent" />
+            <div className="relative pt-6 sm:pt-10">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-3 sm:mb-6">
+                <step.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
               </div>
-              <h3 className="font-syne font-semibold text-xl text-white mb-3">{step.title}</h3>
-              <p className="font-inter text-gray-400 leading-relaxed">{step.desc}</p>
+              <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{step.title}</h3>
+              <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{step.desc}</p>
             </div>
           </div>
         ))}
@@ -712,13 +725,13 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-5xl mx-auto w-full">
-      <div className="text-center mb-16">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+      <div className="text-center mb-10 sm:mb-16">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           In Zahlen
         </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
-      <div className="grid md:grid-cols-3 gap-12">
+      <div className="grid md:grid-cols-3 gap-8 sm:gap-12">
         {stats.map((s, i) => (
           <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
         ))}
@@ -731,28 +744,28 @@ function AboutPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
-      <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
         <div>
-          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Über uns</span>
-          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">Wir sind CL-Solutions</h2>
-          <div className="space-y-5 font-inter text-gray-400 text-lg leading-relaxed">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">Über uns</span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">Wir sind CL-Solutions</h2>
+          <div className="space-y-3 sm:space-y-5 font-inter text-gray-400 text-sm sm:text-base lg:text-lg leading-relaxed">
             <p>Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.</p>
             <p>Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.</p>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {highlights.map((h, i) => (
-            <div key={i} className={`${CARD} flex items-start gap-4 p-5`}>
-              <div className="w-11 h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <h.icon className="w-5 h-5 text-accent" />
+            <div key={i} className={`${CARD} flex items-start gap-3 sm:gap-4 p-4 sm:p-5`}>
+              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
               </div>
               <div>
-                <h3 className="font-syne font-semibold text-white mb-0.5">{h.title}</h3>
-                <p className="font-inter text-gray-400 text-sm">{h.desc}</p>
+                <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
+                <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
               </div>
             </div>
           ))}
-          <div className="flex items-center gap-4 p-5">
+          <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
             <div className="flex -space-x-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">M</div>
@@ -773,16 +786,16 @@ function FAQPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-3xl mx-auto w-full">
-      <div className="text-center mb-10">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">FAQ</span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Häufige Fragen</h2>
+      <div className="text-center mb-6 sm:mb-10">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">FAQ</span>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Häufige Fragen</h2>
       </div>
       <div>
         {faqs.map((faq, i) => (
           <div key={i} className="border-b border-white/[0.07]">
             <button onClick={() => setOpen(open === i ? null : i)}
-              className="w-full py-5 flex items-center justify-between text-left group">
-              <span className="font-syne font-semibold text-white group-hover:text-accent transition-colors pr-8">{faq.q}</span>
+              className="w-full py-4 sm:py-5 flex items-center justify-between text-left group">
+              <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6 sm:pr-8">{faq.q}</span>
               <div className="w-9 h-9 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
                 {open === i ? <Minus className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />}
               </div>
@@ -814,16 +827,16 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
 
   return (
     <div className="max-w-6xl mx-auto w-full">
-      <div className="grid lg:grid-cols-2 gap-12 items-start">
+      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
         <div>
-          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Kontakt</span>
-          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">Kontakt</span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
             Bereit für den nächsten Schritt?
           </h2>
-          <p className="font-inter text-gray-400 text-lg leading-relaxed mb-8">
+          <p className="font-inter text-gray-400 text-sm sm:text-lg leading-relaxed mb-5 sm:mb-8">
             Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
           </p>
-          <div className={`${CARD} p-6`} data-cursor-card>
+          <div className={`${CARD} p-4 sm:p-6`} data-cursor-card>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-accent" />
@@ -842,9 +855,9 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
         </div>
 
         <div>
-          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-8 mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300" data-cursor-card>
-            <h3 className="font-syne font-bold text-2xl text-white mb-3">Erstberatung anfragen</h3>
-            <p className="font-inter text-gray-400 text-base mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
+          <div className="bg-[#0d0d0d] border border-white/[0.08] rounded-2xl p-5 sm:p-8 mb-3 sm:mb-4 hover:border-accent/30 hover:shadow-[0_8px_32px_rgba(0,212,255,0.08)] transition-all duration-300" data-cursor-card>
+            <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3">Erstberatung anfragen</h3>
+            <p className="font-inter text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
             <div className="space-y-3 mb-8">
               {['Kostenlose Analyse Ihrer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -975,8 +988,8 @@ export function Home() {
       </div>
 
       <footer className="bg-[#0a0a0a] border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 sm:py-16">
+          <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
                 <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" />
