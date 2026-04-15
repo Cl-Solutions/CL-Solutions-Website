@@ -315,7 +315,8 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
               Erstgespräch buchen
             </button>
           </div>
-          <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
+          <button className="md:hidden text-white p-3 touch-manipulation" onClick={() => setOpen(!open)}
+            aria-label={open ? 'Menü schließen' : 'Menü öffnen'}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -360,7 +361,7 @@ function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>;
     });
   }, [scrollYProgress]);
   return (
-    <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 sm:gap-3">
+    <div className="dot-nav fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 sm:gap-3">
       {Array.from({ length: TOTAL }, (_, i) => (
         <button key={i} onClick={() => goTo(i)}
           className={`rounded-full transition-all duration-300 ${
@@ -518,10 +519,12 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         changing the typewriter word length never causes the static
         words to reflow/jump.
       */}
-      <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Ihre</span>
+      <h1 className="font-syne font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
+        {/* Split at sentence boundary so "Wir automatisieren." always fits on
+            one line even on 360px phones. "Ihre [word]" is the cyan second line. */}
+        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren.</span>
         <span style={{ display: 'block', color: '#00E5FF' }}>
-          {word}<span className="tw-cursor">|</span>
+          Ihre {word}<span className="tw-cursor">|</span>
         </span>
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -533,7 +536,7 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.1 }}>
         <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-          className="inline-block px-6 py-3 sm:px-8 sm:py-4 bg-accent text-dark font-inter font-semibold text-base sm:text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
+          className="inline-block px-6 py-3 sm:px-8 sm:py-4 bg-accent text-dark font-inter font-semibold text-base sm:text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow touch-manipulation">
           Kostenloses Erstgespräch
         </a>
       </motion.div>
@@ -638,6 +641,8 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
           msOverflowStyle: 'none',
           display: 'flex',
           flexDirection: 'row',
+          overscrollBehaviorX: 'contain',  // prevents vertical page scroll from firing on horizontal swipe
+          touchAction: 'pan-x',
         }}
       >
         {services.map((s) => (
@@ -698,7 +703,7 @@ function ProcessPanel({ isActive }: { isActive: boolean }) {
       {/* Mobile: horizontal scroll with snap; desktop: 3-column grid */}
       <div
         className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-8 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0"
-        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', overscrollBehaviorX: 'contain', touchAction: 'pan-x' } as React.CSSProperties}
         data-scroll-no-bar
       >
         {steps.map((step, i) => (
@@ -847,7 +852,7 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
               </div>
             </div>
             <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-              className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
+              className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow touch-manipulation">
               Jetzt Termin buchen
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
@@ -867,7 +872,7 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
               ))}
             </div>
             <button data-tally-open="2Evere"
-              className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
+              className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group touch-manipulation">
               Jetzt Anfrage stellen
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
@@ -970,7 +975,7 @@ export function Home() {
       <Dots scrollYProgress={activeProgress} goTo={goTo} />
 
       <div style={{ height: `${TOTAL * VH_PER}vh` }} className="relative">
-        <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="sticky top-0 overflow-hidden panel-viewport">
           <StarField scrollY={scrollY} mouseX={mouseX} mouseY={mouseY} />
 
           <div className="absolute inset-0 z-10 pointer-events-none"
