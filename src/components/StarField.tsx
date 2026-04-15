@@ -156,6 +156,11 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           if (node.trail.length > 0) node.trail.shift();
           node.vx += (node.bvx - node.vx) * 0.025;
           node.vy += (node.bvy - node.vy) * 0.025;
+          // Gentle center pull — draws edge-drifted particles back into view
+          // after warp. Proportional to distance so far particles drift faster.
+          // At 600 px from center: ~0.12 px/frame² — visibly back within ~2 s.
+          node.vx += (cx - node.x) * 0.0002;
+          node.vy += (cy - node.y) * 0.0002;
         }
 
         // Move node
@@ -176,7 +181,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           const grad = ctx.createLinearGradient(
             first.x + mx, first.y + my, nx, ny
           );
-          const headAlpha = Math.min(warpFactor * 0.12, 0.05);
+          const headAlpha = Math.min(warpFactor * 0.65, 0.6);
           grad.addColorStop(0, 'rgba(0,229,255,0)');
           grad.addColorStop(1, `rgba(0,229,255,${headAlpha})`);
 
