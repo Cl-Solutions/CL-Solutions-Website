@@ -237,8 +237,15 @@ function Panel({
   return (
     <motion.div
       className="absolute inset-0 flex items-start sm:items-center justify-center px-4 sm:px-6 overflow-hidden"
-      style={{ paddingTop: 'min(80px, 15vh)', paddingBottom: 'min(80px, 15vh)' } as React.CSSProperties}
-      style={{ opacity, transform, zIndex: isActive ? 20 : 10 }}
+      style={{
+        // Merge padding + animation styles into one object (React ignores duplicate style props)
+        // Mobile: items-start + paddingTop ensures headline clears the 80px navbar
+        paddingTop:    'clamp(88px, 14vh, 96px)',
+        paddingBottom: 'clamp(40px, 8vh,  96px)',
+        opacity,
+        transform,
+        zIndex: isActive ? 20 : 10,
+      }}
     >
       {children}
     </motion.div>
@@ -264,7 +271,7 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
   }, [active, end]);
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-6xl sm:text-7xl md:text-8xl text-white tabular-nums">
+      <div className="font-syne font-bold text-4xl sm:text-6xl md:text-8xl text-white tabular-nums">
         {count}<span className="text-accent">{suffix}</span>
       </div>
       <p className="font-inter text-gray-400 text-lg mt-4">{label}</p>
@@ -295,8 +302,10 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color] duration-300 ${
-          scrolled ? 'bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5' : ''
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color] duration-300 border-b border-white/5 ${
+          scrolled
+            ? 'bg-[#0a0a0a]/90 backdrop-blur-md'
+            : 'bg-[rgba(10,10,10,0.95)] md:bg-transparent md:border-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
@@ -528,8 +537,8 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.85 }}
         className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-12">
-        Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.<br className="hidden sm:inline" />
-        Mehr Zeit. Mehr Umsatz. Weniger Stress.
+        Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.{' '}
+        <br className="hidden sm:inline" />Mehr Zeit. Mehr Umsatz. Weniger Stress.
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.1 }}>
@@ -721,13 +730,13 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-5xl mx-auto w-full">
-      <div className="text-center mb-10 sm:mb-16">
+      <div className="text-center mb-6 sm:mb-16">
         <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           In Zahlen
         </span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
-      <div className="grid md:grid-cols-3 gap-8 sm:gap-12">
+      <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 md:gap-12">
         {stats.map((s, i) => (
           <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
         ))}
