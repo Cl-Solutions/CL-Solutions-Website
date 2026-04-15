@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { gsap } from 'gsap';
+import { SplitText } from 'gsap/SplitText';
+gsap.registerPlugin(SplitText);
 import {
   motion,
   useScroll,
@@ -402,29 +405,64 @@ const CARD = `
   transition-all duration-300 ease-out
 `.replace(/\s+/g, ' ').trim();
 
+// ─── GSAP headline split animation ───────────────────────
+// Splits h2/h1 text into words and drops them in from above.
+// Subheading slides in from the left. Runs once per mount.
+function useSplitHeadline(active: boolean) {
+  const headRef = useRef<HTMLElement>(null);
+  const subRef  = useRef<HTMLElement>(null);
+  const done    = useRef(false);
+
+  useEffect(() => {
+    if (!active || done.current) return;
+    const head = headRef.current;
+    const sub  = subRef.current;
+    if (!head) return;
+    done.current = true;
+
+    const split = new SplitText(head, { type: 'words' });
+    gsap.from(split.words, {
+      y: -60,
+      opacity: 0,
+      duration: 0.7,
+      stagger: 0.08,
+      ease: 'power3.out',
+    });
+
+    if (sub) {
+      gsap.from(sub, {
+        x: -30,
+        opacity: 0,
+        duration: 0.55,
+        delay: 0.12,
+        ease: 'power3.out',
+      });
+    }
+  }, [active]);
+
+  return { headRef, subRef };
+}
+
 // ─── Section content ─────────────────────────────────────
 
-function HeroPanel() {
-  const words = 'Wir automatisieren. Ihr Wettbewerb schläft noch.'.split(' ');
+function HeroPanel({ isActive }: { isActive: boolean }) {
+  const { headRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-5xl mx-auto text-center w-full">
-      <h1 className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8">
-        {words.map((word, i) => (
-          <motion.span key={i} className="inline-block mr-[0.25em]"
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}>
-            {word}
-          </motion.span>
-        ))}
+      <h1
+        ref={headRef as React.RefObject<HTMLHeadingElement>}
+        className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8"
+      >
+        Wir automatisieren. Ihr Wettbewerb schläft noch.
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.05 }}
+        transition={{ duration: 0.6, delay: 0.85 }}
         className="font-inter text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12">
         Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.<br />
         Mehr Zeit. Mehr Umsatz. Weniger Stress.
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.3 }}>
+        transition={{ duration: 0.6, delay: 1.1 }}>
         <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
           className="inline-block px-8 py-4 bg-accent text-dark font-inter font-semibold text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
           Kostenloses Erstgespräch
@@ -434,15 +472,16 @@ function HeroPanel() {
   );
 }
 
-function ProblemPanel() {
+function ProblemPanel({ isActive }: { isActive: boolean }) {
+  const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-7xl mx-auto w-full">
       <div className="text-center mb-12">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
           Ihr unsichtbarer Umsatzverlust
         </span>
-        <h2 className="font-syne font-bold text-4xl md:text-5xl text-white leading-tight">
-          Während Sie warten, kauft<br />Ihr Kunde woanders
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white leading-tight">
+          Während Sie warten, kauft Ihr Kunde woanders
         </h2>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
@@ -461,7 +500,7 @@ function ProblemPanel() {
 }
 
 // Services section rebuilt to match main branch tab + detail + mini-cards layout
-function ServicesPanel() {
+function ServicesPanel({ isActive }: { isActive: boolean }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -488,13 +527,15 @@ function ServicesPanel() {
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
+  const { headRef: svcHeadRef, subRef: svcSubRef } = useSplitHeadline(isActive);
+
   return (
     <div className="max-w-7xl mx-auto w-full">
       <div className="text-center mb-6">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3">
+        <span ref={svcSubRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3">
           Unsere Leistungen
         </span>
-        <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
+        <h2 ref={svcHeadRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
       </div>
 
       {/* Nav cards — compact, above the scroll content */}
@@ -570,14 +611,15 @@ function ServicesPanel() {
   );
 }
 
-function ProcessPanel() {
+function ProcessPanel({ isActive }: { isActive: boolean }) {
+  const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
       <div className="text-center mb-14">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
           Unser Prozess
         </span>
-        <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
       </div>
       <div className="grid lg:grid-cols-3 gap-8">
         {steps.map((step, i) => (
@@ -599,14 +641,15 @@ function ProcessPanel() {
   );
 }
 
-function NumbersPanel({ active }: { active: boolean }) {
+function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean }) {
+  const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-5xl mx-auto w-full">
       <div className="text-center mb-16">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">
           In Zahlen
         </span>
-        <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
       <div className="grid md:grid-cols-3 gap-12">
         {stats.map((s, i) => (
@@ -617,13 +660,14 @@ function NumbersPanel({ active }: { active: boolean }) {
   );
 }
 
-function AboutPanel() {
+function AboutPanel({ isActive }: { isActive: boolean }) {
+  const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
       <div className="grid lg:grid-cols-2 gap-16 items-center">
         <div>
-          <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Über uns</span>
-          <h2 className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">Wir sind CL-Solutions</h2>
+          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Über uns</span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">Wir sind CL-Solutions</h2>
           <div className="space-y-5 font-inter text-gray-400 text-lg leading-relaxed">
             <p>Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.</p>
             <p>Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.</p>
@@ -657,13 +701,14 @@ function AboutPanel() {
   );
 }
 
-function FAQPanel() {
+function FAQPanel({ isActive }: { isActive: boolean }) {
   const [open, setOpen] = useState<number | null>(0);
+  const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-3xl mx-auto w-full">
       <div className="text-center mb-10">
-        <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">FAQ</span>
-        <h2 className="font-syne font-bold text-4xl md:text-5xl text-white">Häufige Fragen</h2>
+        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">FAQ</span>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white">Häufige Fragen</h2>
       </div>
       <div>
         {faqs.map((faq, i) => (
@@ -690,7 +735,8 @@ function FAQPanel() {
   );
 }
 
-function ContactPanel() {
+function ContactPanel({ isActive }: { isActive: boolean }) {
+  const { headRef, subRef } = useSplitHeadline(isActive);
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://tally.so/widgets/embed.js';
@@ -703,9 +749,9 @@ function ContactPanel() {
     <div className="max-w-6xl mx-auto w-full">
       <div className="grid lg:grid-cols-2 gap-12 items-start">
         <div>
-          <span className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Kontakt</span>
-          <h2 className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">
-            Bereit für den<br />nächsten Schritt?
+          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-4">Kontakt</span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-4xl md:text-5xl text-white mb-6">
+            Bereit für den nächsten Schritt?
           </h2>
           <p className="font-inter text-gray-400 text-lg leading-relaxed mb-8">
             Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
@@ -821,16 +867,19 @@ export function Home() {
     window.scrollTo({ top: Math.max(0, (index * SPAN + 0.05) * totalH), behavior: 'smooth' });
   };
 
-  const sections: React.ReactNode[] = [
-    <HeroPanel />,
-    <ProblemPanel />,
-    <ServicesPanel />,
-    <ProcessPanel />,
-    <NumbersPanel active={numbersActive} />,
-    <AboutPanel />,
-    <FAQPanel />,
-    <ContactPanel />,
-  ];
+  const renderSection = useCallback((i: number, isActive: boolean): React.ReactNode => {
+    switch (i) {
+      case 0: return <HeroPanel    isActive={isActive} />;
+      case 1: return <ProblemPanel isActive={isActive} />;
+      case 2: return <ServicesPanel isActive={isActive} />;
+      case 3: return <ProcessPanel isActive={isActive} />;
+      case 4: return <NumbersPanel active={numbersActive} isActive={isActive} />;
+      case 5: return <AboutPanel   isActive={isActive} />;
+      case 6: return <FAQPanel     isActive={isActive} />;
+      case 7: return <ContactPanel isActive={isActive} />;
+      default: return null;
+    }
+  }, [numbersActive]);
 
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
@@ -848,10 +897,10 @@ export function Home() {
             style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
 
           <div className="absolute inset-0 z-20">
-            {sections.map((content, i) => (
+            {Array.from({ length: TOTAL }, (_, i) => (
               <Panel key={i} scrollYProgress={activeProgress} index={i}
                 isActive={i === activeSectionIdx} isLast={i === TOTAL - 1}>
-                {content}
+                {renderSection(i, i === activeSectionIdx)}
               </Panel>
             ))}
           </div>
