@@ -493,15 +493,12 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
   const staticRef = useRef<HTMLSpanElement>(null);
   const gsapDone  = useRef(false);
 
-  // Hide before first paint — same pattern as useSplitHeadline
+  // Run in useLayoutEffect so GSAP sets the from-state (opacity:0, y:-60)
+  // synchronously before the first browser paint — no separate pre-hide needed.
+  // Hero is always active from load, so this fires immediately on mount.
   useLayoutEffect(() => {
-    if (staticRef.current) staticRef.current.style.opacity = '0';
-  }, []);
-
-  useEffect(() => {
     if (!isActive || gsapDone.current || !staticRef.current) return;
     gsapDone.current = true;
-    gsap.set(staticRef.current, { opacity: 1 });
     const split = new SplitText(staticRef.current, { type: 'words' });
     gsap.from(split.words, {
       y: -60,
@@ -514,9 +511,14 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
 
   return (
     <div className="max-w-5xl mx-auto text-center w-full">
+      {/*
+        Static text and typewriter are separate block lines so that
+        changing the typewriter word length never causes the static
+        words to reflow/jump.
+      */}
       <h1 className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight mb-8">
-        <span ref={staticRef}>Wir automatisieren. Ihre </span>
-        <span style={{ color: '#00E5FF', whiteSpace: 'nowrap' }}>
+        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Ihre</span>
+        <span style={{ display: 'block', color: '#00E5FF' }}>
           {word}<span className="tw-cursor">|</span>
         </span>
       </h1>
