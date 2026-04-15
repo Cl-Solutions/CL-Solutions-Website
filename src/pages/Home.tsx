@@ -236,7 +236,8 @@ function Panel({
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center px-4 sm:px-6 py-20 sm:py-20 md:py-24 overflow-hidden"
+      className="absolute inset-0 flex items-start sm:items-center justify-center px-4 sm:px-6 overflow-hidden"
+      style={{ paddingTop: 'min(80px, 15vh)', paddingBottom: 'min(80px, 15vh)' } as React.CSSProperties}
       style={{ opacity, transform, zIndex: isActive ? 20 : 10 }}
     >
       {children}
@@ -383,7 +384,7 @@ function ScrollArrow({ scrollYProgress }: { scrollYProgress: MotionValue<number>
 
   return (
     <motion.div
-      className="fixed bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center gap-0.5"
+      className="fixed bottom-4 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center gap-0.5"
       style={{ opacity }}
     >
       <div className="animate-scroll-bounce flex flex-col items-center">
@@ -695,15 +696,10 @@ function ProcessPanel({ isActive }: { isActive: boolean }) {
         </span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
       </div>
-      {/* Mobile: horizontal scroll with snap; desktop: 3-column grid */}
-      <div
-        className="flex lg:grid lg:grid-cols-3 gap-4 lg:gap-8 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0"
-        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-        data-scroll-no-bar
-      >
+      {/* Mobile: vertical stack; desktop: 3-column grid */}
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8">
         {steps.map((step, i) => (
-          <div key={i} className={`${CARD} relative p-5 sm:p-8 flex-shrink-0 w-[78vw] sm:w-[55vw] lg:w-auto`}
-            style={{ scrollSnapAlign: 'start' }}>
+          <div key={i} className={`${CARD} relative p-5 sm:p-8`}>
             <span className="absolute -top-4 -left-1 font-syne font-bold text-6xl sm:text-8xl text-accent/10 leading-none select-none">
               {step.num}
             </span>
