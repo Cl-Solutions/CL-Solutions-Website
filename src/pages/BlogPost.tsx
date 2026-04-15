@@ -37,8 +37,19 @@ export function BlogPost() {
         </div>
       </nav>
 
+      {/* Mobile back button — fixed below navbar, only on small screens */}
+      <div className="md:hidden fixed top-20 left-0 right-0 z-40 px-4 py-2 bg-[rgba(10,10,10,0.85)] backdrop-blur-sm">
+        <Link
+          to="/blog"
+          className="inline-flex items-center gap-1.5 font-inter text-sm text-[#00E5FF]"
+        >
+          <span>←</span>
+          <span>Zurück</span>
+        </Link>
+      </div>
+
       {/* Article */}
-      <div className="pt-32 pb-24 px-6">
+      <div className="pt-32 md:pt-32 pb-24 px-6" style={{ paddingTop: 'clamp(112px, 16vh, 128px)' }}>
         <div className="max-w-[720px] mx-auto">
 
           {/* Back link */}

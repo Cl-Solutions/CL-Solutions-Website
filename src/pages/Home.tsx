@@ -638,6 +638,14 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const goToContact = () => {
+    if (window.innerWidth <= 768) {
+      const el = document.getElementById('ms-7');
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+      return;
+    }
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo({ top: (7 * SPAN + 0.05) * totalH, behavior: 'smooth' });
   };
@@ -1009,7 +1017,11 @@ export function Home() {
 
   const goTo = (index: number) => {
     if (isMobile) {
-      document.getElementById(`ms-${index}`)?.scrollIntoView({ behavior: 'smooth' });
+      const el = document.getElementById(`ms-${index}`);
+      if (el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
       return;
     }
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
