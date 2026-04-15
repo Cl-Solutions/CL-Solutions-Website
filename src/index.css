@@ -5,14 +5,10 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* Prevent horizontal overflow on mobile */
-    overflow-x: hidden;
   }
 
   body {
     @apply bg-dark text-white font-inter antialiased;
-    /* Prevent iOS rubber-band horizontal scroll */
-    overflow-x: hidden;
   }
 
   @media (min-width: 1024px) {
@@ -113,40 +109,4 @@
 
 .animate-scroll-bounce {
   animation: scroll-bounce 1.7s ease-in-out infinite;
-}
-
-/* ── iOS viewport height fix ─────────────────────────────────────────────────
-   100vh on iOS Safari includes the address bar, clipping content below it.
-   100svh (small viewport height) uses only the stable visible area.
-   Supported: iOS Safari 15.4+, Chrome 108+, Firefox 101+ (≈ 97% of mobile).
-   Fallback: 100vh keeps the layout intact on older browsers.              */
-.panel-viewport {
-  height: 100vh;
-  height: 100svh;
-}
-
-/* ── Reduced-motion: disable the 3D scroll animation ────────────────────────
-   Users who prefer reduced motion get a static card at opacity 1 instead of
-   the flying 3D transition.                                               */
-@media (prefers-reduced-motion: reduce) {
-  /* Kill all CSS transitions and animations globally */
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-  }
-}
-
-/* ── Mobile: minimum touch target size ──────────────────────────────────────
-   Buttons inside the scroll panels occasionally render below 44px on xs.
-   This ensures all buttons and anchors meet the Apple HIG 44×44pt minimum. */
-@media (max-width: 640px) {
-  button, a {
-    min-height: 44px;
-  }
-  /* …except decorative/structural elements */
-  .dot-nav button {
-    min-height: unset;
-  }
 }

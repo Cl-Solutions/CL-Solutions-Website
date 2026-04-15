@@ -1,22 +1,30 @@
 /**
  * NetworkField — connected blue-dot particle network with hyperspace warp.
  *
- * Mobile: node count reduced 40%, connection lines skipped entirely.
- *         Canvas pixel size stays at CSS pixels (no DPR scaling) so
- *         drawing stays cheap on high-DPR mobile screens.
+ * At rest:   slow-moving #00D4FF nodes connected by proximity lines.
+ *
+ * On scroll: scroll velocity is tracked via a scroll event listener
+ *            (not MotionValue polling, so it fires reliably).
+ *            Each node accumulates a trail of past positions — the trail
+ *            length is proportional to scroll speed. Nodes also receive a
+ *            centrifugal nudge (away from the viewport centre), making them
+ *            stream outward like classic Star-Wars hyperspace streaks.
+ *            Connection lines fade out during warp.
+ *
+ * When scroll stops: trails drain gradually and centrifugal bias is removed
+ *                    as velocities ease back to their original base values.
  */
 import { useEffect, useRef } from 'react';
 import { MotionValue } from 'framer-motion';
 
 const NODE_COUNT    = 85;
-const NODE_COUNT_MOBILE = 50;   // 40% reduction on touch devices
-const CONNECT_DIST  = 130;      // px — max connection-line distance
-const MAX_WARP_MULT = 14;       // top speed multiplier at full warp
-const TRAIL_MAX     = 38;       // max trail history points per node
+const CONNECT_DIST  = 130;   // px — max connection-line distance
+const MAX_WARP_MULT = 14;    // top speed multiplier at full warp
+const TRAIL_MAX     = 38;    // max trail history points per node
 
-const STREAK_MAX_AGE = 800;     // ms — hard lifetime cap per streak
-const TRAIL_DRAIN    = 3;       // trail points removed per frame when not warping
-                                // 38 pts / 3 / 60fps ≈ 210ms → well within 600ms spec
+const STREAK_MAX_AGE = 800;  // ms — hard lifetime cap per streak
+const TRAIL_DRAIN    = 3;    // trail points removed per frame when not warping
+                             // 38 pts / 3 / 60fps ≈ 210ms → well within 600ms spec
 
 interface Node {
   x: number; y: number;
@@ -58,10 +66,6 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Detect touch/mobile once — drives particle count and feature toggles
-    const isMobile = 'ontouchstart' in window || window.innerWidth <= 768;
-    const activeNodeCount = isMobile ? NODE_COUNT_MOBILE : NODE_COUNT;
-
     let raf: number;
     let nodes: Node[] = [];
     let warpFactor  = 0;
@@ -83,16 +87,12 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const resize = () => {
-      // Keep canvas at CSS pixel dimensions (no DPR scaling).
-      // On a 3× DPR phone this means we draw at 390px not 1170px — intentional:
-      // drawing 9× fewer pixels is more important than crisp dots in a BG effect.
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
-      nodes = Array.from({ length: activeNodeCount }, () =>
+      nodes = Array.from({ length: NODE_COUNT }, () =>
         makeNode(canvas.width, canvas.height)
       );
     };
-    window.addEventListener('resize', resize, { passive: true });
 
     const frame = () => {
       const w  = canvas.width;
@@ -100,7 +100,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
       const cx = w / 2;
       const cy = h / 2;
 
-      // Parallax offset from mouse (spring-smoothed upstream; zero on touch)
+      // Parallax offset from mouse (spring-smoothed upstream)
       const mx = (mouseX?.get() ?? 0) * 0.14;
       const my = (mouseY?.get() ?? 0) * 0.14;
 
@@ -112,16 +112,17 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
 
       // ── Full clear every frame ────────────────────────────────
       // clearRect eliminates ALL residual content so streaks can never
-      // accumulate across scroll cycles.
+      // accumulate across scroll cycles. Trails are redrawn from the
+      // node.trail array, which is the authoritative source of truth.
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, w, h);
 
       const speedMult = 1 + warpFactor * MAX_WARP_MULT;
 
-      // ── Connection lines (desktop only — too expensive on mobile) ─
+      // ── Connection lines (fade during warp) ───────────────────
       const lineAlpha = Math.max(0, 1 - warpFactor * 2.5);
-      if (!isMobile && lineAlpha > 0.01) {
+      if (lineAlpha > 0.01) {
         ctx.lineWidth = 0.8;
         for (let i = 0; i < nodes.length; i++) {
           for (let j = i + 1; j < nodes.length; j++) {
@@ -195,7 +196,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
 
         // ── Warp streak (trail) ────────────────────────────────
         // 'screen' compositing prevents overlapping streaks from additively
-        // stacking into bright blocks — each streak is capped at 0.15 alpha
+        // stacking into bright blocks — each streak is capped at 0.2 alpha
         // and screen blending keeps their union below saturating white.
         if (node.trail.length > 1) {
           const first = node.trail[0];
@@ -232,6 +233,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
     };
 
     resize();
+    window.addEventListener('resize', resize);
     frame();
 
     return () => {
@@ -245,7 +247,7 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.85, willChange: 'transform' }}
+      style={{ opacity: 0.85 }}
     />
   );
 }
