@@ -310,10 +310,10 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
                 {item.label}
               </button>
             ))}
-            <button onClick={() => goTo(7)}
+            <MagneticButton onClick={() => goTo(7)}
               className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors">
               Erstgespräch buchen
-            </button>
+            </MagneticButton>
           </div>
           <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
             {open ? <X size={24} /> : <Menu size={24} />}
@@ -337,13 +337,14 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
                 {item.label}
               </motion.button>
             ))}
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: NAV_ITEMS.length * 0.05 }}
-              onClick={() => { goTo(7); setOpen(false); }}
-              className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg">
-              Erstgespräch buchen
-            </motion.button>
+              transition={{ delay: NAV_ITEMS.length * 0.05 }}>
+              <MagneticButton onClick={() => { goTo(7); setOpen(false); }}
+                className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg">
+                Erstgespräch buchen
+              </MagneticButton>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -405,6 +406,78 @@ const CARD = `
   transition-all duration-300 ease-out
 `.replace(/\s+/g, ' ').trim();
 
+// ─── Magnetic button ─────────────────────────────────────
+// On hover: button drifts toward cursor (max 12px). On leave: springs back.
+// Inner text also shifts slightly for a depth parallax feel.
+type MagneticProps = React.PropsWithChildren<{
+  className?: string;
+  onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
+  'data-tally-open'?: string;
+}>;
+
+function MagneticButton({ children, className, onClick, href, target, rel, ...rest }: MagneticProps) {
+  const btnRef  = useRef<HTMLElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = btn.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const dx = (e.clientX - cx) / (rect.width  / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+      btn.style.transform = `translate(${dx * 12}px, ${dy * 12}px)`;
+      if (textRef.current) {
+        textRef.current.style.transform = `translate(${dx * 5}px, ${dy * 5}px)`;
+      }
+    };
+
+    const onEnter = () => {
+      btn.style.transition  = 'transform 0.15s ease';
+      if (textRef.current) textRef.current.style.transition = 'transform 0.15s ease';
+    };
+
+    const onLeave = () => {
+      btn.style.transition  = 'transform 0.6s cubic-bezier(0.23,1,0.32,1)';
+      btn.style.transform   = 'translate(0px,0px)';
+      if (textRef.current) {
+        textRef.current.style.transition  = 'transform 0.6s cubic-bezier(0.23,1,0.32,1)';
+        textRef.current.style.transform   = 'translate(0px,0px)';
+      }
+    };
+
+    btn.addEventListener('mouseenter', onEnter);
+    btn.addEventListener('mousemove',  onMove);
+    btn.addEventListener('mouseleave', onLeave);
+    return () => {
+      btn.removeEventListener('mouseenter', onEnter);
+      btn.removeEventListener('mousemove',  onMove);
+      btn.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
+  const inner = <span ref={textRef} style={{ display: 'inline-flex', alignItems: 'center', gap: 'inherit' }}>{children}</span>;
+
+  if (href) {
+    return (
+      <a ref={btnRef as React.RefObject<HTMLAnchorElement>} href={href} target={target} rel={rel} className={className}>
+        {inner}
+      </a>
+    );
+  }
+  return (
+    <button ref={btnRef as React.RefObject<HTMLButtonElement>} className={className} onClick={onClick} {...rest}>
+      {inner}
+    </button>
+  );
+}
+
 // ─── GSAP headline split animation ───────────────────────
 // Splits h2/h1 text into words and drops them in from above.
 // Subheading slides in from the left. Runs once per mount.
@@ -463,10 +536,11 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.1 }}>
-        <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+        <MagneticButton
+          href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
           className="inline-block px-8 py-4 bg-accent text-dark font-inter font-semibold text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
           Kostenloses Erstgespräch
-        </a>
+        </MagneticButton>
       </motion.div>
     </div>
   );
@@ -590,10 +664,10 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
                 </div>
                 <h3 className="font-syne font-bold text-xl lg:text-2xl text-white mb-3">{s.title}</h3>
                 <p className="font-inter text-gray-400 leading-relaxed mb-5 text-sm lg:text-base">{s.description}</p>
-                <button onClick={goToContact}
+                <MagneticButton onClick={goToContact}
                   className="px-5 py-2.5 bg-accent text-dark font-inter font-medium rounded-lg text-sm hover:bg-accent/90 transition-colors">
                   Jetzt anfragen
-                </button>
+                </MagneticButton>
               </div>
               <div className="space-y-2">
                 {s.features.map((feat, i) => (
@@ -766,11 +840,11 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
                 <p className="font-inter text-gray-500 text-sm">30 Min., kostenlos &amp; unverbindlich</p>
               </div>
             </div>
-            <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+            <MagneticButton href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
               className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
               Jetzt Termin buchen
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </MagneticButton>
           </div>
         </div>
 
@@ -786,11 +860,11 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
                 </div>
               ))}
             </div>
-            <button data-tally-open="2Evere"
+            <MagneticButton data-tally-open="2Evere"
               className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
               Jetzt Anfrage stellen
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </MagneticButton>
           </div>
 
           {/* Chatbot hint */}
