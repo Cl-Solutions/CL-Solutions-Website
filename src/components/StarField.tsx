@@ -22,12 +22,17 @@ const CONNECT_DIST  = 130;   // px — max connection-line distance
 const MAX_WARP_MULT = 14;    // top speed multiplier at full warp
 const TRAIL_MAX     = 38;    // max trail history points per node
 
+const STREAK_MAX_AGE = 800;  // ms — hard lifetime cap per streak
+const TRAIL_DRAIN    = 3;    // trail points removed per frame when not warping
+                             // 38 pts / 3 / 60fps ≈ 210ms → well within 600ms spec
+
 interface Node {
   x: number; y: number;
   vx: number; vy: number;
   bvx: number; bvy: number;  // base velocity — restored after warp
   size: number;
   trail: { x: number; y: number }[];
+  trailBirth: number;         // performance.now() when trail started; 0 = no trail
 }
 
 function makeNode(w: number, h: number): Node {
@@ -42,6 +47,7 @@ function makeNode(w: number, h: number): Node {
     bvx: vx, bvy: vy,
     size: Math.random() * 1.8 + 0.8,
     trail: [],
+    trailBirth: 0,
   };
 }
 
@@ -102,10 +108,14 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
       scrollVel  *= 0.88;
       warpFactor += (scrollVel - warpFactor) * 0.14;
 
-      // ── Background clear (motion-blur layer) ──────────────────
-      // Lower alpha = slower clearing = longer visible trails
-      const clearAlpha = 0.16 + warpFactor * 0.09;
-      ctx.fillStyle = `rgba(10,10,10,${clearAlpha})`;
+      const now = performance.now();
+
+      // ── Full clear every frame ────────────────────────────────
+      // clearRect eliminates ALL residual content so streaks can never
+      // accumulate across scroll cycles. Trails are redrawn from the
+      // node.trail array, which is the authoritative source of truth.
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, w, h);
 
       const speedMult = 1 + warpFactor * MAX_WARP_MULT;
@@ -136,10 +146,20 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
         const warping = warpFactor > 0.05;
 
         if (warping) {
-          // Store position BEFORE moving (trail = path the node just came from)
-          node.trail.push({ x: node.x, y: node.y });
-          const maxLen = Math.max(2, Math.floor(warpFactor * TRAIL_MAX));
-          while (node.trail.length > maxLen) node.trail.shift();
+          // Record birth time when trail first starts growing
+          if (node.trail.length === 0) node.trailBirth = now;
+
+          // Hard age cap: expire streak after STREAK_MAX_AGE ms so that
+          // long scroll sessions cannot accumulate infinite trail history.
+          if (now - node.trailBirth > STREAK_MAX_AGE) {
+            node.trail = [];
+            node.trailBirth = 0;
+          } else {
+            // Store position BEFORE moving (trail = path node just came from)
+            node.trail.push({ x: node.x, y: node.y });
+            const maxLen = Math.max(2, Math.floor(warpFactor * TRAIL_MAX));
+            while (node.trail.length > maxLen) node.trail.shift();
+          }
 
           // Centrifugal bias — push nodes away from the viewport centre,
           // simulating the viewer accelerating forward through the field.
@@ -152,8 +172,13 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           const spd = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
           if (spd > 2.0) { node.vx = (node.vx / spd) * 2.0; node.vy = (node.vy / spd) * 2.0; }
         } else {
-          // Drain trail gradually (one point per frame) and ease back to base velocity
-          if (node.trail.length > 0) node.trail.shift();
+          // Drain TRAIL_DRAIN points per frame — empties a full trail in
+          // ~210ms at 60fps, satisfying the ≤600ms cleanup requirement.
+          for (let d = 0; d < TRAIL_DRAIN; d++) {
+            if (node.trail.length === 0) break;
+            node.trail.shift();
+          }
+          if (node.trail.length === 0) node.trailBirth = 0;
           node.vx += (node.bvx - node.vx) * 0.025;
           node.vy += (node.bvy - node.vy) * 0.025;
         }
