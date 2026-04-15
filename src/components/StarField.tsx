@@ -156,11 +156,6 @@ export function StarField({ mouseX, mouseY }: NetworkFieldProps) {
           if (node.trail.length > 0) node.trail.shift();
           node.vx += (node.bvx - node.vx) * 0.025;
           node.vy += (node.bvy - node.vy) * 0.025;
-          // Gentle center pull — draws edge-drifted particles back into view
-          // after warp. Proportional to distance so far particles drift faster.
-          // At 600 px from center: ~0.12 px/frame² — visibly back within ~2 s.
-          node.vx += (cx - node.x) * 0.0002;
-          node.vy += (cy - node.y) * 0.0002;
         }
 
         // Move node
