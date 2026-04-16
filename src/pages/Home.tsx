@@ -125,10 +125,10 @@ const highlights = [
 ];
 
 const faqs = [
+  { q: 'Funktioniert das auch für meine Branche?', a: 'Ja. Unsere Lösungen sind branchenunabhängig und werden individuell angepasst. Ob Handwerk, Dienstleistung oder E-Commerce.' },
   { q: 'Was kostet das?',                         a: 'Jede Leistung ist einzeln buchbar. Unsere Preise bestehen aus einer einmaligen Setup-Gebühr und einem optionalen monatlichen Support-Paket. Buchen Sie ein kostenloses Erstgespräch für ein unverbindliches Angebot.' },
   { q: 'Wie lange dauert die Umsetzung?',          a: 'Die meisten Projekte sind innerhalb von 2–4 Wochen einsatzbereit. Kleinere Automatisierungen können in wenigen Tagen umgesetzt werden.' },
   { q: 'Brauche ich technisches Wissen?',          a: 'Nein. Wir kümmern uns um alles Technische. Sie müssen nur wissen, welche Prozesse Sie verbessern möchten — wir zeigen Ihnen die Möglichkeiten.' },
-  { q: 'Funktioniert das auch für meine Branche?', a: 'Ja. Unsere Lösungen sind branchenunabhängig und werden individuell angepasst. Ob Handwerk, Dienstleistung oder E-Commerce.' },
   { q: 'Ist das DSGVO-konform?',                   a: 'Absolut. Als deutsches Unternehmen legen wir großen Wert auf Datenschutz. Alle Lösungen sind DSGVO-konform.' },
   { q: 'Was passiert nach der Umsetzung?',         a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
 ];
