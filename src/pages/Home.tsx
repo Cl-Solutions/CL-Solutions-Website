@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 gsap.registerPlugin(SplitText);
@@ -45,39 +45,13 @@ const EXIT_END_FRAC  = 0.58;
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
-  { icon: Globe,  title: 'Kein professioneller Webauftritt?',    desc: 'Ihre Website ist Ihr erster Eindruck — rund um die Uhr. Wer online nicht überzeugt, verliert Kunden, bevor das erste Gespräch stattfindet.' },
   { icon: UserX,  title: 'Prozesse noch manuell?',               desc: 'Excel, Copy-Paste, manuelle Mails. Während Sie tippen, skaliert Ihre Konkurrenz bereits automatisiert — ohne zusätzliches Personal.' },
   { icon: Clock,  title: 'Kein System, das für Sie arbeitet?',   desc: 'Anfragen kommen auch nachts und am Wochenende. Ohne Automatisierung sind Sie an Ihre eigene Arbeitszeit gebunden — und das limitiert Ihr Wachstum.' },
+  { icon: Globe,  title: 'Kein professioneller Webauftritt?',    desc: 'Ihre Website ist Ihr erster Eindruck — rund um die Uhr. Wer online nicht überzeugt, verliert Kunden, bevor das erste Gespräch stattfindet.' },
 ];
 
-// Services: 4 cards (KI-Chatbot + Voice Agent merged into KI-Kommunikation)
+// Services: 4 cards — order: Prozessautomatisierung, Individuelle KI-Lösungen, Website, KI-Kommunikation
 const services = [
-  {
-    id: 'website',
-    icon: Globe,
-    title: 'Website',
-    shortDesc: 'Professionelle Präsenz',
-    description: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen.',
-    features: [
-      'Mehr Besucher, die zu Kunden werden',
-      'Schnell, modern & auf allen Geräten',
-      'SEO-optimiert für mehr Sichtbarkeit',
-      'Kontaktformulare & automatisches Lead-Capturing',
-    ],
-  },
-  {
-    id: 'ki-kommunikation',
-    icon: MessageSquare,
-    title: 'KI-Kommunikation',
-    shortDesc: 'Chatbot & Voice Agent',
-    description: 'KI-Chatbot und Voice Agent in einer Lösung — damit kein Lead verloren geht.',
-    features: [
-      'Kein entgangener Lead mehr — auch nachts und am Wochenende',
-      'Automatische Terminbuchung & Kundenqualifizierung',
-      'Telefon & Chat: KI übernimmt beide Kanäle',
-      'Nahtlose Integration in bestehende Systeme',
-    ],
-  },
   {
     id: 'automation',
     icon: Workflow,
@@ -104,6 +78,32 @@ const services = [
       'Beratung, Entwicklung & laufende Betreuung',
     ],
   },
+  {
+    id: 'website',
+    icon: Globe,
+    title: 'Website',
+    shortDesc: 'Professionelle Präsenz',
+    description: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen.',
+    features: [
+      'Mehr Besucher, die zu Kunden werden',
+      'Schnell, modern & auf allen Geräten',
+      'SEO-optimiert für mehr Sichtbarkeit',
+      'Kontaktformulare & automatisches Lead-Capturing',
+    ],
+  },
+  {
+    id: 'ki-kommunikation',
+    icon: MessageSquare,
+    title: 'KI-Kommunikation',
+    shortDesc: 'Chatbot & Voice Agent',
+    description: 'KI-Chatbot und Voice Agent in einer Lösung — damit kein Lead verloren geht.',
+    features: [
+      'Kein entgangener Lead mehr — auch nachts und am Wochenende',
+      'Automatische Terminbuchung & Kundenqualifizierung',
+      'Telefon & Chat: KI übernimmt beide Kanäle',
+      'Nahtlose Integration in bestehende Systeme',
+    ],
+  },
 ];
 
 const steps = [
@@ -112,14 +112,23 @@ const steps = [
   { num: '03', icon: TrendingUp, title: 'Umsetzung & Live-Schaltung', desc: 'Wir entwickeln, testen und implementieren. Erste Ergebnisse sind in der Regel innerhalb von 1–2 Wochen sichtbar.' },
 ];
 
-// Stats: "100%" uses count-up, "24/7" and "48h" use fade-in only
-const stats: { type: 'counter' | 'static'; end?: number; suffix?: string; display?: string; label: string }[] = [
-  { type: 'counter', end: 100, suffix: '%', label: 'Individuelle Lösungen' },
-  { type: 'static',  display: '24/7',       label: 'Verfügbarkeit Ihrer KI' },
-  { type: 'static',  display: '48h',        label: 'Bis zum ersten Angebot' },
+// Stats: all use count-up animation
+const stats: { end: number; suffix: string; label: string }[] = [
+  { end: 100, suffix: '%',  label: 'Individuelle Lösungen' },
+  { end: 24,  suffix: '/7', label: 'Verfügbarkeit Ihrer KI' },
+  { end: 48,  suffix: 'h',  label: 'Bis zum ersten Angebot' },
 ];
 
-const techBadges = ['OpenAI', 'n8n', 'VAPI', 'Voiceflow', 'Make', 'Vercel', 'Stripe'];
+// Tech logos for scrolling banner — imgs from simpleicons CDN, text fallbacks for unavailable ones
+const techLogos: { type: 'img' | 'text'; src?: string; alt?: string; label?: string }[] = [
+  { type: 'img',  src: 'https://cdn.simpleicons.org/openai/ffffff',  alt: 'OpenAI' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/n8n/ffffff',     alt: 'n8n' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/make/ffffff',    alt: 'Make' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/vercel/ffffff',  alt: 'Vercel' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/stripe/ffffff',  alt: 'Stripe' },
+  { type: 'text', label: 'Voiceflow' },
+  { type: 'text', label: 'VAPI' },
+];
 
 const highlights = [
   { icon: Users,  title: 'Berkay Aksoy & Marios Lysitsas', desc: 'Wir verstehen Ihr Business. Dann automatisieren wir es.' },
@@ -478,7 +487,7 @@ const CARD = `
 
 
 // ─── Typewriter hook ─────────────────────────────────────
-const TW_WORDS = ['Zeitverlust', 'verpassten Anfragen', 'manueller Arbeit', 'langsamen Prozessen', 'ungenutztem Potenzial'];
+const TW_WORDS = ['Ihren Zeitverlust.', 'Ihre Prozesse.', 'Ihr Wachstum.', 'Ihre Kommunikation.', 'Ihr Potenzial.'];
 
 function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
   const [display, setDisplay] = useState('');
@@ -588,7 +597,7 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         words to reflow/jump.
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Schluss mit</span>
+        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren</span>
         <span style={{ display: 'block', color: '#00E5FF' }}>
           {word}<span className="tw-cursor">|</span>
         </span>
@@ -634,17 +643,17 @@ function ProblemPanel({ isActive }: { isActive: boolean }) {
         ))}
       </div>
       {/* "Das passt, wenn Sie..." */}
-      <div className="glass-card rounded-2xl p-4 sm:p-6">
-        <p className="font-inter text-gray-400 text-sm font-medium mb-3">Das passt, wenn Sie...</p>
-        <ul className="space-y-2">
+      <div className={`${CARD} p-4 sm:p-6`}>
+        <p className="font-inter text-white text-base font-semibold mb-3">Das passt, wenn Sie...</p>
+        <ul className="space-y-2.5">
           {[
             'täglich Zeit mit Aufgaben verbringen, die ein System automatisch erledigen könnte',
             'Anfragen verpassen, weil kein System rund um die Uhr für Sie antwortet',
             'wachsen wollen — ohne proportional mehr Personal einstellen zu müssen',
           ].map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0 mt-1.5" />
-              <span className="font-inter text-gray-400 text-sm leading-relaxed">{item}</span>
+            <li key={i} className="flex items-start gap-3">
+              <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0 mt-2" />
+              <span className="font-inter text-white font-semibold text-base leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
@@ -823,31 +832,72 @@ function FuerSiePanel({ isActive }: { isActive: boolean }) {
   );
 }
 
+// ─── Animated timeline arrow ─────────────────────────────
+function TimelineArrow({ delay }: { delay: number }) {
+  return (
+    <div className="hidden lg:flex items-center justify-center flex-shrink-0 w-20 xl:w-28">
+      <svg width="100%" height="24" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
+        <motion.line
+          x1="0" y1="12" x2="84" y2="12"
+          stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          whileInView={{ pathLength: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay, ease: 'easeOut' }}
+        />
+        <motion.polyline
+          points="80,6 92,12 80,18"
+          stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3, delay: delay + 0.7 }}
+        />
+      </svg>
+    </div>
+  );
+}
+
 function ProcessPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
-      <div className="text-center mb-6 sm:mb-10 lg:mb-14">
+      <div className="text-center mb-8 sm:mb-12 lg:mb-16">
         <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           Drei Schritte bis zu Ihrer Lösung
         </span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So starten wir zusammen</h2>
       </div>
-      {/* Mobile: vertical stack; desktop: 3-column grid */}
-      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8">
+
+      {/* Desktop: horizontal timeline with animated arrows; Mobile: vertical stack */}
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-0">
         {steps.map((step, i) => (
-          <div key={i} className={`${CARD} relative p-5 sm:p-8`}>
-            <span className="absolute -top-4 -left-1 font-syne font-bold text-6xl sm:text-8xl text-accent/10 leading-none select-none">
-              {step.num}
-            </span>
-            <div className="relative pt-6 sm:pt-10">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-3 sm:mb-6">
-                <step.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
+          <React.Fragment key={i}>
+            <motion.div
+              className="flex-1 flex flex-col items-start"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: i * 0.18 }}
+            >
+              {/* Step number */}
+              <span className="font-syne font-bold text-5xl sm:text-6xl text-accent/20 leading-none mb-4 select-none">
+                {step.num}
+              </span>
+              {/* Icon */}
+              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-4 border border-accent/20">
+                <step.icon className="w-6 h-6 text-accent" />
               </div>
-              <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{step.title}</h3>
-              <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{step.desc}</p>
-            </div>
-          </div>
+              {/* Text */}
+              <h3 className="font-syne font-semibold text-lg sm:text-xl text-white mb-2">{step.title}</h3>
+              <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base max-w-xs">{step.desc}</p>
+            </motion.div>
+
+            {/* Animated arrow between steps (desktop only) */}
+            {i < steps.length - 1 && (
+              <TimelineArrow delay={i * 0.18 + 0.4} />
+            )}
+          </React.Fragment>
         ))}
       </div>
     </div>
@@ -865,37 +915,49 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
       <div className="glass-card rounded-2xl p-6 sm:p-10">
+        {/* All three stats use count-up animation */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 mb-8">
           {stats.map((s, i) => (
             <div key={i}>
-              {s.type === 'counter' ? (
-                <Counter end={s.end!} suffix={s.suffix!} label={s.label} active={active} />
-              ) : (
-                <motion.div
-                  className="text-center"
-                  initial={{ opacity: 0 }}
-                  animate={active ? { opacity: 1 } : { opacity: 0 }}
-                  transition={{ duration: 0.8, delay: i * 0.2 }}
-                >
-                  <div className="font-syne font-bold text-4xl sm:text-6xl md:text-8xl text-white tabular-nums">
-                    {s.display}
-                  </div>
-                  <p className="font-inter text-gray-400 text-lg mt-4">{s.label}</p>
-                </motion.div>
-              )}
+              <Counter end={s.end} suffix={s.suffix} label={s.label} active={active} />
             </div>
           ))}
         </div>
 
-        {/* Tech stack badges */}
-        <div className="border-t border-white/10 pt-6">
-          <p className="font-inter text-gray-500 text-sm text-center mb-4">Womit wir arbeiten</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {techBadges.map((badge) => (
-              <span key={badge} className="px-3 py-1.5 glass-card rounded-full font-inter text-gray-300 text-sm">
-                {badge}
-              </span>
-            ))}
+        {/* Infinite scrolling tech logo banner */}
+        <div className="border-t border-white/10 pt-6 overflow-hidden">
+          <p className="font-inter text-gray-500 text-sm text-center mb-5">Womit wir arbeiten</p>
+          {/* Inject keyframe via style tag */}
+          <style>{`
+            @keyframes logo-scroll {
+              0%   { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .logo-track {
+              display: flex;
+              width: max-content;
+              animation: logo-scroll 28s linear infinite;
+            }
+          `}</style>
+          <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)' }}>
+            <div className="logo-track">
+              {/* Render logos twice for seamless loop */}
+              {[...techLogos, ...techLogos].map((logo, i) => (
+                <div key={i} className="flex items-center justify-center flex-shrink-0 mx-6 sm:mx-8">
+                  {logo.type === 'img' ? (
+                    <img
+                      src={logo.src}
+                      alt={logo.alt}
+                      style={{ height: '28px', width: 'auto', opacity: 0.7, filter: 'brightness(1)' }}
+                    />
+                  ) : (
+                    <span className="font-inter font-semibold text-white/70 text-sm tracking-wide whitespace-nowrap">
+                      {logo.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
