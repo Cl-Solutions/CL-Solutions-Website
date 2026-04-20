@@ -1,55 +1,58 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+
+function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
 export function CustomCursor() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isVisible, setIsVisible] = useState(false);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>();
+  const mouse  = useRef({ x: -200, y: -200 });
+  const visible = useRef(false);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-      setIsVisible(true);
+    if ('ontouchstart' in window) return;
+    const dot = dotRef.current;
+    if (!dot) return;
+
+    const setVisible = (v: boolean) => {
+      if (visible.current === v) return;
+      visible.current = v;
+      dot.style.opacity = v ? '1' : '0';
     };
 
-    const handleMouseLeave = () => setIsVisible(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const onMove = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+      dot.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`;
+      setVisible(true);
+    };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    document.body.addEventListener('mouseleave', handleMouseLeave);
-    document.body.addEventListener('mouseenter', handleMouseEnter);
+    // Keep RAF loop alive so future enhancements can plug in easily
+    const tick = () => { rafRef.current = requestAnimationFrame(tick); };
+    rafRef.current = requestAnimationFrame(tick);
+
+    window.addEventListener('mousemove', onMove);
+    document.body.addEventListener('mouseleave', () => setVisible(false));
+    document.body.addEventListener('mouseenter', () => setVisible(true));
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.body.removeEventListener('mouseleave', handleMouseLeave);
-      document.body.removeEventListener('mouseenter', handleMouseEnter);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('mousemove', onMove);
     };
   }, []);
 
-  if (typeof window !== 'undefined' && 'ontouchstart' in window) {
-    return null;
-  }
-
   return (
-    <motion.div
-      className="fixed pointer-events-none z-50 hidden lg:block"
-      animate={{
-        x: mousePosition.x - 150,
-        y: mousePosition.y - 150,
-        opacity: isVisible ? 1 : 0,
+    <div
+      ref={dotRef}
+      className="hidden lg:block"
+      style={{
+        position: 'fixed', top: 0, left: 0,
+        width: '8px', height: '8px',
+        borderRadius: '50%',
+        backgroundColor: '#00E5FF',
+        zIndex: 9999,
+        pointerEvents: 'none',
+        opacity: 0,
+        willChange: 'transform',
       }}
-      transition={{
-        type: 'spring',
-        stiffness: 500,
-        damping: 28,
-        mass: 0.5,
-      }}
-    >
-      <div
-        className="w-[300px] h-[300px] rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(0, 212, 255, 0.08) 0%, rgba(0, 212, 255, 0) 70%)',
-        }}
-      />
-    </motion.div>
+    />
   );
 }
