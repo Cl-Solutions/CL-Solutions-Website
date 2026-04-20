@@ -755,7 +755,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               boxSizing: 'border-box',
             }}
           >
-            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-start">
+            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-center">
               <div>
                 {/* Icon hidden on small screens to save vertical space */}
                 <div className="hidden sm:flex w-11 h-11 bg-accent/10 rounded-xl items-center justify-center mb-3 sm:mb-4">
@@ -772,7 +772,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
                   Jetzt anfragen
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2 place-content-center">
                 {s.features.map((feat, i) => (
                   <div key={i} className="flex flex-col items-center justify-center p-2 sm:p-3 glass-card rounded-xl text-center">
                     <div className="w-1.5 h-1.5 bg-accent rounded-full mb-1.5" />
