@@ -598,7 +598,10 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
         <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Schluss mit</span>
-        <span style={{ display: 'block', color: '#00E5FF', minHeight: '1.25em' }}>
+        {/* Reserve space for 2 wrapped lines on narrow mobile screens.
+            Overridden to 1 line on sm+ via the injected style rule below. */}
+        <style>{`.hero-tw-line{min-height:2.6em}@media(min-width:640px){.hero-tw-line{min-height:1.3em}}`}</style>
+        <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
           {word}<span className="tw-cursor">|</span>
         </span>
       </h1>
