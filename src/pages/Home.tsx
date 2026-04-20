@@ -597,10 +597,9 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         words to reflow/jump.
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren.</span>
-        <span style={{ display: 'block' }}>
-          <span style={{ color: '#ffffff' }}>Schluss mit </span>
-          <span style={{ color: '#00E5FF' }}>{word}<span className="tw-cursor">|</span></span>
+        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Schluss mit</span>
+        <span style={{ display: 'block', color: '#00E5FF' }}>
+          {word}<span className="tw-cursor">|</span>
         </span>
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -775,8 +774,8 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
                 {s.features.map((feat, i) => (
-                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl">
-                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0 mt-1" />
+                  <div key={i} className="flex items-center justify-center gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl text-center">
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0" />
                     <span className="font-inter text-gray-300 text-xs sm:text-sm leading-tight">{feat}</span>
                   </div>
                 ))}
