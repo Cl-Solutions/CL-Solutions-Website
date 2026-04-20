@@ -774,8 +774,8 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
                 {s.features.map((feat, i) => (
-                  <div key={i} className="flex items-center justify-center gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl text-center">
-                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0" />
+                  <div key={i} className="flex flex-col items-center justify-center p-2 sm:p-3 glass-card rounded-xl text-center">
+                    <div className="w-1.5 h-1.5 bg-accent rounded-full mb-1.5" />
                     <span className="font-inter text-gray-300 text-xs sm:text-sm leading-tight">{feat}</span>
                   </div>
                 ))}
