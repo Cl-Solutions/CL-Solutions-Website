@@ -487,7 +487,7 @@ const CARD = `
 
 
 // ─── Typewriter hook ─────────────────────────────────────
-const TW_WORDS = ['Ihren Zeitverlust.', 'Ihre Prozesse.', 'Ihr Wachstum.', 'Ihre Kommunikation.', 'Ihr Potenzial.'];
+const TW_WORDS = ['Zeitverlust.', 'verpassten Anfragen.', 'manueller Arbeit.', 'langsamen Prozessen.', 'ungenutztem Potenzial.'];
 
 function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
   const [display, setDisplay] = useState('');
@@ -597,9 +597,10 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         words to reflow/jump.
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren</span>
-        <span style={{ display: 'block', color: '#00E5FF' }}>
-          {word}<span className="tw-cursor">|</span>
+        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren.</span>
+        <span style={{ display: 'block' }}>
+          <span style={{ color: '#ffffff' }}>Schluss mit </span>
+          <span style={{ color: '#00E5FF' }}>{word}<span className="tw-cursor">|</span></span>
         </span>
       </h1>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -710,7 +711,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
       </div>
 
       {/* Nav cards — compact, above the scroll content */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {services.map((s, i) => (
           <button key={s.id} onClick={() => scrollToService(i)}
             className={`text-left p-3 lg:p-4 rounded-2xl border transition-all duration-300 ${
@@ -772,7 +773,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
                   Jetzt anfragen
                 </button>
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2">
                 {s.features.map((feat, i) => (
                   <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl">
                     <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0 mt-1" />
