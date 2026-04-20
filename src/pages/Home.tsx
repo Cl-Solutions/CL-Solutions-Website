@@ -15,7 +15,7 @@ import {
 } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  Globe, MessageSquare, Phone, Workflow,
+  Globe, MessageSquare, Workflow, Zap,
   Search, Cog, TrendingUp,
   Users, MapPin, Target,
   Calendar, ArrowRight, CheckCircle,
@@ -25,7 +25,7 @@ import { StarField } from '../components/StarField';
 import { CustomCursor } from '../components/CustomCursor';
 
 // ─── Layout constants ────────────────────────────────────
-const TOTAL  = 8;
+const TOTAL  = 9;
 const VH_PER = 200;       // ↓ from 400 — snappier scroll feel
 const SPAN   = 1 / TOTAL;
 
@@ -45,12 +45,12 @@ const EXIT_END_FRAC  = 0.58;
 
 // ─── Content data ────────────────────────────────────────
 const problems = [
-  { icon: Globe,  title: 'Veralteter Webauftritt',         desc: 'Ihre Website ist Ihr erster Eindruck. Wer online nicht überzeugt, verliert Kunden noch bevor das erste Gespräch stattfindet.' },
-  { icon: UserX,  title: 'Verpasste Leads',                desc: 'Keine sofortige Antwort? Ihr Interessent ist in Sekunden bei der Konkurrenz. Ihre Website muss ein 24/7-Verkäufer sein.' },
-  { icon: Clock,  title: 'Manuelle Prozesse & Zeitverlust', desc: 'Stundenlange Routinearbeit frisst wertvolle Zeit. Excel-Listen, Copy-Paste — während Wachstumschancen ungenutzt bleiben.' },
+  { icon: Globe,  title: 'Kein professioneller Webauftritt?',    desc: 'Ihre Website ist Ihr erster Eindruck — rund um die Uhr. Wer online nicht überzeugt, verliert Kunden, bevor das erste Gespräch stattfindet.' },
+  { icon: UserX,  title: 'Prozesse noch manuell?',               desc: 'Excel, Copy-Paste, manuelle Mails. Während Sie tippen, skaliert Ihre Konkurrenz bereits automatisiert — ohne zusätzliches Personal.' },
+  { icon: Clock,  title: 'Kein System, das für Sie arbeitet?',   desc: 'Anfragen kommen auch nachts und am Wochenende. Ohne Automatisierung sind Sie an Ihre eigene Arbeitszeit gebunden — und das limitiert Ihr Wachstum.' },
 ];
 
-// Services with full feature lists (matching main branch Services component)
+// Services: 4 cards (KI-Chatbot + Voice Agent merged into KI-Kommunikation)
 const services = [
   {
     id: 'website',
@@ -59,36 +59,23 @@ const services = [
     shortDesc: 'Professionelle Präsenz',
     description: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen.',
     features: [
-      'Professionelles, individuelles Design',
-      'Schnelle Ladezeiten & SEO-optimiert',
-      'Responsive für alle Geräte',
-      'Kontaktformulare & Lead-Capture',
+      'Mehr Besucher, die zu Kunden werden',
+      'Schnell, modern & auf allen Geräten',
+      'SEO-optimiert für mehr Sichtbarkeit',
+      'Kontaktformulare & automatisches Lead-Capturing',
     ],
   },
   {
-    id: 'chatbot',
+    id: 'ki-kommunikation',
     icon: MessageSquare,
-    title: 'KI-Chatbot',
-    shortDesc: '24/7 Kundenservice',
-    description: 'Ihr digitaler Mitarbeiter beantwortet Fragen, qualifiziert Leads und bucht Termine automatisch ein.',
+    title: 'KI-Kommunikation',
+    shortDesc: 'Chatbot & Voice Agent',
+    description: 'KI-Chatbot und Voice Agent in einer Lösung — damit kein Lead verloren geht.',
     features: [
-      'Sofortige Antworten rund um die Uhr',
-      'Automatische Lead-Qualifizierung & Terminbuchung',
-      'Nahtlose Integration & lernfähig',
-      'Testen Sie unseren KI-Experten rechts unten',
-    ],
-  },
-  {
-    id: 'voice',
-    icon: Phone,
-    title: 'Voice Agent',
-    shortDesc: 'Telefonische KI',
-    description: 'Automatisierte Telefongespräche für Terminvereinbarungen, Erinnerungen und Kundenservice.',
-    features: [
-      'Natürliche Sprachverarbeitung',
-      'Terminbestätigungen per Anruf',
-      '24/7-Verfügbarkeit',
-      'CRM-Integration',
+      'Kein entgangener Lead mehr — auch nachts und am Wochenende',
+      'Automatische Terminbuchung & Kundenqualifizierung',
+      'Telefon & Chat: KI übernimmt beide Kanäle',
+      'Nahtlose Integration in bestehende Systeme',
     ],
   },
   {
@@ -98,39 +85,56 @@ const services = [
     shortDesc: 'Workflows optimieren',
     description: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett.',
     features: [
-      'Datenübertragung zwischen Systemen',
-      'Automatische Rechnungsstellung',
-      'E-Mail-Workflows',
-      'Benutzerdefinierte Integrationen',
+      'Repetitive Aufgaben vollständig eliminieren',
+      'Systeme verbinden — ohne manuelle Datenpflege',
+      'Automatische Rechnungsstellung & E-Mail-Workflows',
+      'Individuelle Integrationen für Ihren genauen Use Case',
+    ],
+  },
+  {
+    id: 'custom-ki',
+    icon: Zap,
+    title: 'Individuelle KI-Lösungen',
+    shortDesc: 'Custom Development',
+    description: 'Maßgeschneiderte KI-Systeme für komplexe Anforderungen — von der Idee bis zur fertigen Lösung.',
+    features: [
+      'Maßgeschneiderte KI-Systeme für komplexe Anforderungen',
+      'Von der Idee bis zur fertigen Lösung aus einer Hand',
+      'Skalierbare Architektur, die mit Ihrem Unternehmen wächst',
+      'Beratung, Entwicklung & laufende Betreuung',
     ],
   },
 ];
 
 const steps = [
-  { num: '01', icon: Search,     title: 'Analyse',    desc: 'Wir analysieren Ihre Website und Prozesse, um Verbesserungs- und Automatisierungspotenzial zu identifizieren.' },
-  { num: '02', icon: Cog,        title: 'Umsetzung',  desc: 'Wir entwickeln und implementieren maßgeschneiderte Lösungen, die nahtlos in Ihr Unternehmen integriert werden.' },
-  { num: '03', icon: TrendingUp, title: 'Ergebnisse', desc: 'Schnell geliefert: Sie sparen Zeit, gewinnen Kunden und skalieren ohne zusätzlichen Aufwand.' },
+  { num: '01', icon: Search,     title: 'Kennenlernen & Analyse',  desc: 'In einem kostenlosen 30-Minuten-Gespräch analysieren wir Ihre Prozesse, identifizieren konkrete Potenziale und verstehen Ihr Ziel.' },
+  { num: '02', icon: Cog,        title: 'Konzept & Kosten',        desc: 'Sie erhalten innerhalb von 48 Stunden ein maßgeschneidertes Angebot — transparent, verständlich, ohne versteckte Kosten.' },
+  { num: '03', icon: TrendingUp, title: 'Umsetzung & Live-Schaltung', desc: 'Wir entwickeln, testen und implementieren. Erste Ergebnisse sind in der Regel innerhalb von 1–2 Wochen sichtbar.' },
 ];
 
-const stats = [
-  { end: 8,   suffix: '+', label: 'Projekte abgeschlossen' },
-  { end: 3,   suffix: 'x', label: 'schnellere Prozesse' },
-  { end: 100, suffix: '%', label: 'Remote & flexibel' },
+// Stats: "100%" uses count-up, "24/7" and "48h" use fade-in only
+const stats: { type: 'counter' | 'static'; end?: number; suffix?: string; display?: string; label: string }[] = [
+  { type: 'counter', end: 100, suffix: '%', label: 'Individuelle Lösungen' },
+  { type: 'static',  display: '24/7',       label: 'Verfügbarkeit Ihrer KI' },
+  { type: 'static',  display: '48h',        label: 'Bis zum ersten Angebot' },
 ];
+
+const techBadges = ['OpenAI', 'n8n', 'VAPI', 'Voiceflow', 'Make', 'Vercel', 'Stripe'];
 
 const highlights = [
-  { icon: Users,  title: 'Berkay Aksoy & Marios Lysitsas', desc: 'Jung, engagiert und motiviert für Ihr Projekt' },
+  { icon: Users,  title: 'Berkay Aksoy & Marios Lysitsas', desc: 'Wir verstehen Ihr Business. Dann automatisieren wir es.' },
   { icon: MapPin, title: 'Made in Germany',                 desc: 'Deutsch, zuverlässig, DSGVO-konform' },
   { icon: Target, title: 'Ergebnisorientiert',              desc: 'Wir messen uns an Ihrem ROI' },
 ];
 
 const faqs = [
   { q: 'Funktioniert das auch für meine Branche?', a: 'Ja. Unsere Lösungen sind branchenunabhängig und werden individuell angepasst. Ob Handwerk, Dienstleistung oder E-Commerce.' },
-  { q: 'Was kostet das?',                         a: 'Jede Leistung ist einzeln buchbar. Unsere Preise bestehen aus einer einmaligen Setup-Gebühr und einem optionalen monatlichen Support-Paket. Buchen Sie ein kostenloses Erstgespräch für ein unverbindliches Angebot.' },
+  { q: 'Was kostet das?',                         a: 'Jedes Projekt ist individuell — Umfang, Komplexität und laufende Betreuung beeinflussen den Preis. Was wir sagen können: Ein automatisierter Prozess rechnet sich in der Regel innerhalb weniger Wochen. Im kostenlosen Erstgespräch nennen wir Ihnen konkrete Zahlen — ohne Überraschungen danach.' },
   { q: 'Wie lange dauert die Umsetzung?',          a: 'Die meisten Projekte sind innerhalb von 2–4 Wochen einsatzbereit. Kleinere Automatisierungen können in wenigen Tagen umgesetzt werden.' },
   { q: 'Brauche ich technisches Wissen?',          a: 'Nein. Wir kümmern uns um alles Technische. Sie müssen nur wissen, welche Prozesse Sie verbessern möchten — wir zeigen Ihnen die Möglichkeiten.' },
   { q: 'Ist das DSGVO-konform?',                   a: 'Absolut. Als deutsches Unternehmen legen wir großen Wert auf Datenschutz. Alle Lösungen sind DSGVO-konform.' },
   { q: 'Was passiert nach der Umsetzung?',         a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
+  { q: 'Was, wenn ich mit dem Ergebnis nicht zufrieden bin?', a: 'Wir arbeiten so lange nach, bis Sie zufrieden sind. Unser Ziel ist eine langfristige Zusammenarbeit — kein einmaliges Projekt. Das Erstgespräch ist kostenlos und unverbindlich: Wenn die Chemie oder das Angebot nicht passt, entstehen Ihnen keinerlei Kosten.' },
 ];
 
 // ─── Mouse glow cursor ────────────────────────────────────
@@ -320,13 +324,14 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
 }
 
 // ─── Navigation ──────────────────────────────────────────
+// Sections: 0=Hero, 1=Problem, 2=Services, 3=FuerSie, 4=Process, 5=Numbers, 6=About, 7=FAQ, 8=Contact
 const NAV_ITEMS: { label: string; idx?: number; href?: string }[] = [
   { label: 'Leistungen', idx: 2 },
-  { label: 'Prozess',    idx: 3 },
-  { label: 'Über uns',   idx: 5 },
-  { label: 'FAQ',        idx: 6 },
+  { label: 'Prozess',    idx: 4 },
+  { label: 'Über uns',   idx: 6 },
+  { label: 'FAQ',        idx: 7 },
   { label: 'Blog',       href: '/blog' },
-  { label: 'Kontakt',    idx: 7 },
+  { label: 'Kontakt',    idx: 8 },
 ];
 
 function Nav({ goTo }: { goTo: (i: number) => void }) {
@@ -366,9 +371,9 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
                     {item.label}
                   </button>
             ))}
-            <button onClick={() => goTo(7)}
+            <button onClick={() => goTo(8)}
               className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors">
-              Erstgespräch buchen
+              Potenzialanalyse buchen
             </button>
           </div>
           <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
@@ -405,9 +410,9 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
             <motion.button
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: NAV_ITEMS.length * 0.05 }}
-              onClick={() => { goTo(7); setOpen(false); }}
+              onClick={() => { goTo(8); setOpen(false); }}
               className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg">
-              Erstgespräch buchen
+              Potenzialanalyse buchen
             </motion.button>
           </motion.div>
         )}
@@ -473,7 +478,7 @@ const CARD = `
 
 
 // ─── Typewriter hook ─────────────────────────────────────
-const TW_WORDS = ['Prozesse.', 'Leads.', 'Kommunikation.', 'Zukunft.'];
+const TW_WORDS = ['Zeitverlust', 'verpassten Anfragen', 'manueller Arbeit', 'langsamen Prozessen', 'ungenutztem Potenzial'];
 
 function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
   const [display, setDisplay] = useState('');
@@ -583,7 +588,7 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
         words to reflow/jump.
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Ihre</span>
+        <span ref={staticRef} style={{ display: 'block' }}>Schluss mit</span>
         <span style={{ display: 'block', color: '#00E5FF' }}>
           {word}<span className="tw-cursor">|</span>
         </span>
@@ -591,14 +596,14 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.85 }}
         className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-12">
-        Automatisierung &amp; KI-Lösungen für deutsche Unternehmen.{' '}
-        <br className="hidden sm:inline" />Mehr Zeit. Mehr Umsatz. Weniger Stress.
+        KI-Lösungen &amp; Automatisierung für deutsche Unternehmen.{' '}
+        <br className="hidden sm:inline" />Mehr Zeit. Mehr Umsatz. Skalierbares Wachstum.
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 1.1 }}>
         <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
           className="inline-block px-6 py-3 sm:px-8 sm:py-4 bg-accent text-dark font-inter font-semibold text-base sm:text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
-          Kostenloses Erstgespräch
+          Kostenlose Potenzialanalyse
         </a>
       </motion.div>
     </div>
@@ -617,7 +622,7 @@ function ProblemPanel({ isActive }: { isActive: boolean }) {
           Während Sie warten, kauft Ihr Kunde woanders
         </h2>
       </div>
-      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6 mb-6">
         {problems.map((p, i) => (
           <div key={i} className={`${CARD} p-5 sm:p-8`}>
             <div className="w-11 h-11 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
@@ -627,6 +632,22 @@ function ProblemPanel({ isActive }: { isActive: boolean }) {
             <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{p.desc}</p>
           </div>
         ))}
+      </div>
+      {/* "Das passt, wenn Sie..." */}
+      <div className="glass-card rounded-2xl p-4 sm:p-6">
+        <p className="font-inter text-gray-400 text-sm font-medium mb-3">Das passt, wenn Sie...</p>
+        <ul className="space-y-2">
+          {[
+            'täglich Zeit mit Aufgaben verbringen, die ein System automatisch erledigen könnte',
+            'Anfragen verpassen, weil kein System rund um die Uhr für Sie antwortet',
+            'wachsen wollen — ohne proportional mehr Personal einstellen zu müssen',
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0 mt-1.5" />
+              <span className="font-inter text-gray-400 text-sm leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -639,7 +660,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
 
   const goToContact = () => {
     if (window.innerWidth <= 768) {
-      const el = document.getElementById('ms-7');
+      const el = document.getElementById('ms-8');
       if (el) {
         const top = el.getBoundingClientRect().top + window.scrollY - 70;
         window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
@@ -647,7 +668,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
       return;
     }
     const totalH = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: (7 * SPAN + 0.05) * totalH, behavior: 'smooth' });
+    window.scrollTo({ top: (8 * SPAN + 0.05) * totalH, behavior: 'smooth' });
   };
 
   const scrollToService = (idx: number) => {
@@ -758,15 +779,59 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
   );
 }
 
+// ─── New: "Diese Lösungen sind für Sie, wenn..." panel ───
+function FuerSiePanel({ isActive }: { isActive: boolean }) {
+  const { headRef } = useSplitHeadline(isActive);
+
+  const cards = [
+    {
+      icon: Clock,
+      title: 'Sie täglich Zeit verlieren',
+      text: 'Routineaufgaben, manuelle Prozesse, Copy-Paste — Ihr Tag steckt voller Arbeit, die kein Mensch erledigen müsste.',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Sie wachsen wollen — ohne mehr Aufwand',
+      text: 'Mehr Kunden, mehr Umsatz, aber kein proportional größeres Team. Automatisierung ist Ihr stärkster Hebel.',
+    },
+    {
+      icon: Zap,
+      title: 'Ihre Systeme nicht zusammenarbeiten',
+      text: 'Tools, die nicht miteinander reden. Daten, die manuell übertragen werden. Das kostet Zeit, Geld und Nerven — täglich.',
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto w-full">
+      <div className="text-center mb-8 sm:mb-12">
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white leading-tight">
+          Diese Lösungen sind für Sie, wenn...
+        </h2>
+      </div>
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+        {cards.map((card, i) => (
+          <div key={i} className={`${CARD} p-5 sm:p-8`}>
+            <div className="w-11 h-11 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
+              <card.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
+            </div>
+            <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{card.title}</h3>
+            <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{card.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProcessPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
     <div className="max-w-6xl mx-auto w-full">
       <div className="text-center mb-6 sm:mb-10 lg:mb-14">
         <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
-          Unser Prozess
+          Drei Schritte bis zu Ihrer Lösung
         </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So arbeiten wir zusammen</h2>
+        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So starten wir zusammen</h2>
       </div>
       {/* Mobile: vertical stack; desktop: 3-column grid */}
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8">
@@ -800,10 +865,38 @@ function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
       </div>
       <div className="glass-card rounded-2xl p-6 sm:p-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 mb-8">
           {stats.map((s, i) => (
-            <div key={i}><Counter end={s.end} suffix={s.suffix} label={s.label} active={active} /></div>
+            <div key={i}>
+              {s.type === 'counter' ? (
+                <Counter end={s.end!} suffix={s.suffix!} label={s.label} active={active} />
+              ) : (
+                <motion.div
+                  className="text-center"
+                  initial={{ opacity: 0 }}
+                  animate={active ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{ duration: 0.8, delay: i * 0.2 }}
+                >
+                  <div className="font-syne font-bold text-4xl sm:text-6xl md:text-8xl text-white tabular-nums">
+                    {s.display}
+                  </div>
+                  <p className="font-inter text-gray-400 text-lg mt-4">{s.label}</p>
+                </motion.div>
+              )}
+            </div>
           ))}
+        </div>
+
+        {/* Tech stack badges */}
+        <div className="border-t border-white/10 pt-6">
+          <p className="font-inter text-gray-500 text-sm text-center mb-4">Womit wir arbeiten</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {techBadges.map((badge) => (
+              <span key={badge} className="px-3 py-1.5 glass-card rounded-full font-inter text-gray-300 text-sm">
+                {badge}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -903,8 +996,11 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
           <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
             Bereit für den nächsten Schritt?
           </h2>
-          <p className="font-inter text-gray-400 text-sm sm:text-lg leading-relaxed mb-5 sm:mb-8">
+          <p className="font-inter text-gray-400 text-sm sm:text-lg leading-relaxed mb-1 sm:mb-2">
             Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
+          </p>
+          <p className="font-inter text-gray-500 text-xs sm:text-sm leading-relaxed mb-5 sm:mb-8">
+            Kein Risiko — das Erstgespräch ist kostenlos &amp; vollständig unverbindlich.
           </p>
           <div className={`${CARD} p-4 sm:p-6`} data-cursor-card>
             <div className="flex items-center gap-4 mb-4">
@@ -957,6 +1053,8 @@ function ContactPanel({ isActive }: { isActive: boolean }) {
 }
 
 // ─── Home ────────────────────────────────────────────────
+// Section index map:
+// 0=Hero, 1=Problem, 2=Services, 3=FuerSie, 4=Process, 5=Numbers, 6=About, 7=FAQ, 8=Contact
 export function Home() {
   const { scrollY, scrollYProgress } = useScroll();
 
@@ -991,13 +1089,14 @@ export function Home() {
     });
   }, [scrollYProgress, isReady]);
 
+  // Numbers is now section index 5
   const [numbersActive, setNumbersActive] = useState(false);
   useEffect(() => {
     if (!isReady) return;
-    const s4enter = Math.min(4 * SPAN, 0.990);
-    const s4exit  = (4 + DWELL_END_FRAC) * SPAN;
+    const s5enter = Math.min(5 * SPAN, 0.990);
+    const s5exit  = (5 + DWELL_END_FRAC) * SPAN;
     return scrollYProgress.on('change', (v) => {
-      setNumbersActive(v >= s4enter && v <= s4exit);
+      setNumbersActive(v >= s5enter && v <= s5exit);
     });
   }, [scrollYProgress, isReady]);
 
@@ -1030,14 +1129,15 @@ export function Home() {
 
   const renderSection = useCallback((i: number, isActive: boolean): React.ReactNode => {
     switch (i) {
-      case 0: return <HeroPanel    isActive={isActive} />;
-      case 1: return <ProblemPanel isActive={isActive} />;
+      case 0: return <HeroPanel     isActive={isActive} />;
+      case 1: return <ProblemPanel  isActive={isActive} />;
       case 2: return <ServicesPanel isActive={isActive} />;
-      case 3: return <ProcessPanel isActive={isActive} />;
-      case 4: return <NumbersPanel active={numbersActive} isActive={isActive} />;
-      case 5: return <AboutPanel   isActive={isActive} />;
-      case 6: return <FAQPanel     isActive={isActive} />;
-      case 7: return <ContactPanel isActive={isActive} />;
+      case 3: return <FuerSiePanel  isActive={isActive} />;
+      case 4: return <ProcessPanel  isActive={isActive} />;
+      case 5: return <NumbersPanel  active={numbersActive} isActive={isActive} />;
+      case 6: return <AboutPanel    isActive={isActive} />;
+      case 7: return <FAQPanel      isActive={isActive} />;
+      case 8: return <ContactPanel  isActive={isActive} />;
       default: return null;
     }
   }, [numbersActive]);
@@ -1085,7 +1185,7 @@ export function Home() {
         </div>
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="font-inter text-gray-600 text-sm">{new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
-          <p className="font-inter text-gray-600 text-sm">Made with precision in Germany</p>
+          <p className="font-inter text-gray-600 text-sm">DSGVO-konform · Made in Germany · Remote-first</p>
         </div>
       </div>
     </footer>
@@ -1113,16 +1213,17 @@ export function Home() {
             </div>
           </div>
 
-          {/* Sections 1–7: auto height, activated when scrolled into view */}
-          <MobileSection id="ms-1">{(a) => <ProblemPanel   isActive={a} />}</MobileSection>
-          <MobileSection id="ms-2">{(a) => <ServicesPanel  isActive={a} />}</MobileSection>
-          <MobileSection id="ms-3">{(a) => <ProcessPanel   isActive={a} />}</MobileSection>
-          <MobileSection id="ms-4" onView={setMobileNumActive}>
+          {/* Sections 1–8: auto height, activated when scrolled into view */}
+          <MobileSection id="ms-1">{(a) => <ProblemPanel  isActive={a} />}</MobileSection>
+          <MobileSection id="ms-2">{(a) => <ServicesPanel isActive={a} />}</MobileSection>
+          <MobileSection id="ms-3">{(a) => <FuerSiePanel  isActive={a} />}</MobileSection>
+          <MobileSection id="ms-4">{(a) => <ProcessPanel  isActive={a} />}</MobileSection>
+          <MobileSection id="ms-5" onView={setMobileNumActive}>
             {(a) => <NumbersPanel active={mobileNumActive} isActive={a} />}
           </MobileSection>
-          <MobileSection id="ms-5">{(a) => <AboutPanel     isActive={a} />}</MobileSection>
-          <MobileSection id="ms-6">{(a) => <FAQPanel       isActive={a} />}</MobileSection>
-          <MobileSection id="ms-7">{(a) => <ContactPanel   isActive={a} />}</MobileSection>
+          <MobileSection id="ms-6">{(a) => <AboutPanel    isActive={a} />}</MobileSection>
+          <MobileSection id="ms-7">{(a) => <FAQPanel      isActive={a} />}</MobileSection>
+          <MobileSection id="ms-8">{(a) => <ContactPanel  isActive={a} />}</MobileSection>
         </div>
 
         {footer}
