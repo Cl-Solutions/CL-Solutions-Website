@@ -121,7 +121,7 @@ const stats: { end: number; suffix: string; label: string }[] = [
 
 // Tech logos for scrolling banner — imgs from simpleicons CDN, text fallbacks for unavailable ones
 const techLogos: { type: 'img' | 'text'; src?: string; alt?: string; label?: string }[] = [
-  { type: 'img',  src: 'https://cdn.simpleicons.org/openai/ffffff',  alt: 'OpenAI' },
+  { type: 'text', label: 'OpenAI' },
   { type: 'img',  src: 'https://cdn.simpleicons.org/n8n/ffffff',     alt: 'n8n' },
   { type: 'img',  src: 'https://cdn.simpleicons.org/make/ffffff',    alt: 'Make' },
   { type: 'img',  src: 'https://cdn.simpleicons.org/vercel/ffffff',  alt: 'Vercel' },
@@ -722,8 +722,8 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
             <s.icon className={`w-5 h-5 mb-2 transition-colors ${
               activeIdx === i ? 'text-accent' : 'text-gray-500'
             }`} />
-            <div className="font-syne font-semibold text-white text-sm leading-tight">{s.title}</div>
-            <div className="font-inter text-xs text-gray-500 mt-0.5 leading-tight">{s.shortDesc}</div>
+            <div className="font-syne font-semibold text-white text-base leading-tight">{s.title}</div>
+            <div className="font-inter text-sm text-gray-500 mt-0.5 leading-tight">{s.shortDesc}</div>
           </button>
         ))}
       </div>
@@ -755,7 +755,7 @@ function ServicesPanel({ isActive }: { isActive: boolean }) {
               boxSizing: 'border-box',
             }}
           >
-            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-start lg:items-center">
+            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-start">
               <div>
                 {/* Icon hidden on small screens to save vertical space */}
                 <div className="hidden sm:flex w-11 h-11 bg-accent/10 rounded-xl items-center justify-center mb-3 sm:mb-4">
@@ -832,73 +832,58 @@ function FuerSiePanel({ isActive }: { isActive: boolean }) {
   );
 }
 
-// ─── Animated timeline arrow ─────────────────────────────
-function TimelineArrow({ delay }: { delay: number }) {
-  return (
-    <div className="hidden lg:flex items-center justify-center flex-shrink-0 w-20 xl:w-28">
-      <svg width="100%" height="24" viewBox="0 0 100 24" fill="none" preserveAspectRatio="none">
-        <motion.line
-          x1="0" y1="12" x2="84" y2="12"
-          stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay, ease: 'easeOut' }}
-        />
-        <motion.polyline
-          points="80,6 92,12 80,18"
-          stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3, delay: delay + 0.7 }}
-        />
-      </svg>
-    </div>
-  );
-}
-
 function ProcessPanel({ isActive }: { isActive: boolean }) {
   const { headRef, subRef } = useSplitHeadline(isActive);
   return (
-    <div className="max-w-6xl mx-auto w-full">
-      <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+    <div className="max-w-2xl mx-auto w-full">
+      <div className="text-center mb-10 sm:mb-14">
         <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
           Drei Schritte bis zu Ihrer Lösung
         </span>
         <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So starten wir zusammen</h2>
       </div>
 
-      {/* Desktop: horizontal timeline with animated arrows; Mobile: vertical stack */}
-      <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-0">
-        {steps.map((step, i) => (
-          <React.Fragment key={i}>
-            <motion.div
-              className="flex-1 flex flex-col items-start"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: i * 0.18 }}
-            >
-              {/* Step number */}
-              <span className="font-syne font-bold text-5xl sm:text-6xl text-accent/20 leading-none mb-4 select-none">
-                {step.num}
-              </span>
-              {/* Icon */}
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-4 border border-accent/20">
-                <step.icon className="w-6 h-6 text-accent" />
-              </div>
-              {/* Text */}
-              <h3 className="font-syne font-semibold text-lg sm:text-xl text-white mb-2">{step.title}</h3>
-              <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base max-w-xs">{step.desc}</p>
-            </motion.div>
+      {/* Vertical stepper */}
+      <div className="relative">
+        {/* Animated vertical line */}
+        <motion.div
+          className="absolute top-0 bottom-0 w-0.5"
+          style={{
+            left: '19px',
+            background: 'linear-gradient(to bottom, #00E5FF, rgba(0,229,255,0.3))',
+            transformOrigin: 'top',
+          }}
+          initial={{ scaleY: 0 }}
+          whileInView={{ scaleY: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.1, ease: 'easeOut' }}
+        />
 
-            {/* Animated arrow between steps (desktop only) */}
-            {i < steps.length - 1 && (
-              <TimelineArrow delay={i * 0.18 + 0.4} />
-            )}
-          </React.Fragment>
-        ))}
+        <div className="space-y-10 sm:space-y-12">
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              className="flex items-start gap-6 sm:gap-8"
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.28 }}
+            >
+              {/* Filled cyan circle with step number */}
+              <div
+                className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: '#00E5FF' }}
+              >
+                <span className="font-syne font-bold text-sm" style={{ color: '#0a0a0a' }}>{step.num}</span>
+              </div>
+              {/* Content */}
+              <div className="pt-1 pb-2">
+                <h3 className="font-syne font-bold text-lg sm:text-xl text-white mb-2">{step.title}</h3>
+                <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{step.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );
