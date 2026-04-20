@@ -653,7 +653,7 @@ function ProblemPanel({ isActive }: { isActive: boolean }) {
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-3">
               <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0 mt-2" />
-              <span className="font-inter text-white font-semibold text-base leading-relaxed">{item}</span>
+              <span className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
