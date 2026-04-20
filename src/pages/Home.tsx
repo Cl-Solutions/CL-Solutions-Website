@@ -598,7 +598,7 @@ function HeroPanel({ isActive }: { isActive: boolean }) {
       */}
       <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
         <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Schluss mit</span>
-        <span style={{ display: 'block', color: '#00E5FF' }}>
+        <span style={{ display: 'block', color: '#00E5FF', minHeight: '1.25em' }}>
           {word}<span className="tw-cursor">|</span>
         </span>
       </h1>
