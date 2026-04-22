@@ -27,12 +27,14 @@ export function BlogPost() {
             <Link to="/blog" className="nav-item font-inter text-sm text-[#00E5FF] transition-colors duration-150">
               Blog
             </Link>
-            <Link
-              to="/"
+            <a
+              href="https://cal.eu/cl-solutions/30min"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-5 py-2.5 bg-[#00E5FF] text-[#0a0a0a] font-inter font-medium text-sm rounded-lg hover:bg-[#00E5FF]/90 transition-colors"
             >
               Erstgespräch buchen
-            </Link>
+            </a>
           </div>
         </div>
       </nav>

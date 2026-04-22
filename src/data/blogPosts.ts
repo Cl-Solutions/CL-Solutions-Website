@@ -6,9 +6,125 @@ export interface BlogPost {
   category: string;
   readingTime: string;   // e.g. "5 min"
   content: string;       // HTML string — safe, authored internally
+  draft?: boolean;       // true = not shown on public blog listing
 }
 
 export const blogPosts: BlogPost[] = [
+  // ─── DRAFTS (2026-04-21) ────────────────────────────────────────────────────
+  {
+    slug: 'ki-agenten-fuer-kmu',
+    title: 'KI-Agenten für KMU: Was sie sind und wie Sie sie heute einsetzen',
+    excerpt:
+      'KI-Agenten erledigen eigenständig mehrstufige Aufgaben – ohne dass ein Mensch jeden Schritt anweist. Was steckt dahinter, und welche konkreten Anwendungsfälle gibt es für kleine Unternehmen?',
+    date: '2026-04-21',
+    category: 'KI-Agenten',
+    readingTime: '6 min',
+    draft: true,
+    content: `
+<p>Der Begriff „KI-Agent" taucht gerade überall auf. Doch was bedeutet er konkret – und was hat ein kleines Unternehmen davon? Dieser Artikel erklärt das Konzept ohne Buzzword-Bingo und zeigt, welche Anwendungsfälle heute tatsächlich praxisreif sind.</p>
+
+<h2>Was ein KI-Agent von einem Chatbot unterscheidet</h2>
+<p>Ein klassischer Chatbot beantwortet Fragen. Er wartet auf eine Eingabe, formuliert eine Antwort, fertig. Ein KI-Agent geht weiter: Er verfolgt ein Ziel, plant dafür notwendige Schritte, führt diese eigenständig aus – und passt seinen Kurs an, wenn etwas nicht funktioniert.</p>
+<p>Beispiel: Sie beauftragen einen KI-Agenten damit, alle Leads aus den letzten 30 Tagen zu analysieren, eine Follow-up-E-Mail zu verfassen und einen Termin vorzuschlagen, sofern kein Abschluss erfolgt ist. Der Agent erledigt das selbstständig: CRM abfragen, Daten auswerten, E-Mail schreiben, Kalender prüfen, Nachricht versenden. Kein menschliches Zutun nach dem ersten Auftrag.</p>
+
+<h2>Drei KI-Agenten, die heute in KMU funktionieren</h2>
+<p>Nicht jeder Anwendungsfall ist ausgereift. Diese drei sind es:</p>
+
+<h3>1. Recherche-Agent</h3>
+<p>Sie bekommen eine Anfrage von einem potenziellen Kunden. Ein Recherche-Agent durchsucht automatisch deren Website, LinkedIn-Profil und aktuelle Pressemeldungen – und legt Ihnen in zwei Minuten eine strukturierte Zusammenfassung vor: Unternehmensgröße, Branche, mögliche Pain Points, passende Angebote von Ihrer Seite. Was früher 20 Minuten Handarbeit war, kostet jetzt Sekunden.</p>
+
+<h3>2. Dokumenten-Agent</h3>
+<p>Eingehende Dokumente – Rechnungen, Bestellungen, Angebote – müssen gelesen, kategorisiert und weitergeleitet werden. Ein Dokumenten-Agent liest PDFs und E-Mail-Anhänge, extrahiert die relevanten Daten (Betrag, Absender, Fälligkeitsdatum) und trägt sie direkt in Ihre Buchhaltungssoftware ein. Menschliche Fehler beim Abtippen gehören der Vergangenheit an.</p>
+
+<h3>3. Outreach-Agent</h3>
+<p>Für Dienstleister, die aktiv neue Kunden gewinnen wollen: Ein Outreach-Agent identifiziert täglich passende Unternehmen aus einer definierten Zielgruppe, personalisiert eine Kontaktaufnahme auf Basis öffentlicher Informationen und schickt die Nachricht über LinkedIn oder E-Mail. Kein Massenspam – sondern relevante, individuelle Erstansprache im Autopilot.</p>
+
+<h2>Was KI-Agenten heute noch nicht können</h2>
+<p>Ehrlichkeit ist wichtig: KI-Agenten machen Fehler. Sie halluzinieren gelegentlich, missinterpretieren unklare Aufgaben und brauchen klare Grenzen. Sie sind kein Ersatz für menschliches Urteilsvermögen bei sensiblen Entscheidungen – aber hervorragende Unterstützung bei klar definierten, wiederholbaren Aufgaben.</p>
+<p>Der Schlüssel liegt im Design: Ein guter KI-Agent hat einen engen Aufgabenbereich, klare Übergabepunkte an Menschen und eine nachvollziehbare Protokollierung seiner Aktionen.</p>
+
+<h2>Wie Sie anfangen</h2>
+<p>Identifizieren Sie einen Prozess in Ihrem Unternehmen, der aus mehreren Schritten besteht, sich regelmäßig wiederholt und klare Regeln hat. Genau dort setzt ein KI-Agent an. Wenn Sie wissen möchten, ob Ihr Prozess für einen Agenten geeignet ist, sprechen Sie uns an – die erste Einschätzung ist kostenlos.</p>
+    `.trim(),
+  },
+  {
+    slug: 'e-mail-automatisierung-kmu',
+    title: 'E-Mail-Automatisierung für KMU: Täglich 1–2 Stunden sparen ohne Aufwand',
+    excerpt:
+      'E-Mails fressen in kleinen Unternehmen unverhältnismäßig viel Zeit. Mit den richtigen Automatisierungen reduzieren Sie den manuellen Aufwand drastisch – ohne ein einziges Mal zu programmieren.',
+    date: '2026-04-21',
+    category: 'E-Mail-Automatisierung',
+    readingTime: '5 min',
+    draft: true,
+    content: `
+<p>Laut einer McKinsey-Studie verbringen Wissensarbeiter durchschnittlich 28 % ihrer Arbeitszeit mit E-Mails. Für Inhaber kleiner Unternehmen, die alles selbst machen, ist diese Zahl oft noch höher. Die gute Nachricht: Ein großer Teil davon ist automatisierbar – heute, mit einfachen Tools, ohne Programmierkenntnisse.</p>
+
+<h2>Welche E-Mails sich automatisieren lassen</h2>
+<p>Nicht alle E-Mails sind gleich. Manche erfordern echtes menschliches Nachdenken – die bleiben bei Ihnen. Aber ein erschreckend großer Anteil ist reine Routine:</p>
+<ul>
+  <li><strong>Eingangsbestätigungen</strong>: „Ihre Anfrage ist eingegangen, wir melden uns innerhalb von 24 Stunden." Das schreibt kein Mensch mehr von Hand.</li>
+  <li><strong>Terminbestätigungen und -erinnerungen</strong>: Nach jeder Buchung, 24 Stunden vorher, 1 Stunde vorher – alles automatisch.</li>
+  <li><strong>Follow-up nach Angeboten</strong>: Kein Angebot ohne Nachfass. Ein automatischer Follow-up nach 3 und 7 Tagen erinnert den Interessenten – ohne dass Sie daran denken müssen.</li>
+  <li><strong>Onboarding neuer Kunden</strong>: Sobald jemand unterschreibt, startet eine Sequenz: Willkommens-E-Mail, Zugang zu Unterlagen, Vorstellung des Ablaufs. Alles automatisch, alles in Ihrer Sprache.</li>
+  <li><strong>Bewertungsanfragen</strong>: 48 Stunden nach Projektabschluss eine kurze Bitte um eine Google-Rezension. Simpel, wirkungsvoll.</li>
+</ul>
+
+<h2>Tools, die das ohne Code ermöglichen</h2>
+<p>Sie brauchen dafür keine eigene Softwareentwicklung. Folgende Tools decken 90 % der Anwendungsfälle ab:</p>
+<p><strong>Make (ehemals Integromat)</strong> ist die flexibelste Option für Workflows, die mehrere Apps verbinden. Sie definieren visuell: „Wenn X passiert, dann tu Y mit Z." Sehr mächtig, moderate Lernkurve.</p>
+<p><strong>Brevo (ehemals Sendinblue)</strong> ist ideal für Sequenz-E-Mails und Newsletter. Günstig, DSGVO-konform in Deutschland, einfach zu bedienen.</p>
+<p><strong>Zapier</strong> ist das bekannteste Integrations-Tool weltweit. Mehr als 6.000 App-Verbindungen, auch ohne Entwicklerkenntnisse bedienbar. Teurer als Make, dafür sehr intuitiv.</p>
+
+<h2>Ein konkretes Setup: Follow-up-Automatisierung in 3 Schritten</h2>
+<p>Angenommen, Sie nutzen ein einfaches Kontaktformular auf Ihrer Website. So sieht eine vollständige Automatisierung aus: Erstens erhält der Interessent sofort eine Eingangsbestätigung mit klaren nächsten Schritten. Zweitens wird der Kontakt automatisch in Ihr CRM eingetragen und kategorisiert. Drittens – falls nach 48 Stunden keine Antwort Ihrerseits erfolgte – erhält der Interessent eine sanfte Follow-up-E-Mail, die Ihre Erreichbarkeit unterstreicht.</p>
+<p>Aufwand für die Einrichtung: 2–3 Stunden. Wiederkehrender Zeitgewinn: 30–60 Minuten täglich. Amortisierung: in der ersten Woche.</p>
+
+<h2>DSGVO beachten</h2>
+<p>Bei aller Effizienz: In Deutschland und Österreich gilt die DSGVO. Automatisierte E-Mails dürfen nur an Personen gehen, die aktiv eingewilligt haben. Das bedeutet: Double-Opt-in-Verfahren für Newsletter, klare Hinweise im Kontaktformular, und Anbieter mit EU-Datenspeicherung (Brevo, CleverReach, Mailchimp mit EU-Einstellungen). Wer das einmal sauber aufsetzt, ist auf der sicheren Seite.</p>
+<p>Wenn Sie Ihre E-Mail-Kommunikation systematisch automatisieren wollen – wir helfen Ihnen, das in wenigen Tagen aufzusetzen. Melden Sie sich für ein kostenloses Erstgespräch.</p>
+    `.trim(),
+  },
+  {
+    slug: 'ki-roi-berechnen-kmu',
+    title: 'KI-ROI für KMU: So berechnen Sie, ob sich eine KI-Lösung wirklich lohnt',
+    excerpt:
+      'Bevor Sie in KI investieren, sollten Sie wissen, was Sie dafür bekommen. Diese einfache Rechenmethode zeigt Ihnen in 10 Minuten, ob ein KI-Projekt Sinn macht – oder nicht.',
+    date: '2026-04-21',
+    category: 'Strategie',
+    readingTime: '7 min',
+    draft: true,
+    content: `
+<p>„KI lohnt sich immer" – das hören Sie von Anbietern. „KI ist nur ein Hype" – das hören Sie von Skeptikern. Beide Aussagen sind falsch. Ob eine KI-Lösung sich für Ihr Unternehmen lohnt, hängt von konkreten Zahlen ab. Und diese Zahlen können Sie selbst ermitteln.</p>
+
+<h2>Die Grundformel: ROI = (Nutzen – Kosten) / Kosten × 100</h2>
+<p>Das klingt simpel – und das ist es auch. Der Trick liegt darin, Nutzen und Kosten vollständig zu erfassen. Viele Anbieter nennen nur die Lizenzkosten. Viele Interessenten rechnen nur die offensichtlichsten Einsparungen. Beide Fehler führen zu falschen Entscheidungen.</p>
+
+<h2>Kosten vollständig erfassen</h2>
+<p>Auf der Kostenseite zählen nicht nur die monatliche Software-Gebühr. Rechnen Sie auch ein: die einmalige Einrichtungsgebühr (Setup, Konfiguration, Integration), die interne Zeit für Einführung und Schulung (auch wenn es nur ein paar Stunden sind), die laufenden Anpassungskosten wenn sich Ihr Geschäft verändert, sowie eventuelle API-Kosten bei nutzungsbasierter Abrechnung.</p>
+<p>Beispiel: Ein KI-Chatbot kostet 1.200 € Setup + 150 € monatlich. Im ersten Jahr: 1.200 + (12 × 150) = 3.000 €. Dazu kommen 4 Stunden Einarbeitungszeit à 50 €/Stunde = 200 €. Gesamtkosten Jahr 1: 3.200 €.</p>
+
+<h2>Nutzen vollständig erfassen</h2>
+<p>Hier unterschätzen die meisten Unternehmer den tatsächlichen Wert. Drei Kategorien:</p>
+
+<h3>Direkte Zeitersparnis</h3>
+<p>Welche Aufgabe wird automatisiert? Wie viele Stunden pro Woche kostet sie heute? Was ist Ihre Stunde wert (als Unternehmer: mindestens 80–150 €)? Beispiel: Der Chatbot beantwortet 60 Anfragen pro Monat, die bisher je 8 Minuten Bearbeitungszeit kosteten. Das sind 8 Stunden pro Monat × 12 Monate × 80 €/h = 7.680 € Zeitwert pro Jahr.</p>
+
+<h3>Umsatzsteigerung durch schnellere Reaktion</h3>
+<p>Wenn Anfragen bisher durchschnittlich 4 Stunden auf eine Antwort warteten und Sie 3 Leads pro Monat deshalb verloren haben: Wie hoch ist Ihr durchschnittlicher Auftragswert? Bei 500 € Auftragswert und 3 verlorenen Leads pro Monat sind das 18.000 € entgangener Umsatz pro Jahr. Selbst wenn der Chatbot nur die Hälfte davon rettet, sind das 9.000 €.</p>
+
+<h3>Qualitätsverbesserung</h3>
+<p>Fehler bei der Dateneingabe, vergessene Follow-ups, inkonsistente Kommunikation – das hat ebenfalls einen Preis, auch wenn er schwerer zu messen ist. Schätzen Sie konservativ.</p>
+
+<h2>Das Rechenbeispiel im Überblick</h2>
+<p>Kosten Jahr 1: 3.200 €. Nutzen Jahr 1: 7.680 € (Zeitersparnis) + 4.500 € (gewonnene Leads, konservativ) = 12.180 €. ROI: (12.180 – 3.200) / 3.200 × 100 = 280 %. Das bedeutet: Für jeden investierten Euro erhalten Sie 2,80 € zurück – im ersten Jahr.</p>
+<p>Ab Jahr 2 entfallen die Einrichtungskosten. Der ROI steigt auf über 500 %.</p>
+
+<h2>Wann lohnt es sich nicht?</h2>
+<p>Wenn der zu automatisierende Prozess weniger als zweimal pro Woche vorkommt, ist der Aufwand für Einrichtung und Wartung oft größer als der Nutzen. Auch wenn der Prozess sehr variabel ist – also nie zweimal gleich abläuft – stoßen einfache KI-Lösungen schnell an Grenzen.</p>
+<p>Die ehrliche Antwort: Nicht jede KI-Lösung lohnt sich für jedes Unternehmen. Wir rechnen das im Erstgespräch gemeinsam durch – mit Ihren echten Zahlen. Wenn sich die Investition nicht lohnt, sagen wir das auch.</p>
+    `.trim(),
+  },
+  // ─── PUBLISHED ──────────────────────────────────────────────────────────────
   {
     slug: 'ki-automatisierung-fuer-kleine-unternehmen',
     title: 'Wie KI-Automatisierung kleine Unternehmen wettbewerbsfähig macht',
@@ -110,7 +226,7 @@ export const blogPosts: BlogPost[] = [
 ];
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
-  return blogPosts.find((p) => p.slug === slug);
+  return blogPosts.find((p) => p.slug === slug && !p.draft);
 }
 
 export function formatDate(iso: string): string {

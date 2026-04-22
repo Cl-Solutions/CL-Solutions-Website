@@ -1234,7 +1234,7 @@ export function Home() {
           </div>
         </div>
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="font-inter text-gray-600 text-sm">{new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
+          <p className="font-inter text-gray-600 text-sm">© {new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
           <p className="font-inter text-gray-600 text-sm">DSGVO-konform · Made in Germany · Remote-first</p>
         </div>
       </div>
