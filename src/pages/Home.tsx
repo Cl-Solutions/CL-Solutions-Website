@@ -1,166 +1,188 @@
-import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+// ─── REDESIGN V3 — Home.tsx ──────────────────────────────────────────────────
+// Branch: redesign-v3  |  Normal scroll layout, 11 sections
+// Replaces 3D panel system with scroll-triggered animations per section.
+// Nav + Footer + dark/cyan theme + StarField + CustomCursor preserved.
+
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 gsap.registerPlugin(SplitText);
 import {
   motion,
-  useScroll,
-  useTransform,
-  useMotionTemplate,
+  AnimatePresence,
+  useInView,
   useMotionValue,
   useSpring,
-  useInView,
-  AnimatePresence,
-  MotionValue,
 } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  Globe, MessageSquare, Workflow, Zap,
-  Search, Cog, TrendingUp,
-  Users, MapPin, Target,
-  Calendar, ArrowRight, CheckCircle,
-  UserX, Clock, Plus, Minus, Menu, X,
+  Clock, TrendingUp, Zap, MessageSquare,
+  RefreshCw, Link2,
+  Search, Cog,
+  ArrowRight, ChevronLeft, ChevronRight,
+  Plus, Minus, Menu, X, Calendar,
+  Users, MapPin, Target, CheckCircle,
 } from 'lucide-react';
 import { StarField } from '../components/StarField';
 import { CustomCursor } from '../components/CustomCursor';
 
-// ─── Layout constants ────────────────────────────────────
-const TOTAL  = 9;
-const VH_PER = 200;       // ↓ from 400 — snappier scroll feel
-const SPAN   = 1 / TOTAL;
+// ─── Shared helpers ──────────────────────────────────────────────────────────
 
-// 3D depth constants — inline perspective per panel (avoids stacking-context
-// conflicts that container-level perspective causes with overflow:hidden).
-// PERSP=1200, Z_FAR=-22800 → scale = 1200/(1200+22800) ≈ 0.05 (tiny dot)
-// PERSP=1200, EXIT_Z=533   → scale = 1200/(1200−533)   ≈ 1.80 (flies past)
-const PERSP  = 1200;
-const Z_FAR  = -22800;
-const EXIT_Z = 533;
+const CARD = [
+  'glass-card glass-card-interactive rounded-2xl',
+  'hover:-translate-y-1.5 hover:scale-[1.02]',
+  'transition-all duration-300 ease-out',
+].join(' ');
 
-// Section timing fractions (of SPAN)
-const ENTRY_SPAN     = 0.38;  // ↑ from 0.15 — next slide visible earlier, longer fly-in (~76 vh)
-const DWELL_END_FRAC = 0.45;
-const EXIT_END_FRAC  = 0.58;
-// Gap between sections = (1 - EXIT_END_FRAC - ENTRY_SPAN) × SPAN ≈ 8 vh
+/** Smooth-scroll to a section by ID, offsetting for the fixed 80px navbar. */
+function scrollToId(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    const top = el.getBoundingClientRect().top + window.scrollY - 84;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+}
 
-// ─── Content data ────────────────────────────────────────
-const problems = [
-  { icon: UserX,  title: 'Prozesse noch manuell?',               desc: 'Excel, Copy-Paste, manuelle Mails. Während Sie tippen, skaliert Ihre Konkurrenz bereits automatisiert — ohne zusätzliches Personal.' },
-  { icon: Clock,  title: 'Kein System, das für Sie arbeitet?',   desc: 'Anfragen kommen auch nachts und am Wochenende. Ohne Automatisierung sind Sie an Ihre eigene Arbeitszeit gebunden — und das limitiert Ihr Wachstum.' },
-  { icon: Globe,  title: 'Kein professioneller Webauftritt?',    desc: 'Ihre Website ist Ihr erster Eindruck — rund um die Uhr. Wer online nicht überzeugt, verliert Kunden, bevor das erste Gespräch stattfindet.' },
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const NAV_ITEMS: { label: string; id?: string; href?: string }[] = [
+  { label: 'Leistungen',  id: 'leistungen' },
+  { label: 'Prozess',     id: 'prozess' },
+  { label: 'Über uns',    id: 'ueber-uns' },
+  { label: 'FAQ',         id: 'faq' },
+  { label: 'Blog',        href: '/blog' },
+  { label: 'Kontakt',     id: 'kontakt' },
 ];
 
-// Services: 4 cards — order: Prozessautomatisierung, Individuelle KI-Lösungen, Website, KI-Kommunikation
+const problems = [
+  { icon: Clock,          title: 'Täglich Zeit verlieren',           desc: 'Routineaufgaben, manuelle Prozesse, Copy-Paste — euer Tag steckt voller Arbeit, die kein Mensch erledigen müsste.' },
+  { icon: TrendingUp,     title: 'Wachsen ohne mehr Aufwand',        desc: 'Mehr Kunden, mehr Umsatz — aber nicht proportional mehr Personal. Automatisierung ist euer stärkster Hebel.' },
+  { icon: Zap,            title: 'Systeme reden nicht miteinander',  desc: 'Tools die nicht verbunden sind. Daten die manuell übertragen werden. Das kostet täglich Zeit, Geld und Nerven.' },
+  { icon: MessageSquare,  title: 'Anfragen fallen durchs Raster',    desc: 'Keine Reaktion außerhalb der Bürozeiten. Leads die zu spät oder gar nicht bearbeitet werden.' },
+];
+
 const services = [
   {
     id: 'automation',
-    icon: Workflow,
-    title: 'Prozessautomatisierung',
-    shortDesc: 'Workflows optimieren',
-    description: 'Wir verbinden Ihre Tools und automatisieren repetitive Aufgaben komplett.',
-    features: [
-      'Repetitive Aufgaben vollständig eliminieren',
-      'Systeme verbinden — ohne manuelle Datenpflege',
-      'Automatische Rechnungsstellung & E-Mail-Workflows',
-      'Individuelle Integrationen für Ihren genauen Use Case',
-    ],
+    icon: RefreshCw,
+    emoji: '🔄',
+    title: 'Prozesse automatisieren',
+    text: 'Wir verbinden eure bestehenden Tools und automatisieren Abläufe, die heute manuell laufen. Keine Datenpflege mehr. Keine verpassten Schritte. Alles läuft durch — auch wenn niemand hinschaut.',
+    tags: ['n8n', 'Make', 'Zapier', 'Python', 'REST APIs'],
+  },
+  {
+    id: 'integration',
+    icon: Link2,
+    emoji: '🔗',
+    title: 'Systeme verbinden',
+    text: 'CRM, ERP, E-Mail, Kalender, Buchhaltung — wir bringen zusammen, was nicht zusammenarbeitet. Daten fließen automatisch, Fehler durch manuelle Übertragung verschwinden.',
+    tags: ['API-Integration', 'Webhooks', 'Datenpipelines', 'Custom Middleware'],
+  },
+  {
+    id: 'communication',
+    icon: MessageSquare,
+    emoji: '💬',
+    title: 'Kommunikation automatisieren',
+    text: 'Chatbot und Voice Agent, der Anfragen entgegennimmt, qualifiziert und weiterleitet — in eurer Sprache, in eurer Markenstimme, rund um die Uhr.',
+    tags: ['Voice Agent', 'Chatbot', 'OpenAI', 'WhatsApp', 'Telefonie-Integration'],
   },
   {
     id: 'custom-ki',
     icon: Zap,
-    title: 'Individuelle KI-Lösungen',
-    shortDesc: 'Custom Development',
-    description: 'Maßgeschneiderte KI-Systeme für komplexe Anforderungen — von der Idee bis zur fertigen Lösung.',
-    features: [
-      'Maßgeschneiderte KI-Systeme für komplexe Anforderungen',
-      'Von der Idee bis zur fertigen Lösung aus einer Hand',
-      'Skalierbare Architektur, die mit Ihrem Unternehmen wächst',
-      'Beratung, Entwicklung & laufende Betreuung',
-    ],
+    emoji: '⚡',
+    title: 'Custom KI-Lösung',
+    text: 'Kein Standardtool passt? Wir entwickeln KI-Systeme, die genau auf euren Prozess zugeschnitten sind — von der Logik bis zur Integration in eure bestehende Infrastruktur.',
+    tags: ['Custom LLM', 'Fine-Tuning', 'KI-Agenten', 'RAG', 'Dokumenten-KI'],
+  },
+];
+
+const showcaseCards = [
+  {
+    emoji: '🔄',
+    category: 'Prozessautomatisierung',
+    title: '[Projektname Platzhalter]',
+    desc: 'Vollautomatische Synchronisation zwischen CRM und Buchhaltungssystem. Manuelle Datenpflege komplett eliminiert.',
+    badge: '8h/Woche eingespart',
   },
   {
-    id: 'website',
-    icon: Globe,
-    title: 'Website',
-    shortDesc: 'Professionelle Präsenz',
-    description: 'Moderne, schnelle Websites, die Vertrauen schaffen und Besucher zu Kunden machen.',
-    features: [
-      'Mehr Besucher, die zu Kunden werden',
-      'Schnell, modern & auf allen Geräten',
-      'SEO-optimiert für mehr Sichtbarkeit',
-      'Kontaktformulare & automatisches Lead-Capturing',
-    ],
+    emoji: '💬',
+    category: 'KI-Kommunikation',
+    title: '[Projektname Platzhalter]',
+    desc: 'Voice Agent übernimmt eingehende Anrufe außerhalb der Geschäftszeiten, qualifiziert Anfragen und bucht Termine automatisch.',
+    badge: '24/7 Erreichbarkeit',
   },
   {
-    id: 'ki-kommunikation',
-    icon: MessageSquare,
-    title: 'KI-Kommunikation',
-    shortDesc: 'Chatbot & Voice Agent',
-    description: 'KI-Chatbot und Voice Agent in einer Lösung — damit kein Lead verloren geht.',
-    features: [
-      'Kein entgangener Lead mehr — auch nachts und am Wochenende',
-      'Automatische Terminbuchung & Kundenqualifizierung',
-      'Telefon & Chat: KI übernimmt beide Kanäle',
-      'Nahtlose Integration in bestehende Systeme',
-    ],
+    emoji: '🔗',
+    category: 'System-Integration',
+    title: '[Projektname Platzhalter]',
+    desc: 'API-Verbindung zwischen Shop-System, Lager und Versanddienstleister. Bestellungen laufen vollautomatisch durch.',
+    badge: '0 manuelle Schritte',
+  },
+  {
+    emoji: '⚡',
+    category: 'Custom KI-Lösung',
+    title: '[Projektname Platzhalter]',
+    desc: 'Dokumenten-KI extrahiert relevante Daten aus eingehenden PDFs und überträgt sie strukturiert ins interne System.',
+    badge: '90% schneller',
+  },
+  {
+    emoji: '📊',
+    category: 'Individuelle KI-Lösung',
+    title: '[Projektname Platzhalter]',
+    desc: 'KI-Agent qualifiziert eingehende Leads automatisch, scored sie nach Priorität und übergibt nur kaufbereite Kontakte ans Vertriebsteam.',
+    badge: '3x schnellere Reaktionszeit',
   },
 ];
 
 const steps = [
-  { num: '01', icon: Search,     title: 'Kennenlernen & Analyse',  desc: 'In einem kostenlosen 30-Minuten-Gespräch analysieren wir Ihre Prozesse, identifizieren konkrete Potenziale und verstehen Ihr Ziel.' },
-  { num: '02', icon: Cog,        title: 'Konzept & Kosten',        desc: 'Sie erhalten innerhalb von 48 Stunden ein maßgeschneidertes Angebot — transparent, verständlich, ohne versteckte Kosten.' },
-  { num: '03', icon: TrendingUp, title: 'Umsetzung & Live-Schaltung', desc: 'Wir entwickeln, testen und implementieren. Erste Ergebnisse sind in der Regel innerhalb von 1–2 Wochen sichtbar.' },
+  { num: '01', icon: Search,     title: 'Kennenlernen & Analyse',    desc: 'In einem kostenlosen 30-Minuten-Gespräch analysieren wir eure Prozesse, identifizieren die größten Hebel und verstehen euer Ziel.' },
+  { num: '02', icon: Cog,        title: 'Konzept & Angebot',         desc: 'Innerhalb von 48 Stunden erhaltet ihr ein maßgeschneidertes Konzept mit konkreten Lösungsvorschlägen und transparenten Kosten — ohne versteckte Posten.' },
+  { num: '03', icon: TrendingUp, title: 'Umsetzung & Live-Schaltung', desc: 'Wir entwickeln, testen und implementieren. Erste automatisierte Abläufe sind in der Regel innerhalb von 1–2 Wochen live.' },
 ];
 
-// Stats: all use count-up animation
-const stats: { end: number; suffix: string; label: string }[] = [
-  { end: 100, suffix: '%',  label: 'Individuelle Lösungen' },
-  { end: 24,  suffix: '/7', label: 'Verfügbarkeit Ihrer KI' },
-  { end: 48,  suffix: 'h',  label: 'Bis zum ersten Angebot' },
+type StatDef =
+  | { kind: 'count'; end: number; suffix: string; label: string }
+  | { kind: 'static'; display: string; label: string };
+
+const stats: StatDef[] = [
+  { kind: 'count',  end: 48,  suffix: 'h',  label: 'Bis zum ersten Angebot' },
+  { kind: 'static', display: '1–2 Wo.',     label: 'Bis zur ersten Live-Lösung' },
+  { kind: 'count',  end: 24,  suffix: '/7', label: 'Verfügbarkeit eurer KI' },
+  { kind: 'count',  end: 0,   suffix: '',   label: 'Manuelle Schritte nach Automatisierung' },
 ];
 
-// Tech logos for scrolling banner — imgs from simpleicons CDN, text fallbacks for unavailable ones
 const techLogos: { type: 'img' | 'text'; src?: string; alt?: string; label?: string }[] = [
   { type: 'text', label: 'OpenAI' },
-  { type: 'img',  src: 'https://cdn.simpleicons.org/n8n/ffffff',     alt: 'n8n' },
-  { type: 'img',  src: 'https://cdn.simpleicons.org/make/ffffff',    alt: 'Make' },
-  { type: 'img',  src: 'https://cdn.simpleicons.org/vercel/ffffff',  alt: 'Vercel' },
-  { type: 'img',  src: 'https://cdn.simpleicons.org/stripe/ffffff',  alt: 'Stripe' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/n8n/ffffff',    alt: 'n8n' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/make/ffffff',   alt: 'Make' },
+  { type: 'text', label: 'Anthropic' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/zapier/ffffff', alt: 'Zapier' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/python/ffffff', alt: 'Python' },
+  { type: 'img',  src: 'https://cdn.simpleicons.org/vercel/ffffff', alt: 'Vercel' },
   { type: 'text', label: 'Voiceflow' },
-  { type: 'text', label: 'VAPI' },
-];
-
-const highlights = [
-  { icon: Users,  title: 'Berkay Aksoy & Marios Lysitsas', desc: 'Wir verstehen Ihr Business. Dann automatisieren wir es.' },
-  { icon: MapPin, title: 'Made in Germany',                 desc: 'Deutsch, zuverlässig, DSGVO-konform' },
-  { icon: Target, title: 'Ergebnisorientiert',              desc: 'Wir messen uns an Ihrem ROI' },
 ];
 
 const faqs = [
-  { q: 'Funktioniert das auch für meine Branche?', a: 'Ja. Unsere Lösungen sind branchenunabhängig und werden individuell angepasst. Ob Handwerk, Dienstleistung oder E-Commerce.' },
-  { q: 'Was kostet das?',                         a: 'Jedes Projekt ist individuell — Umfang, Komplexität und laufende Betreuung beeinflussen den Preis. Was wir sagen können: Ein automatisierter Prozess rechnet sich in der Regel innerhalb weniger Wochen. Im kostenlosen Erstgespräch nennen wir Ihnen konkrete Zahlen — ohne Überraschungen danach.' },
-  { q: 'Wie lange dauert die Umsetzung?',          a: 'Die meisten Projekte sind innerhalb von 2–4 Wochen einsatzbereit. Kleinere Automatisierungen können in wenigen Tagen umgesetzt werden.' },
-  { q: 'Brauche ich technisches Wissen?',          a: 'Nein. Wir kümmern uns um alles Technische. Sie müssen nur wissen, welche Prozesse Sie verbessern möchten — wir zeigen Ihnen die Möglichkeiten.' },
-  { q: 'Ist das DSGVO-konform?',                   a: 'Absolut. Als deutsches Unternehmen legen wir großen Wert auf Datenschutz. Alle Lösungen sind DSGVO-konform.' },
-  { q: 'Was passiert nach der Umsetzung?',         a: 'Wir lassen Sie nicht allein. Nach der Implementierung bieten wir Support und können bei Bedarf weitere Optimierungen vornehmen.' },
-  { q: 'Was, wenn ich mit dem Ergebnis nicht zufrieden bin?', a: 'Wir arbeiten so lange nach, bis Sie zufrieden sind. Unser Ziel ist eine langfristige Zusammenarbeit — kein einmaliges Projekt. Das Erstgespräch ist kostenlos und unverbindlich: Wenn die Chemie oder das Angebot nicht passt, entstehen Ihnen keinerlei Kosten.' },
+  { q: 'Für welche Branchen funktioniert das?',         a: 'Prozessautomatisierung funktioniert branchenunabhängig — überall wo Aufgaben wiederholt werden, Systeme nicht verbunden sind oder Kommunikation manuell läuft. Wir haben Lösungen für Dienstleister, Handel, Handwerk und B2B-Unternehmen umgesetzt.' },
+  { q: 'Was kostet das?',                               a: 'Jedes Projekt ist individuell — Umfang, Komplexität und laufende Betreuung beeinflussen den Preis. Was wir sagen können: Ein automatisierter Prozess rechnet sich in der Regel innerhalb weniger Wochen. Im kostenlosen Erstgespräch nennen wir euch konkrete Zahlen — ohne Überraschungen danach.' },
+  { q: 'Wie lange dauert die Umsetzung?',               a: 'Erste Ergebnisse sind oft in 1–2 Wochen sichtbar. Komplexere Systeme mit mehreren Integrationen dauern entsprechend länger — das besprechen wir im Konzept transparent.' },
+  { q: 'Brauchen wir technisches Wissen?',              a: 'Nein. Ihr beschreibt euren Prozess, wir übernehmen alles Technische. Nach Übergabe bekommt ihr eine verständliche Dokumentation und Einführung.' },
+  { q: 'Ist das DSGVO-konform?',                        a: 'Ja. Wir sind ein deutsches Unternehmen und setzen alle Lösungen DSGVO-konform um. Datenspeicherung, Verarbeitung und Zugriffe werden transparent dokumentiert.' },
+  { q: 'Was passiert nach der Umsetzung?',              a: 'Wir begleiten den Go-Live, beheben Startschwierigkeiten und stehen für Anpassungen zur Verfügung. Auf Wunsch bieten wir laufende Betreuung und Weiterentwicklung.' },
+  { q: 'Was, wenn ich mit dem Ergebnis nicht zufrieden bin?', a: 'Wir arbeiten ergebnisorientiert — nicht stunden- oder projektbasiert. Wenn etwas nicht passt, passen wir es an. Das klären wir vor Projektstart vertraglich.' },
 ];
 
-// ─── Mouse glow cursor ────────────────────────────────────
-// Scroll-reactive: large+dim at rest, tight+bright while scrolling.
-// Position is set via direct DOM transform (no React state) for 60fps.
-// Size crossfades between two CSS layers via opacity transitions.
+// ─── Utilities ───────────────────────────────────────────────────────────────
+
+/** Mouse glow — follows cursor, tightens during scroll. Desktop only. */
 function MouseGlow() {
   const outerRef = useRef<HTMLDivElement>(null);
   const [scrolling, setScrolling] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
-
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (outerRef.current) {
-        outerRef.current.style.transform =
-          `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`;
-      }
+      if (outerRef.current)
+        outerRef.current.style.transform = `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`;
     };
     const onScroll = () => {
       setScrolling(true);
@@ -175,146 +197,62 @@ function MouseGlow() {
       clearTimeout(timerRef.current);
     };
   }, []);
-
   return (
-    <div
-      ref={outerRef}
-      className="fixed pointer-events-none z-[60] hidden lg:block"
-      style={{ width: '300px', height: '300px', top: 0, left: 0, willChange: 'transform' }}
-    >
-      {/* Resting state: large, low-opacity glow */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0) 70%)',
-          opacity: scrolling ? 0 : 1,
-          transition: 'opacity 300ms ease',
-        }}
-      />
-      {/* Warp state: small tight glow pulled toward centre */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          width: '150px', height: '150px',
-          top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0) 70%)',
-          opacity: scrolling ? 1 : 0,
-          transition: 'opacity 300ms ease',
-        }}
-      />
+    <div ref={outerRef} className="fixed pointer-events-none z-[60] hidden lg:block"
+      style={{ width: 300, height: 300, top: 0, left: 0, willChange: 'transform' }}>
+      <div className="absolute inset-0 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0) 70%)', opacity: scrolling ? 0 : 1, transition: 'opacity 300ms ease' }} />
+      <div className="absolute rounded-full"
+        style={{ width: 150, height: 150, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, rgba(0,212,255,0.25) 0%, rgba(0,212,255,0) 70%)', opacity: scrolling ? 1 : 0, transition: 'opacity 300ms ease' }} />
     </div>
   );
 }
 
-// ─── 3D Section Panel ────────────────────────────────────
-function Panel({
-  children,
-  scrollYProgress,
-  index,
-  isActive,
-  isLast = false,
-}: {
-  children: React.ReactNode;
-  scrollYProgress: MotionValue<number>;
-  index: number;
-  isActive: boolean;
-  isLast?: boolean;
-}) {
-  const isHero = index === 0;
+/**
+ * GSAP SplitText reveal for headings, triggered on first inView.
+ * headRef → words drop from above; subRef → slides in from left.
+ */
+function useSplitHeadline(inView: boolean) {
+  const headRef = useRef<HTMLElement>(null);
+  const subRef  = useRef<HTMLElement>(null);
+  const done    = useRef(false);
 
-  const entryStart = isHero ? 0     : Math.max(0.005, (index - ENTRY_SPAN) * SPAN);
-  const entryMid   = isHero ? 0.001 : (entryStart + Math.min(index * SPAN, 0.990)) / 2;
-  const entryFull  = isHero ? 0.001 : Math.min(index * SPAN, 0.990);
-  // exitStart/exitEnd must stay ≤ 1.0 — Chrome's ScrollTimeline API propagates the
-  // useTransform input range directly as WAAPI keyframe offsets in bindToMotionValue.
-  // Values > 1 crash with "Offsets must be null or in the range [0,1]" (no try/catch).
-  const exitStart  = isLast ? 0.991 : (index + DWELL_END_FRAC) * SPAN;
-  const exitEnd    = isLast ? 0.999 : Math.min((index + EXIT_END_FRAC) * SPAN, 0.999);
-
-  const z = useTransform(
-    scrollYProgress,
-    [entryStart, entryFull, exitStart, exitEnd],
-    [isHero ? 0 : Z_FAR, 0, 0, isLast ? 0 : EXIT_Z]
-  );
-
-  const opacity = useTransform(
-    scrollYProgress,
-    [entryStart, entryMid,    exitStart, exitEnd],
-    [isHero ? 1 : 0,    1,    1,         isLast ? 1 : 0]
-  );
-
-  // Inline perspective per panel — avoids container stacking-context issues.
-  // No blur at any point; sharpness is maintained throughout.
-  const transform = useMotionTemplate`perspective(${PERSP}px) translateZ(${z}px)`;
-
-  return (
-    <motion.div
-      className="absolute inset-0 flex items-start sm:items-center justify-center px-4 sm:px-6 overflow-hidden"
-      style={{
-        // Merge padding + animation styles into one object (React ignores duplicate style props)
-        // Mobile: items-start + paddingTop ensures headline clears the 80px navbar
-        paddingTop:    'clamp(88px, 14vh, 96px)',
-        paddingBottom: 'clamp(40px, 8vh,  96px)',
-        opacity,
-        transform,
-        zIndex: isActive ? 20 : 10,
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-// ─── Mobile detection ────────────────────────────────────
-function useIsMobile() {
-  const [mobile, setMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
-  );
-  useEffect(() => {
-    const check = () => setMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', check, { passive: true });
-    return () => window.removeEventListener('resize', check);
+  useLayoutEffect(() => {
+    if (headRef.current) headRef.current.style.opacity = '0';
+    if (subRef.current)  subRef.current.style.opacity  = '0';
   }, []);
-  return mobile;
-}
-
-// ─── Mobile section wrapper ───────────────────────────────
-// Uses IntersectionObserver (via useInView) to trigger isActive
-// when a section scrolls into view — replaces scroll-progress activation.
-function MobileSection({
-  id,
-  onView,
-  children,
-}: {
-  id: string;
-  onView?: (v: boolean) => void;
-  children: (isActive: boolean) => React.ReactNode;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
 
   useEffect(() => {
-    if (inView) onView?.(true);
-  }, [inView, onView]);
+    if (!inView || done.current) return;
+    done.current = true;
+    const head = headRef.current;
+    const sub  = subRef.current;
+    if (head) {
+      gsap.set(head, { opacity: 1 });
+      const split = new SplitText(head, { type: 'words' });
+      gsap.from(split.words, { y: -50, opacity: 0, duration: 0.65, stagger: 0.07, ease: 'power3.out' });
+    }
+    if (sub) {
+      gsap.set(sub, { opacity: 1 });
+      gsap.from(sub, { x: -20, opacity: 0, duration: 0.5, delay: 0.1, ease: 'power3.out' });
+    }
+  }, [inView]);
 
-  return (
-    <div ref={ref} id={id} className="relative px-4 sm:px-6 py-14 sm:py-20">
-      {children(inView)}
-    </div>
-  );
+  return { headRef, subRef };
 }
 
-// ─── Animated counter ────────────────────────────────────
+/** Animated count-up number. */
 function Counter({ end, suffix, label, active }: { end: number; suffix: string; label: string; active: boolean }) {
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (!active) return;
+    // For 0: immediately show without animation
+    if (end === 0) { setCount(0); return; }
     let startTs: number | null = null;
     let raf: number;
     const tick = (ts: number) => {
       if (!startTs) startTs = ts;
-      const p = Math.min((ts - startTs) / 2200, 1);
+      const p = Math.min((ts - startTs) / 2000, 1);
       setCount(Math.floor((1 - Math.pow(1 - p, 4)) * end));
       if (p < 1) raf = requestAnimationFrame(tick);
       else setCount(end);
@@ -324,50 +262,56 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
   }, [active, end]);
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-4xl sm:text-6xl md:text-8xl text-white tabular-nums">
+      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
         {count}<span className="text-accent">{suffix}</span>
       </div>
-      <p className="font-inter text-gray-400 text-lg mt-4">{label}</p>
+      <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
     </div>
   );
 }
 
-// ─── Navigation ──────────────────────────────────────────
-// Sections: 0=Hero, 1=Problem, 2=Services, 3=FuerSie, 4=Process, 5=Numbers, 6=About, 7=FAQ, 8=Contact
-const NAV_ITEMS: { label: string; idx?: number; href?: string }[] = [
-  { label: 'Leistungen', idx: 2 },
-  { label: 'Prozess',    idx: 4 },
-  { label: 'Über uns',   idx: 6 },
-  { label: 'FAQ',        idx: 7 },
-  { label: 'Blog',       href: '/blog' },
-  { label: 'Kontakt',    idx: 8 },
-];
+// ─── Section label ────────────────────────────────────────────────────────────
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-inter text-accent text-xs font-semibold tracking-[0.18em] uppercase block mb-3">
+      {children}
+    </span>
+  );
+}
 
-function Nav({ goTo }: { goTo: (i: number) => void }) {
+// ─── Nav ─────────────────────────────────────────────────────────────────────
+function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open,     setOpen]     = useState(false);
+
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', h, { passive: true });
     return () => window.removeEventListener('scroll', h);
   }, []);
+
+  const handleNav = (item: typeof NAV_ITEMS[0]) => {
+    if (item.id) scrollToId(item.id);
+    setOpen(false);
+  };
+
   return (
     <>
       <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
+        initial={{ y: -100 }} animate={{ y: 0 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
           scrolled
-            ? 'bg-[rgba(10,10,10,0.75)] backdrop-blur-[16px] border-[rgba(0,229,255,0.08)]'
-            : 'bg-[rgba(10,10,10,0.5)] backdrop-blur-[16px] border-[rgba(0,229,255,0.05)] md:bg-[rgba(10,10,10,0.4)]'
+            ? 'bg-[rgba(10,10,10,0.80)] backdrop-blur-[16px] border-[rgba(0,229,255,0.08)]'
+            : 'bg-[rgba(10,10,10,0.50)] backdrop-blur-[16px] border-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
-          <button onClick={() => goTo(0)} className="flex items-center gap-3">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3">
             <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />
             <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
           </button>
+
           <div className="hidden md:flex items-center gap-8">
             {NAV_ITEMS.map((item) => (
               item.href
@@ -375,16 +319,17 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
                     className="nav-item font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
                     {item.label}
                   </Link>
-                : <button key={item.idx} onClick={() => goTo(item.idx!)}
+                : <button key={item.id} onClick={() => handleNav(item)}
                     className="nav-item font-inter text-sm text-gray-400 hover:text-white transition-colors duration-150">
                     {item.label}
                   </button>
             ))}
-            <button onClick={() => goTo(8)}
-              className="px-5 py-2.5 bg-accent text-dark font-inter font-medium text-sm rounded-lg hover:bg-accent/90 transition-colors">
-              Potenzialanalyse buchen
+            <button onClick={() => scrollToId('kontakt')}
+              className="px-5 py-2.5 bg-accent text-dark font-inter font-semibold text-sm rounded-lg hover:bg-accent/90 transition-colors">
+              Prozessanalyse buchen
             </button>
           </div>
+
           <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -396,32 +341,20 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-40 bg-[#0a0a0a] pt-24 flex flex-col items-center gap-6 p-8 md:hidden"
-          >
+            className="fixed inset-0 z-40 bg-[#0a0a0a] pt-24 flex flex-col items-center gap-6 p-8 md:hidden">
             {NAV_ITEMS.map((item, i) => (
               item.href
-                ? <motion.div key={item.href}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}>
-                    <Link to={item.href} onClick={() => setOpen(false)}
-                      className="font-inter text-white text-xl">
-                      {item.label}
-                    </Link>
+                ? <motion.div key={item.href} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                    <Link to={item.href} onClick={() => setOpen(false)} className="font-inter text-white text-xl">{item.label}</Link>
                   </motion.div>
-                : <motion.button key={item.idx}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => { goTo(item.idx!); setOpen(false); }}
-                    className="font-inter text-white text-xl">
-                    {item.label}
+                : <motion.button key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    onClick={() => handleNav(item)} className="font-inter text-white text-xl">{item.label}
                   </motion.button>
             ))}
-            <motion.button
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: NAV_ITEMS.length * 0.05 }}
-              onClick={() => { goTo(8); setOpen(false); }}
-              className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-medium rounded-lg">
-              Potenzialanalyse buchen
+            <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: NAV_ITEMS.length * 0.05 }}
+              onClick={() => { scrollToId('kontakt'); setOpen(false); }}
+              className="mt-4 px-8 py-3 bg-accent text-dark font-inter font-semibold rounded-lg">
+              Prozessanalyse buchen
             </motion.button>
           </motion.div>
         )}
@@ -430,460 +363,96 @@ function Nav({ goTo }: { goTo: (i: number) => void }) {
   );
 }
 
-// ─── Dot navigation ──────────────────────────────────────
-function Dots({ scrollYProgress, goTo }: { scrollYProgress: MotionValue<number>; goTo: (i: number) => void }) {
-  const [cur, setCur] = useState(0);
-  useEffect(() => {
-    return scrollYProgress.on('change', (v) => {
-      setCur(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
-    });
-  }, [scrollYProgress]);
-  return (
-    <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 sm:gap-3">
-      {Array.from({ length: TOTAL }, (_, i) => (
-        <button key={i} onClick={() => goTo(i)}
-          className={`rounded-full transition-all duration-300 ${
-            i === cur
-              ? 'w-1.5 h-3 sm:w-2 sm:h-4 bg-accent'
-              : 'w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/20 hover:bg-white/50'
-          }`} />
-      ))}
-    </div>
-  );
-}
+// ─── SECTION 1 — Hero ────────────────────────────────────────────────────────
+function HeroSection() {
+  const line1Ref = useRef<HTMLSpanElement>(null);
+  const line2Ref = useRef<HTMLSpanElement>(null);
+  const done     = useRef(false);
 
-// ─── Persistent scroll indicator ─────────────────────────
-// Stays fixed at the bottom-centre throughout the scroll journey,
-// fading out as the user approaches the final section.
-function ScrollArrow({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const fadeStart = (TOTAL - 1.8) * SPAN;
-  const fadeEnd   = (TOTAL - 0.6) * SPAN;
-  const opacity   = useTransform(scrollYProgress, [fadeStart, fadeEnd], [1, 0]);
-
-  return (
-    <motion.div
-      className="fixed bottom-4 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center gap-0.5"
-      style={{ opacity }}
-    >
-      <div className="animate-scroll-bounce flex flex-col items-center">
-        <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
-          <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style={{ marginTop: '-5px' }}>
-          <path d="M1 1.5L11 10.5L21 1.5" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Shared card class ───────────────────────────────────
-// Glass surface + lift/scale on hover
-const CARD = `
-  glass-card glass-card-interactive rounded-2xl
-  hover:-translate-y-1.5 hover:scale-[1.02]
-  transition-all duration-300 ease-out
-`.replace(/\s+/g, ' ').trim();
-
-
-// ─── Typewriter hook ─────────────────────────────────────
-const TW_WORDS = ['Zeitverlust.', 'verpassten Anfragen.', 'manueller Arbeit.', 'langsamen Prozessen.', 'ungenutztem Potenzial.'];
-
-function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
-  const [display, setDisplay] = useState('');
-  const [wordIdx, setWordIdx] = useState(0);
-  const [phase,   setPhase]   = useState<'typing' | 'pausing' | 'deleting'>('typing');
-
-  useEffect(() => {
-    const word = words[wordIdx];
-    let t: ReturnType<typeof setTimeout>;
-    if (phase === 'typing') {
-      if (display.length < word.length) {
-        t = setTimeout(() => setDisplay(word.slice(0, display.length + 1)), typeMs);
-      } else {
-        setPhase('pausing');
-      }
-    } else if (phase === 'pausing') {
-      t = setTimeout(() => setPhase('deleting'), pauseMs);
-    } else {
-      if (display.length > 0) {
-        t = setTimeout(() => setDisplay(display.slice(0, -1)), deleteMs);
-      } else {
-        setWordIdx((wordIdx + 1) % words.length);
-        setPhase('typing');
-      }
-    }
-    return () => clearTimeout(t);
-  }, [display, phase, wordIdx, words, typeMs, deleteMs, pauseMs]);
-
-  return display;
-}
-
-// ─── GSAP headline split animation ───────────────────────
-// Text is hidden before first paint so it's invisible while the panel
-// flies in from the distance. GSAP reveals + animates on first activation.
-function useSplitHeadline(active: boolean) {
-  const headRef = useRef<HTMLElement>(null);
-  const subRef  = useRef<HTMLElement>(null);
-  const done    = useRef(false);
-
-  // Hide synchronously before first browser paint — prevents text flash during entry
   useLayoutEffect(() => {
-    if (headRef.current) headRef.current.style.opacity = '0';
-    if (subRef.current)  subRef.current.style.opacity  = '0';
+    if (line1Ref.current) line1Ref.current.style.opacity = '0';
+    if (line2Ref.current) line2Ref.current.style.opacity = '0';
   }, []);
 
   useEffect(() => {
-    if (!active || done.current) return;
-    const head = headRef.current;
-    const sub  = subRef.current;
-    if (!head) return;
+    if (done.current) return;
     done.current = true;
-
-    // Reveal parent so individual word opacities work correctly
-    gsap.set(head, { opacity: 1 });
-    const split = new SplitText(head, { type: 'words' });
-    gsap.from(split.words, {
-      y: -60,
-      opacity: 0,
-      duration: 0.7,
-      stagger: 0.08,
-      ease: 'power3.out',
-    });
-
-    if (sub) {
-      gsap.set(sub, { opacity: 1 });
-      gsap.from(sub, {
-        x: -30,
-        opacity: 0,
-        duration: 0.55,
-        delay: 0.12,
-        ease: 'power3.out',
-      });
+    const tl = gsap.timeline();
+    if (line1Ref.current) {
+      gsap.set(line1Ref.current, { opacity: 1 });
+      const s1 = new SplitText(line1Ref.current, { type: 'words' });
+      tl.from(s1.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out' }, 0.1);
     }
-  }, [active]);
-
-  return { headRef, subRef };
-}
-
-// ─── Section content ─────────────────────────────────────
-
-function HeroPanel({ isActive }: { isActive: boolean }) {
-  const word = useTypewriter(TW_WORDS);
-  const staticRef = useRef<HTMLSpanElement>(null);
-  const gsapDone  = useRef(false);
-
-  // Run in useLayoutEffect so GSAP sets the from-state (opacity:0, y:-60)
-  // synchronously before the first browser paint — no separate pre-hide needed.
-  // Hero is always active from load, so this fires immediately on mount.
-  useLayoutEffect(() => {
-    if (!isActive || gsapDone.current || !staticRef.current) return;
-    gsapDone.current = true;
-    const split = new SplitText(staticRef.current, { type: 'words' });
-    gsap.from(split.words, {
-      y: -60,
-      opacity: 0,
-      duration: 0.7,
-      stagger: 0.08,
-      ease: 'power3.out',
-    });
-  }, [isActive]);
-
-  return (
-    <div className="max-w-5xl mx-auto text-center w-full">
-      {/*
-        Static text and typewriter are separate block lines so that
-        changing the typewriter word length never causes the static
-        words to reflow/jump.
-      */}
-      <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-5 sm:mb-8">
-        <span ref={staticRef} style={{ display: 'block' }}>Wir automatisieren. Schluss mit</span>
-        {/* Reserve space for 2 wrapped lines on narrow mobile screens.
-            Overridden to 1 line on sm+ via the injected style rule below. */}
-        <style>{`.hero-tw-line{min-height:2.6em}@media(min-width:640px){.hero-tw-line{min-height:1.3em}}`}</style>
-        <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
-          {word}<span className="tw-cursor">|</span>
-        </span>
-      </h1>
-      <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.85 }}
-        className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-12">
-        KI-Lösungen &amp; Automatisierung für deutsche Unternehmen.{' '}
-        <br className="hidden sm:inline" />Mehr Zeit. Mehr Umsatz. Skalierbares Wachstum.
-      </motion.p>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.1 }}>
-        <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-          className="inline-block px-6 py-3 sm:px-8 sm:py-4 bg-accent text-dark font-inter font-semibold text-base sm:text-lg rounded-lg hover:bg-accent/90 transition-colors animate-pulse-glow">
-          Kostenlose Potenzialanalyse
-        </a>
-      </motion.div>
-    </div>
-  );
-}
-
-function ProblemPanel({ isActive }: { isActive: boolean }) {
-  const { headRef, subRef } = useSplitHeadline(isActive);
-  return (
-    <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-8 sm:mb-12">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
-          Ihr unsichtbarer Umsatzverlust
-        </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white leading-tight">
-          Während Sie warten, kauft Ihr Kunde woanders
-        </h2>
-      </div>
-      <div className="grid md:grid-cols-3 gap-4 sm:gap-6 mb-6">
-        {problems.map((p, i) => (
-          <div key={i} className={`${CARD} p-5 sm:p-8`}>
-            <div className="w-11 h-11 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
-              <p.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
-            </div>
-            <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{p.title}</h3>
-            <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{p.desc}</p>
-          </div>
-        ))}
-      </div>
-      {/* "Das passt, wenn Sie..." */}
-      <div className={`${CARD} p-4 sm:p-6`}>
-        <p className="font-inter text-white text-base font-semibold mb-3">Das passt, wenn Sie...</p>
-        <ul className="space-y-2.5">
-          {[
-            'täglich Zeit mit Aufgaben verbringen, die ein System automatisch erledigen könnte',
-            'Anfragen verpassen, weil kein System rund um die Uhr für Sie antwortet',
-            'wachsen wollen — ohne proportional mehr Personal einstellen zu müssen',
-          ].map((item, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <div className="w-1.5 h-1.5 bg-accent rounded-full flex-shrink-0 mt-2" />
-              <span className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed">{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-// Services section rebuilt to match main branch tab + detail + mini-cards layout
-function ServicesPanel({ isActive }: { isActive: boolean }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const goToContact = () => {
-    if (window.innerWidth <= 768) {
-      const el = document.getElementById('ms-8');
-      if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 70;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      }
-      return;
+    if (line2Ref.current) {
+      gsap.set(line2Ref.current, { opacity: 1 });
+      const s2 = new SplitText(line2Ref.current, { type: 'words' });
+      tl.from(s2.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out' }, 0.35);
     }
-    const totalH = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: (8 * SPAN + 0.05) * totalH, behavior: 'smooth' });
-  };
-
-  const scrollToService = (idx: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
-    setActiveIdx(idx);
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const idx = Math.round(el.scrollLeft / el.clientWidth);
-      setActiveIdx(Math.min(idx, services.length - 1));
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
-  const { headRef: svcHeadRef, subRef: svcSubRef } = useSplitHeadline(isActive);
-
   return (
-    <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-4 sm:mb-6">
-        <span ref={svcSubRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-2 sm:mb-3">
-          Unsere Leistungen
-        </span>
-        <h2 ref={svcHeadRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Was wir für Sie tun</h2>
-      </div>
+    <section id="hero" className="min-h-screen flex items-center justify-center px-6 pt-20 pb-12" style={{ scrollMarginTop: 80 }}>
+      <div className="max-w-4xl mx-auto text-center w-full">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
+          <Label>KI-Automatisierung · Made in Germany</Label>
+        </motion.div>
 
-      {/* Nav cards — compact, above the scroll content */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        {services.map((s, i) => (
-          <button key={s.id} onClick={() => scrollToService(i)}
-            className={`text-left p-3 lg:p-4 rounded-2xl border transition-all duration-300 ${
-              activeIdx === i
-                ? 'bg-accent/10 border-accent/60'
-                : 'glass-card glass-card-interactive'
-            }`}
-            style={activeIdx === i ? { backdropFilter: 'blur(12px) saturate(1.4)' } : undefined}>
-            <s.icon className={`w-5 h-5 mb-2 transition-colors ${
-              activeIdx === i ? 'text-accent' : 'text-gray-500'
-            }`} />
-            <div className="font-syne font-semibold text-white text-base leading-tight">{s.title}</div>
-            <div className="font-inter text-sm text-gray-500 mt-0.5 leading-tight">{s.shortDesc}</div>
+        <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-8">
+          <span ref={line1Ref} className="block">Euer Unternehmen läuft.</span>
+          <span ref={line2Ref} className="block text-accent">Eure Prozesse laufen mit.</span>
+        </h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          Wir bauen KI-Systeme, die repetitive Arbeit übernehmen, Systeme verbinden und Anfragen automatisch qualifizieren — damit euer Team sich auf das konzentriert, was wirklich Wert schafft.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-7 py-4 bg-accent text-dark font-inter font-semibold text-base rounded-xl hover:bg-accent/90 transition-colors animate-pulse-glow">
+            Kostenlose Prozessanalyse — 30 Min.
+            <ArrowRight className="w-4 h-4" />
+          </a>
+          <button onClick={() => scrollToId('prozess')}
+            className="inline-flex items-center gap-2 px-7 py-4 font-inter font-medium text-base text-white border border-white/10 rounded-xl hover:border-accent/40 hover:text-accent transition-colors">
+            Wie das funktioniert →
           </button>
-        ))}
+        </motion.div>
       </div>
-
-      {/* Horizontal scroll container — each service gets one full panel */}
-      <div
-        ref={scrollRef}
-        data-scroll-no-bar
-        className="rounded-3xl"
-        style={{
-          height: 'clamp(300px, 42vh, 380px)',
-          overflowX: 'scroll',
-          scrollSnapType: 'x mandatory',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        {services.map((s) => (
-          <div
-            key={s.id}
-            className="glass-card rounded-3xl p-4 sm:p-6 lg:p-8"
-            style={{
-              minWidth: '100%',
-              width: '100%',
-              scrollSnapAlign: 'start',
-              flexShrink: 0,
-              boxSizing: 'border-box',
-            }}
-          >
-            <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 h-full items-center">
-              <div>
-                {/* Icon hidden on small screens to save vertical space */}
-                <div className="hidden sm:flex w-11 h-11 bg-accent/10 rounded-xl items-center justify-center mb-3 sm:mb-4">
-                  <s.icon className="w-5 h-5 text-accent" />
-                </div>
-                <div className="flex items-center gap-2 mb-2 sm:hidden">
-                  <s.icon className="w-4 h-4 text-accent" />
-                  <h3 className="font-syne font-bold text-lg text-white">{s.title}</h3>
-                </div>
-                <h3 className="hidden sm:block font-syne font-bold text-xl lg:text-2xl text-white mb-2 sm:mb-3">{s.title}</h3>
-                <p className="font-inter text-gray-400 leading-relaxed mb-3 sm:mb-5 text-xs sm:text-sm lg:text-base">{s.description}</p>
-                <button onClick={goToContact}
-                  className="px-4 py-2 sm:px-5 sm:py-2.5 bg-accent text-dark font-inter font-medium rounded-lg text-xs sm:text-sm hover:bg-accent/90 transition-colors">
-                  Jetzt anfragen
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 sm:gap-2 place-content-center">
-                {s.features.map((feat, i) => (
-                  <div key={i} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 glass-card rounded-xl">
-                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-accent rounded-full flex-shrink-0 mt-1.5" />
-                    <span className="font-inter text-gray-300 text-xs sm:text-sm leading-tight">{feat}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    </section>
   );
 }
 
-// ─── New: "Diese Lösungen sind für Sie, wenn..." panel ───
-function FuerSiePanel({ isActive }: { isActive: boolean }) {
-  const { headRef } = useSplitHeadline(isActive);
+// ─── SECTION 2 — Trust Bar ───────────────────────────────────────────────────
+function TrustBar() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-5% 0px' });
 
-  const cards = [
-    {
-      icon: Clock,
-      title: 'Sie täglich Zeit verlieren',
-      text: 'Routineaufgaben, manuelle Prozesse, Copy-Paste — Ihr Tag steckt voller Arbeit, die kein Mensch erledigen müsste.',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Sie wachsen wollen — ohne mehr Aufwand',
-      text: 'Mehr Kunden, mehr Umsatz, aber kein proportional größeres Team. Automatisierung ist Ihr stärkster Hebel.',
-    },
-    {
-      icon: Zap,
-      title: 'Ihre Systeme nicht zusammenarbeiten',
-      text: 'Tools, die nicht miteinander reden. Daten, die manuell übertragen werden. Das kostet Zeit, Geld und Nerven — täglich.',
-    },
+  const items = [
+    { flag: '🇩🇪', text: 'Made in Germany' },
+    { flag: '✓',   text: 'DSGVO-konform' },
+    { flag: '⚡',   text: 'Angebot in 48h' },
+    { flag: '🚀',  text: 'Erste Ergebnisse in 1–2 Wochen' },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto w-full">
-      <div className="text-center mb-8 sm:mb-12">
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white leading-tight">
-          Diese Lösungen sind für Sie, wenn...
-        </h2>
-      </div>
-      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-        {cards.map((card, i) => (
-          <div key={i} className={`${CARD} p-5 sm:p-8`}>
-            <div className="w-11 h-11 sm:w-14 sm:h-14 bg-accent/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6">
-              <card.icon className="w-5 h-5 sm:w-7 sm:h-7 text-accent" />
-            </div>
-            <h3 className="font-syne font-semibold text-base sm:text-xl text-white mb-2 sm:mb-3">{card.title}</h3>
-            <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{card.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProcessPanel({ isActive }: { isActive: boolean }) {
-  const { headRef, subRef } = useSplitHeadline(isActive);
-  return (
-    <div className="max-w-2xl mx-auto w-full">
-      <div className="text-center mb-10 sm:mb-14">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
-          Drei Schritte bis zu Ihrer Lösung
-        </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">So starten wir zusammen</h2>
-      </div>
-
-      {/* Vertical stepper */}
-      <div className="relative">
-        {/* Animated vertical line */}
-        <motion.div
-          className="absolute top-0 bottom-0 w-0.5"
-          style={{
-            left: '19px',
-            background: 'linear-gradient(to bottom, #00E5FF, rgba(0,229,255,0.3))',
-            transformOrigin: 'top',
-          }}
-          initial={{ scaleY: 0 }}
-          whileInView={{ scaleY: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.1, ease: 'easeOut' }}
-        />
-
-        <div className="space-y-10 sm:space-y-12">
-          {steps.map((step, i) => (
+    <div ref={ref} className="border-y border-white/5 bg-[rgba(0,229,255,0.02)] py-5 px-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {items.map((item, i) => (
             <motion.div
               key={i}
-              className="flex items-start gap-6 sm:gap-8"
-              initial={{ opacity: 0, x: -16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.28 }}
-            >
-              {/* Filled cyan circle with step number */}
-              <div
-                className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ background: '#00E5FF' }}
-              >
-                <span className="font-syne font-bold text-sm" style={{ color: '#0a0a0a' }}>{step.num}</span>
-              </div>
-              {/* Content */}
-              <div className="pt-1 pb-2">
-                <h3 className="font-syne font-bold text-lg sm:text-xl text-white mb-2">{step.title}</h3>
-                <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{step.desc}</p>
-              </div>
+              initial={{ opacity: 0, y: 10 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="flex items-center justify-center gap-2 text-center">
+              <span className="text-lg leading-none">{item.flag}</span>
+              <span className="font-inter text-sm text-gray-300 font-medium">{item.text}</span>
             </motion.div>
           ))}
         </div>
@@ -892,265 +461,631 @@ function ProcessPanel({ isActive }: { isActive: boolean }) {
   );
 }
 
-function NumbersPanel({ active, isActive }: { active: boolean; isActive: boolean }) {
-  const { headRef, subRef } = useSplitHeadline(isActive);
+// ─── SECTION 3 — Problem ─────────────────────────────────────────────────────
+function ProblemSection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
   return (
-    <div className="max-w-5xl mx-auto w-full">
-      <div className="text-center mb-6 sm:mb-16">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
-          In Zahlen
-        </span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Ergebnisse, die zählen</h2>
+    <section id="problem" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6">
+      <div ref={ref} className="max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>Für wen das passt</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white leading-tight">
+            Kommt euch das bekannt vor?
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {problems.map((p, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.15 + i * 0.1 }}
+              className={`${CARD} p-6 sm:p-7`}>
+              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
+                <p.icon className="w-5 h-5 text-accent" />
+              </div>
+              <h3 className="font-syne font-semibold text-base sm:text-lg text-white mb-2 leading-snug">{p.title}</h3>
+              <p className="font-inter text-gray-400 text-sm leading-relaxed">{p.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
-      <div className="glass-card rounded-2xl p-6 sm:p-10">
-        {/* All three stats use count-up animation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 mb-8">
-          {stats.map((s, i) => (
-            <div key={i}>
-              <Counter end={s.end} suffix={s.suffix} label={s.label} active={active} />
-            </div>
+    </section>
+  );
+}
+
+// ─── SECTION 4 — Services / Personalisierung ─────────────────────────────────
+function ServicesSection() {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  const active = services[activeIdx];
+
+  return (
+    <section id="leistungen" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
+      <div ref={ref} className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>Euer Einstieg</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            Wo liegt euer größter Hebel?
+          </h2>
+        </div>
+
+        {/* 4 clickable tiles */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+          {services.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => setActiveIdx(i)}
+              className={`text-left p-4 rounded-2xl border transition-all duration-300 ${
+                activeIdx === i
+                  ? 'bg-accent/10 border-accent/50 shadow-[0_0_20px_rgba(0,229,255,0.08)]'
+                  : 'glass-card glass-card-interactive'
+              }`}>
+              <span className="text-xl mb-2 block">{s.emoji}</span>
+              <span className="font-syne font-semibold text-white text-sm sm:text-base leading-tight block">{s.title}</span>
+            </button>
           ))}
         </div>
 
-        {/* Infinite scrolling tech logo banner */}
-        <div className="border-t border-white/10 pt-6 overflow-hidden">
-          <p className="font-inter text-gray-500 text-sm text-center mb-5">Womit wir arbeiten</p>
-          {/* Inject keyframe via style tag */}
-          <style>{`
-            @keyframes logo-scroll {
-              0%   { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .logo-track {
-              display: flex;
-              width: max-content;
-              animation: logo-scroll 28s linear infinite;
-            }
-          `}</style>
-          <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 12%, black 88%, transparent)' }}>
-            <div className="logo-track">
-              {/* Render logos twice for seamless loop */}
-              {[...techLogos, ...techLogos].map((logo, i) => (
-                <div key={i} className="flex items-center justify-center flex-shrink-0 mx-6 sm:mx-8">
-                  {logo.type === 'img' ? (
-                    <img
-                      src={logo.src}
-                      alt={logo.alt}
-                      style={{ height: '28px', width: 'auto', opacity: 0.7, filter: 'brightness(1)' }}
-                    />
-                  ) : (
-                    <span className="font-inter font-semibold text-white/70 text-sm tracking-wide whitespace-nowrap">
-                      {logo.label}
-                    </span>
-                  )}
-                </div>
+        {/* Expanding content — AnimatePresence for smooth swap */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeIdx}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.28 }}
+            className="glass-card rounded-2xl p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <active.icon className="w-5 h-5 text-accent" />
+              </div>
+              <h3 className="font-syne font-bold text-xl text-white">{active.title}</h3>
+            </div>
+            <p className="font-inter text-gray-300 text-base sm:text-lg leading-relaxed mb-6">{active.text}</p>
+            <div className="flex flex-wrap gap-2">
+              {active.tags.map((tag) => (
+                <span key={tag} className="font-inter text-xs text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
+                  {tag}
+                </span>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
+    </section>
   );
 }
 
-function AboutPanel({ isActive }: { isActive: boolean }) {
-  const { headRef, subRef } = useSplitHeadline(isActive);
-  return (
-    <div className="max-w-6xl mx-auto w-full">
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-        <div>
-          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">Über uns</span>
-          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">Wir sind CL-Solutions</h2>
-          <div className="space-y-3 sm:space-y-5 font-inter text-gray-400 text-sm sm:text-base lg:text-lg leading-relaxed">
-            <p>Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.</p>
-            <p>Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.</p>
-          </div>
-        </div>
-        <div className="space-y-3 sm:space-y-4">
-          {highlights.map((h, i) => (
-            <div key={i} className={`${CARD} flex items-start gap-3 sm:gap-4 p-4 sm:p-5`}>
-              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
-                <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
-              </div>
-            </div>
-          ))}
-          <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
-            <div className="flex -space-x-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">M</div>
-            </div>
-            <div>
-              <p className="font-inter text-white text-sm">Berkay &amp; Marios</p>
-              <p className="font-inter text-gray-500 text-xs">Gründer, CL-Solutions</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ─── SECTION 5 — Über uns ─────────────────────────────────────────────────────
+function AboutSection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
 
-function FAQPanel({ isActive }: { isActive: boolean }) {
-  const [open, setOpen] = useState<number | null>(0);
-  const { headRef, subRef } = useSplitHeadline(isActive);
+  const highlights = [
+    { icon: Users,  label: 'Berkay Aksoy & Marios Lysitsas', sub: 'Wirtschaftsingenieure & Gründer' },
+    { icon: MapPin, label: 'Made in Germany',                 sub: 'Deutsch, zuverlässig, DSGVO-konform' },
+    { icon: Target, label: 'Ergebnisorientiert',              sub: 'Kein Overengineering — nur was wirkt' },
+  ];
+
   return (
-    <div className="max-w-3xl mx-auto w-full">
-      <div className="text-center mb-6 sm:mb-10">
-        <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">FAQ</span>
-        <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">Häufige Fragen</h2>
-      </div>
-      <div className="space-y-2">
-        {faqs.map((faq, i) => (
-          <div key={i} className="glass-card glass-card-interactive rounded-xl px-4">
-            <button onClick={() => setOpen(open === i ? null : i)}
-              className="w-full py-4 sm:py-5 flex items-center justify-between text-left group">
-              <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6 sm:pr-8">{faq.q}</span>
-              <div className="w-9 h-9 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
-                {open === i ? <Minus className="w-4 h-4 text-accent" /> : <Plus className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />}
-              </div>
-            </button>
-            <AnimatePresence>
-              {open === i && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                  <p className="font-inter text-gray-400 leading-relaxed pb-5 text-sm">{faq.a}</p>
+    <section id="ueber-uns" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6">
+      <div ref={ref} className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+          {/* Left */}
+          <div>
+            <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+              <Label>Wer wir sind</Label>
+            </span>
+            <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+              className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-6 leading-tight">
+              Wirtschaftsingenieure, die automatisieren.
+            </h2>
+            <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-8">
+              Berkay Aksoy und Marios Lysitsas haben als studierte Wirtschaftsingenieure und Controller nicht nur technisches Know-how — sie verstehen wie Unternehmen wirklich funktionieren. Kein Buzzword-Bingo. Kein Overengineering. Nur was wirklich wirkt.
+            </p>
+
+            {/* Team badges */}
+            <div className="space-y-3 mb-8">
+              {[
+                { init: 'B', name: 'Berkay Aksoy',    role: 'Wirtschaftsingenieur & KI-Spezialist',       grad: 'from-accent to-accent/50', text: 'text-dark' },
+                { init: 'M', name: 'Marios Lysitsas', role: 'Controller & Automatisierungsarchitekt',      grad: 'from-white to-gray-400',   text: 'text-dark' },
+              ].map((p) => (
+                <motion.div
+                  key={p.init}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={inView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="glass-card rounded-xl p-4 flex items-center gap-4">
+                  <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${p.grad} flex items-center justify-center flex-shrink-0 ring-2 ring-[#0a0a0a]`}>
+                    <span className={`font-syne font-bold ${p.text}`}>{p.init}</span>
+                  </div>
+                  <div>
+                    <p className="font-syne font-semibold text-white text-sm">{p.name}</p>
+                    <p className="font-inter text-gray-400 text-xs">{p.role}</p>
+                  </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
+              ))}
+            </div>
+
+            <p className="font-inter text-gray-600 text-sm">Made in Germany · DSGVO-konform · Ergebnisorientiert</p>
           </div>
-        ))}
+
+          {/* Right — highlight cards */}
+          <div className="space-y-4">
+            {highlights.map((h, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 24 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.2 + i * 0.12 }}
+                className={`${CARD} flex items-start gap-4 p-5`}>
+                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <h.icon className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-syne font-semibold text-white text-sm sm:text-base">{h.label}</p>
+                  <p className="font-inter text-gray-400 text-xs sm:text-sm mt-0.5">{h.sub}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function ContactPanel({ isActive }: { isActive: boolean }) {
-  const { headRef, subRef } = useSplitHeadline(isActive);
+// ─── SECTION 6 — Demo Placeholder ────────────────────────────────────────────
+function DemoSection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  return (
+    <section id="demo" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
+      <div ref={ref} className="max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>In Aktion</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            Nicht erklären. Zeigen.
+          </h2>
+        </div>
+
+        {/* Video placeholder */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative w-full rounded-2xl border-2 border-dashed border-accent/40 bg-[rgba(0,229,255,0.03)] overflow-hidden"
+          style={{ aspectRatio: '16/9' }}>
+          {/* Placeholder badge */}
+          <div className="absolute top-4 left-4 z-10">
+            <span className="font-inter text-xs font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full">
+              Platzhalter
+            </span>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 gap-4">
+            {/* Play icon */}
+            <div className="w-16 h-16 rounded-full border-2 border-accent/40 flex items-center justify-center mb-2">
+              <div className="w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[18px] border-l-accent/60 ml-1" />
+            </div>
+            <p className="font-syne font-semibold text-white text-lg sm:text-xl">Demo-Video Platzhalter</p>
+            <p className="font-inter text-gray-500 text-sm max-w-md">
+              Hier kommt ein 90-Sekunden-Screenrecording eines echten automatisierten Workflows.<br />
+              <span className="text-gray-600">Format: MP4 · Geplant: KW XX</span>
+            </p>
+          </div>
+        </motion.div>
+
+        <p className="font-inter text-gray-600 text-xs sm:text-sm text-center mt-5">
+          Beispiel-Flows: Lead-Qualifizierung · CRM-Automatisierung · Voice Agent Eingang
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ─── SECTION 7 — Showcase Slideshow ──────────────────────────────────────────
+function ShowcaseSection() {
+  const [current, setCurrent] = useState(0);
+  const [dir,     setDir]     = useState(1);
+  const total        = showcaseCards.length;
+  const touchStartX  = useRef(0);
+  const ref          = useRef<HTMLDivElement>(null);
+  const inView       = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  const prev = () => { setDir(-1); setCurrent((c) => (c - 1 + total) % total); };
+  const next = () => { setDir(1);  setCurrent((c) => (c + 1) % total); };
+  const goTo = (i: number) => { setDir(i > current ? 1 : -1); setCurrent(i); };
+
+  const card = showcaseCards[current];
+
+  return (
+    <section id="showcase" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6">
+      <div ref={ref} className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>Umgesetzte Lösungen</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            Was wir gebaut haben
+          </h2>
+        </div>
+
+        {/* Slideshow */}
+        <div
+          role="region"
+          aria-label="Projektgalerie"
+          tabIndex={0}
+          className="outline-none"
+          onKeyDown={(e) => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); }}
+          onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX.current;
+            if (dx > 50) prev();
+            if (dx < -50) next();
+          }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, x: dir * 60 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: dir * -60 }}
+              transition={{ duration: 0.32 }}
+              className="glass-card rounded-2xl p-7 sm:p-10 border-dashed border border-accent/25">
+
+              {/* Top row */}
+              <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{card.emoji}</span>
+                  <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
+                    {card.category}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-inter text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-3 py-1.5 rounded-full">
+                    {card.badge}
+                  </span>
+                  <span className="font-inter text-xs text-amber-400 bg-amber-400/10 border border-amber-400/25 px-2.5 py-1.5 rounded-full">
+                    Platzhalter — wird befüllt
+                  </span>
+                </div>
+              </div>
+
+              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white/50 mb-3 italic">{card.title}</h3>
+              <p className="font-inter text-gray-300 text-base sm:text-lg leading-relaxed">{card.desc}</p>
+
+              {/* Card counter */}
+              <p className="font-inter text-gray-600 text-xs mt-6">{current + 1} / {total}</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button onClick={prev} aria-label="Vorheriges Projekt"
+            className="w-10 h-10 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          {showcaseCards.map((_, i) => (
+            <button key={i} onClick={() => goTo(i)} aria-label={`Projekt ${i + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === current ? 'w-6 h-2 bg-accent' : 'w-2 h-2 bg-white/20 hover:bg-white/40'
+              }`} />
+          ))}
+
+          <button onClick={next} aria-label="Nächstes Projekt"
+            className="w-10 h-10 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <p className="font-inter text-gray-600 text-xs text-center mt-4">
+          Pfeiltasten ← → zum Navigieren · Touch-Swipe auf Mobile
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ─── SECTION 8 — Prozess ─────────────────────────────────────────────────────
+function ProcessSection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  return (
+    <section id="prozess" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
+      <div ref={ref} className="max-w-2xl mx-auto">
+        <div className="text-center mb-14">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>Drei Schritte bis zu eurer Lösung</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            So starten wir zusammen
+          </h2>
+        </div>
+
+        <div className="relative">
+          {/* Animated vertical line */}
+          <motion.div
+            className="absolute top-0 bottom-0 w-0.5"
+            style={{ left: 19, background: 'linear-gradient(to bottom, #00E5FF, rgba(0,229,255,0.2))', transformOrigin: 'top' }}
+            initial={{ scaleY: 0 }}
+            animate={inView ? { scaleY: 1 } : {}}
+            transition={{ duration: 1.1, ease: 'easeOut', delay: 0.2 }}
+          />
+
+          <div className="space-y-10 sm:space-y-12">
+            {steps.map((step, i) => (
+              <motion.div
+                key={i}
+                className="flex items-start gap-6 sm:gap-8"
+                initial={{ opacity: 0, x: -20 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.3 + i * 0.25 }}>
+                <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: '#00E5FF' }}>
+                  <span className="font-syne font-bold text-sm" style={{ color: '#0a0a0a' }}>{step.num}</span>
+                </div>
+                <div className="pt-1 pb-2">
+                  <h3 className="font-syne font-bold text-lg sm:text-xl text-white mb-2">{step.title}</h3>
+                  <p className="font-inter text-gray-400 leading-relaxed text-sm sm:text-base">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SECTION 9 — Zahlen / Stats ──────────────────────────────────────────────
+function StatsSection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  return (
+    <section id="zahlen" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6">
+      <div ref={ref} className="max-w-5xl mx-auto">
+        <div className="text-center mb-14">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>In Zahlen</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            Ergebnisse, die zählen
+          </h2>
+        </div>
+
+        <div className="glass-card rounded-2xl p-8 sm:p-12">
+          {/* 4 stats — 2×2 mobile, 4-col desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10">
+            {stats.map((s, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
+                {s.kind === 'count'
+                  ? <Counter end={s.end} suffix={s.suffix} label={s.label} active={inView} />
+                  : <div className="text-center">
+                      <div className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl text-white">{s.display}</div>
+                      <p className="font-inter text-gray-400 text-sm sm:text-base mt-3">{s.label}</p>
+                    </div>
+                }
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Tech logo scrolling banner */}
+          <div className="border-t border-white/10 pt-8 overflow-hidden">
+            <p className="font-inter text-gray-500 text-sm text-center mb-5">Womit wir arbeiten</p>
+            <style>{`
+              @keyframes logo-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+              .logo-track { display: flex; width: max-content; animation: logo-scroll 30s linear infinite; }
+            `}</style>
+            <div className="relative" style={{
+              maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+            }}>
+              <div className="logo-track">
+                {[...techLogos, ...techLogos].map((logo, i) => (
+                  <div key={i} className="flex items-center justify-center flex-shrink-0 mx-7 sm:mx-9">
+                    {logo.type === 'img'
+                      ? <img src={logo.src} alt={logo.alt} style={{ height: 26, width: 'auto', opacity: 0.65 }} />
+                      : <span className="font-inter font-semibold text-white/60 text-sm tracking-wide whitespace-nowrap">{logo.label}</span>
+                    }
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SECTION 10 — FAQ ─────────────────────────────────────────────────────────
+function FAQSection() {
+  const [open, setOpen] = useState<number | null>(0);
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const { headRef, subRef } = useSplitHeadline(inView);
+
+  return (
+    <section id="faq" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
+      <div ref={ref} className="max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <span ref={subRef as React.RefObject<HTMLSpanElement>}>
+            <Label>FAQ</Label>
+          </span>
+          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            Häufige Fragen
+          </h2>
+        </div>
+
+        <div className="space-y-2">
+          {faqs.map((faq, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4, delay: 0.1 + i * 0.07 }}
+              className="glass-card glass-card-interactive rounded-xl px-5">
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full py-5 flex items-center justify-between text-left group">
+                <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6">
+                  {faq.q}
+                </span>
+                <div className="w-9 h-9 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
+                  {open === i
+                    ? <Minus className="w-4 h-4 text-accent" />
+                    : <Plus  className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />
+                  }
+                </div>
+              </button>
+              <AnimatePresence>
+                {open === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden">
+                    <p className="font-inter text-gray-400 leading-relaxed pb-5 text-sm">{faq.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SECTION 11 — Finaler CTA ─────────────────────────────────────────────────
+function CTASection() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+
+  // Load Tally embed script
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://tally.so/widgets/embed.js';
+    script.src   = 'https://tally.so/widgets/embed.js';
     script.async = true;
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto w-full">
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-        <div>
-          <span ref={subRef as React.RefObject<HTMLSpanElement>} className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">Kontakt</span>
-          <h2 ref={headRef as React.RefObject<HTMLHeadingElement>} className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
-            Bereit für den nächsten Schritt?
-          </h2>
-          <p className="font-inter text-gray-400 text-sm sm:text-lg leading-relaxed mb-1 sm:mb-2">
-            Lassen Sie uns herausfinden, wie wir Ihre Prozesse automatisieren können. Keine Verpflichtungen, nur Klarheit.
-          </p>
-          <p className="font-inter text-gray-500 text-xs sm:text-sm leading-relaxed mb-5 sm:mb-8">
-            Kein Risiko — das Erstgespräch ist kostenlos &amp; vollständig unverbindlich.
-          </p>
-          <div className={`${CARD} p-4 sm:p-6`} data-cursor-card>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-syne font-semibold text-white">Termin vereinbaren</h3>
-                <p className="font-inter text-gray-500 text-sm">30 Min., kostenlos &amp; unverbindlich</p>
-              </div>
-            </div>
-            <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-              className="w-full py-3 bg-accent text-dark font-inter font-medium rounded-lg flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
-              Jetzt Termin buchen
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
-          </div>
-        </div>
+    <section id="kontakt" style={{ scrollMarginTop: 80 }}
+      className="py-24 sm:py-32 px-6">
+      <div ref={ref} className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
-        <div>
-          <div className="glass-card glass-card-interactive rounded-2xl p-5 sm:p-8 mb-3 sm:mb-4" data-cursor-card>
-            <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3">Erstberatung anfragen</h3>
-            <p className="font-inter text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">Wir klären Ihren Bedarf persönlich, bevor Sie sich entscheiden.</p>
-            <div className="space-y-3 mb-8">
-              {['Kostenlose Analyse Ihrer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
-                  <span className="font-inter text-gray-300 text-sm">{item}</span>
-                </div>
-              ))}
-            </div>
-            <button data-tally-open="2Evere"
-              className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
-              Jetzt Anfrage stellen
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-
-          {/* Chatbot hint */}
-          <div className="flex items-center gap-3 p-4 glass-card rounded-xl">
-            <MessageSquare className="w-5 h-5 text-accent flex-shrink-0" />
-            <p className="font-inter text-gray-400 text-sm">
-              Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
+          {/* Left */}
+          <motion.div initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}>
+            <Label>Kontakt</Label>
+            <h2 className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-5 leading-tight">
+              Zeigt uns einen Prozess, der euch täglich Zeit kostet.
+            </h2>
+            <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-2">
+              In 30 Minuten analysieren wir gemeinsam, was sich automatisieren lässt — konkret, kostenlos, ohne Verkaufsgespräch.
             </p>
-          </div>
+            <p className="font-inter text-gray-600 text-sm mb-8">
+              Kein Risiko — das Erstgespräch ist kostenlos &amp; vollständig unverbindlich.
+            </p>
+
+            {/* Calendar card */}
+            <div className={`${CARD} p-5 sm:p-6`}>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-syne font-semibold text-white">Termin vereinbaren</h3>
+                  <p className="font-inter text-gray-500 text-sm">30 Min., kostenlos &amp; unverbindlich</p>
+                </div>
+              </div>
+              <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+                className="w-full py-3 bg-accent text-dark font-inter font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
+                Jetzt Termin buchen →
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Right */}
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.1 }}>
+            <div className="glass-card glass-card-interactive rounded-2xl p-6 sm:p-8 mb-4">
+              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2">Erstberatung anfragen</h3>
+              <p className="font-inter text-gray-400 text-sm sm:text-base mb-6">Wir klären euren Bedarf persönlich, bevor ihr euch entscheidet.</p>
+              <div className="space-y-3 mb-8">
+                {['Kostenlose Analyse eurer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                    <span className="font-inter text-gray-300 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                data-tally-open="2Evere"
+                className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
+                Jetzt Anfrage stellen
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+
+            {/* Chatbot hint */}
+            <div className="flex items-center gap-3 p-4 glass-card rounded-xl">
+              <MessageSquare className="w-5 h-5 text-accent flex-shrink-0" />
+              <p className="font-inter text-gray-400 text-sm">
+                Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-// ─── Home ────────────────────────────────────────────────
-// Section index map:
-// 0=Hero, 1=Problem, 2=Services, 3=FuerSie, 4=Process, 5=Numbers, 6=About, 7=FAQ, 8=Contact
+// ─── Home ─────────────────────────────────────────────────────────────────────
 export function Home() {
-  const { scrollY, scrollYProgress } = useScroll();
-
-  // ── Readiness gate ──────────────────────────────────────
-  // Chrome 115+ uses a native ScrollTimeline for scroll-linked WAAPI animations.
-  // If the timeline is created before the page is fully laid out (fonts, images,
-  // external scripts all loaded), the scroll extents can be wrong and all panels
-  // stay frozen at progress=0. Fix: hold a stable zero-value placeholder until
-  // window.load fires and one more rAF confirms the first paint is done.
-  const zeroProgress = useMotionValue(0);
-  const [isReady, setIsReady] = useState(false);
-  useEffect(() => {
-    const markReady = () => requestAnimationFrame(() => setIsReady(true));
-    if (document.readyState === 'complete') {
-      markReady();
-    } else {
-      window.addEventListener('load', markReady, { once: true });
-    }
-    return () => window.removeEventListener('load', markReady);
-  }, []);
-
-  // Before ready: use a stable zero MotionValue so panels render in their
-  // initial state (hero visible, rest zoomed-out) without binding to any
-  // ScrollTimeline. After ready: switch to the real scrollYProgress.
-  const activeProgress = isReady ? scrollYProgress : zeroProgress;
-
-  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
-  useEffect(() => {
-    if (!isReady) return;
-    return scrollYProgress.on('change', (v) => {
-      setActiveSectionIdx(Math.min(TOTAL - 1, Math.floor(v * TOTAL)));
-    });
-  }, [scrollYProgress, isReady]);
-
-  // Numbers is now section index 5
-  const [numbersActive, setNumbersActive] = useState(false);
-  useEffect(() => {
-    if (!isReady) return;
-    const s5enter = Math.min(5 * SPAN, 0.990);
-    const s5exit  = (5 + DWELL_END_FRAC) * SPAN;
-    return scrollYProgress.on('change', (v) => {
-      setNumbersActive(v >= s5enter && v <= s5exit);
-    });
-  }, [scrollYProgress, isReady]);
-
-  // Spring-smoothed mouse for StarField parallax
   const rawMouseX = useMotionValue(0);
   const rawMouseY = useMotionValue(0);
   const mouseX    = useSpring(rawMouseX, { stiffness: 60, damping: 25 });
@@ -1161,78 +1096,43 @@ export function Home() {
     rawMouseY.set(((e.clientY / window.innerHeight) - 0.5) * 60);
   };
 
-  const isMobile = useIsMobile();
-  const [mobileNumActive, setMobileNumActive] = useState(false);
-
-  const goTo = (index: number) => {
-    if (isMobile) {
-      const el = document.getElementById(`ms-${index}`);
-      if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 70;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      }
-      return;
-    }
-    const totalH = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo({ top: Math.max(0, (index * SPAN + 0.05) * totalH), behavior: 'smooth' });
-  };
-
-  const renderSection = useCallback((i: number, isActive: boolean): React.ReactNode => {
-    switch (i) {
-      case 0: return <HeroPanel     isActive={isActive} />;
-      case 1: return <ProblemPanel  isActive={isActive} />;
-      case 2: return <ServicesPanel isActive={isActive} />;
-      case 3: return <FuerSiePanel  isActive={isActive} />;
-      case 4: return <ProcessPanel  isActive={isActive} />;
-      case 5: return <NumbersPanel  active={numbersActive} isActive={isActive} />;
-      case 6: return <AboutPanel    isActive={isActive} />;
-      case 7: return <FAQPanel      isActive={isActive} />;
-      case 8: return <ContactPanel  isActive={isActive} />;
-      default: return null;
-    }
-  }, [numbersActive]);
-
-  // Shared footer — same on mobile and desktop
   const footer = (
     <footer className="bg-[#0a0a0a] border-t border-white/5 relative z-10">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 sm:py-16">
-        <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-10">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-5">
               <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" />
               <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
             </div>
-            <p className="font-inter text-gray-500 leading-relaxed max-w-sm">
-              KI-Automatisierung für deutsche Unternehmen. Wir machen Technologie nutzbar – ohne Buzzwords.
+            <p className="font-inter text-gray-500 leading-relaxed max-w-sm text-sm">
+              KI-Automatisierung für deutsche Unternehmen. Wir machen Technologie nutzbar — ohne Buzzwords.
             </p>
           </div>
+
           <div>
-            <h4 className="font-syne font-semibold text-white mb-4">Navigation</h4>
+            <h4 className="font-syne font-semibold text-white mb-4 text-sm">Navigation</h4>
             <ul className="space-y-3">
               {NAV_ITEMS.map((item) => (
-                <li key={item.href ?? item.idx}>
+                <li key={item.href ?? item.id}>
                   {item.href
-                    ? <Link to={item.href}
-                        className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
-                        {item.label}
-                      </Link>
-                    : <button onClick={() => goTo(item.idx!)}
-                        className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">
-                        {item.label}
-                      </button>
+                    ? <Link to={item.href} className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">{item.label}</Link>
+                    : <button onClick={() => scrollToId(item.id!)} className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">{item.label}</button>
                   }
                 </li>
               ))}
             </ul>
           </div>
+
           <div>
-            <h4 className="font-syne font-semibold text-white mb-4">Rechtliches</h4>
+            <h4 className="font-syne font-semibold text-white mb-4 text-sm">Rechtliches</h4>
             <ul className="space-y-3">
-              <li><Link to="/impressum" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Impressum</Link></li>
+              <li><Link to="/impressum"   className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Impressum</Link></li>
               <li><Link to="/datenschutz" className="font-inter text-gray-500 hover:text-accent transition-colors text-sm">Datenschutz</Link></li>
             </ul>
           </div>
         </div>
+
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="font-inter text-gray-600 text-sm">© {new Date().getFullYear()} CL-Solutions. Alle Rechte vorbehalten.</p>
           <p className="font-inter text-gray-600 text-sm">DSGVO-konform · Made in Germany · Remote-first</p>
@@ -1241,74 +1141,34 @@ export function Home() {
     </footer>
   );
 
-  // ── MOBILE: normal stacked page, no 3D transforms ─────
-  if (isMobile) {
-    return (
-      <div className="bg-[#0a0a0a]">
-        {/* Fixed starfield + vignette as page background */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <StarField mouseX={mouseX} mouseY={mouseY} />
-          <div className="absolute inset-0"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
-        </div>
-
-        <CustomCursor />
-        <Nav goTo={goTo} />
-
-        <div className="relative z-10">
-          {/* Hero — fills first viewport, content vertically centred */}
-          <div id="ms-0" className="min-h-screen flex items-center justify-center px-4 pt-20 pb-12">
-            <div className="w-full max-w-5xl">
-              <HeroPanel isActive={true} />
-            </div>
-          </div>
-
-          {/* Sections 1–8: auto height, activated when scrolled into view */}
-          <MobileSection id="ms-1">{(a) => <ProblemPanel  isActive={a} />}</MobileSection>
-          <MobileSection id="ms-2">{(a) => <ServicesPanel isActive={a} />}</MobileSection>
-          <MobileSection id="ms-3">{(a) => <FuerSiePanel  isActive={a} />}</MobileSection>
-          <MobileSection id="ms-4">{(a) => <ProcessPanel  isActive={a} />}</MobileSection>
-          <MobileSection id="ms-5" onView={setMobileNumActive}>
-            {(a) => <NumbersPanel active={mobileNumActive} isActive={a} />}
-          </MobileSection>
-          <MobileSection id="ms-6">{(a) => <AboutPanel    isActive={a} />}</MobileSection>
-          <MobileSection id="ms-7">{(a) => <FAQPanel      isActive={a} />}</MobileSection>
-          <MobileSection id="ms-8">{(a) => <ContactPanel  isActive={a} />}</MobileSection>
-        </div>
-
-        {footer}
-      </div>
-    );
-  }
-
-  // ── DESKTOP: existing 3D scroll-zoom animation ────────
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
       <CustomCursor />
       <MouseGlow />
-      <ScrollArrow scrollYProgress={activeProgress} />
-      <Nav goTo={goTo} />
-      <Dots scrollYProgress={activeProgress} goTo={goTo} />
 
-      <div style={{ height: `${TOTAL * VH_PER}vh` }} className="relative">
-        <div className="sticky top-0 h-screen overflow-hidden">
-          <StarField scrollY={scrollY} mouseX={mouseX} mouseY={mouseY} />
-
-          <div className="absolute inset-0 z-10 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
-
-          <div className="absolute inset-0 z-20">
-            {Array.from({ length: TOTAL }, (_, i) => (
-              <Panel key={i} scrollYProgress={activeProgress} index={i}
-                isActive={i === activeSectionIdx} isLast={i === TOTAL - 1}>
-                {renderSection(i, i === activeSectionIdx)}
-              </Panel>
-            ))}
-          </div>
-        </div>
+      {/* Fixed starfield background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <StarField mouseX={mouseX} mouseY={mouseY} />
+        <div className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse at center, transparent 32%, rgba(10,10,10,0.82) 100%)' }} />
       </div>
 
-      {footer}
+      {/* All content above starfield */}
+      <div className="relative z-10">
+        <Nav />
+        <HeroSection />
+        <TrustBar />
+        <ProblemSection />
+        <ServicesSection />
+        <AboutSection />
+        <DemoSection />
+        <ShowcaseSection />
+        <ProcessSection />
+        <StatsSection />
+        <FAQSection />
+        <CTASection />
+        {footer}
+      </div>
     </div>
   );
 }
