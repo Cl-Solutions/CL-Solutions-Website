@@ -29,6 +29,7 @@ import { Spotlight } from '../components/ui/Spotlight';
 import { GlowCard } from '../components/ui/GlowCard';
 import { ShimmerButton } from '../components/ui/ShimmerButton';
 import { GridBeam } from '../components/ui/GridBeam';
+import { ShowcaseFlow } from '../components/ui/ShowcaseFlow';
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
 
@@ -875,6 +876,9 @@ function ShowcaseSection() {
               exit={{ opacity: 0, x: dir * -60 }}
               transition={{ duration: 0.32 }}>
             <GlowCard className="p-7 sm:p-10" intensity="medium">
+
+              {/* Animated flow visualisation */}
+              <ShowcaseFlow index={current} />
 
               {/* Top row */}
               <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
