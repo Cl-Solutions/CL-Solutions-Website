@@ -417,12 +417,16 @@ function Nav() {
                   </button>
             ))}
             <button onClick={() => scrollToId('kontakt')}
-              className="px-5 py-2.5 bg-accent text-dark font-inter font-semibold text-sm rounded-lg hover:bg-accent/90 transition-colors">
+              className="px-5 py-2.5 bg-accent text-dark font-inter font-semibold text-sm rounded-lg hover:bg-accent/90 active:scale-[0.97] transition-all duration-150">
               Prozessanalyse buchen
             </button>
           </div>
 
-          <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)}>
+          <button
+            className="md:hidden text-white p-3 -mr-1 rounded-lg hover:bg-white/5 transition-colors"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? 'Menü schließen' : 'Menü öffnen'}
+            aria-expanded={open}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -609,7 +613,7 @@ function ProblemSection() {
                   <p.icon className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-syne font-semibold text-base sm:text-lg text-white mb-2 leading-snug">{p.title}</h3>
-                <p className="font-inter text-gray-400 text-sm leading-relaxed">{p.desc}</p>
+                <p className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed">{p.desc}</p>
               </GlowCard>
             </motion.div>
           ))}
@@ -634,7 +638,7 @@ function ServicesSection() {
       <div ref={ref} className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <span ref={subRef as React.RefObject<HTMLSpanElement>}>
-            <Label>Euer Einstieg</Label>
+            <Label>Was wir lösen</Label>
           </span>
           <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
             className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
@@ -735,6 +739,7 @@ function AboutSection() {
                 key={i}
                 initial={{ opacity: 0, x: 20 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
+                whileHover={{ y: -3 }}
                 transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
                 <GlowCard className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5">
                   <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -860,7 +865,7 @@ function ShowcaseSection() {
           role="region"
           aria-label="Projektgalerie"
           tabIndex={0}
-          className="outline-none"
+          className="outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-2xl"
           onKeyDown={(e) => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); }}
           onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
           onTouchEnd={(e) => {
@@ -907,9 +912,11 @@ function ShowcaseSection() {
 
           {showcaseCards.map((_, i) => (
             <button key={i} onClick={() => goTo(i)} aria-label={`Projekt ${i + 1}`}
-              className={`rounded-full transition-all duration-300 ${
+              className="flex items-center justify-center w-6 h-11 -mx-1">
+              <span className={`rounded-full transition-all duration-300 block ${
                 i === current ? 'w-6 h-2 bg-accent' : 'w-2 h-2 bg-white/20 hover:bg-white/40'
               }`} />
+            </button>
           ))}
 
           <button onClick={next} aria-label="Nächstes Projekt"
@@ -1022,10 +1029,6 @@ function StatsSection() {
           {/* Tech logo scrolling banner */}
           <div className="border-t border-white/10 pt-8 overflow-hidden">
             <p className="font-inter text-gray-500 text-sm text-center mb-5">Womit wir arbeiten</p>
-            <style>{`
-              @keyframes logo-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-              .logo-track { display: flex; width: max-content; animation: logo-scroll 30s linear infinite; }
-            `}</style>
             <div className="relative" style={{
               maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
               WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
@@ -1034,7 +1037,7 @@ function StatsSection() {
                 {[...techLogos, ...techLogos].map((logo, i) => (
                   <div key={i} className="flex items-center justify-center flex-shrink-0 mx-7 sm:mx-9">
                     {logo.type === 'img'
-                      ? <img src={logo.src} alt={logo.alt} style={{ height: 26, width: 'auto', opacity: 0.65 }} />
+                      ? <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" style={{ height: 26, width: 'auto', opacity: 0.65 }} />
                       : <span className="font-inter font-semibold text-white/60 text-sm tracking-wide whitespace-nowrap">{logo.label}</span>
                     }
                   </div>
@@ -1079,6 +1082,7 @@ function FAQSection() {
               className="glass-card rounded-xl px-5 hover:border-accent/25 hover:shadow-[0_0_20px_rgba(0,212,255,0.06)] transition-all duration-300">
               <button
                 onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
                 className="w-full py-5 flex items-center justify-between text-left group">
                 <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6">
                   {faq.q}
@@ -1098,7 +1102,7 @@ function FAQSection() {
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden">
-                    <p className="font-inter text-gray-400 leading-relaxed pb-5 text-sm">{faq.a}</p>
+                    <p className="font-inter text-gray-400 leading-relaxed pb-5 text-sm sm:text-base">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1138,7 +1142,7 @@ function CTASection() {
 
             {/* ── Left column ── */}
             <div className="p-7 sm:p-10 flex flex-col">
-              <Label>Kontakt</Label>
+              <Label>Jetzt starten</Label>
               <h2 className="font-syne font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
                 Zeigt uns einen Prozess, der euch täglich Zeit kostet.
               </h2>
@@ -1227,7 +1231,7 @@ export function Home() {
         <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-5">
-              <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" />
+              <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" loading="lazy" decoding="async" />
               <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
             </div>
             <p className="font-inter text-gray-500 leading-relaxed max-w-sm text-sm">

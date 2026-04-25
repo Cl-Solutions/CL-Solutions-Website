@@ -195,3 +195,31 @@
 .animate-scroll-bounce {
   animation: scroll-bounce 1.7s ease-in-out infinite;
 }
+
+/* ── Tech-logo scrolling banner (moved from inline <style>) ─────────────── */
+@keyframes logo-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.logo-track {
+  display: flex;
+  width: max-content;
+  animation: logo-scroll 30s linear infinite;
+}
+
+/* ── Focus-visible ring for keyboard nav ────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.5);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* ── Reduced motion: disable non-essential animations ───────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .logo-track,
+  .animate-scroll-bounce,
+  .tw-cursor {
+    animation: none !important;
+  }
+  .tw-cursor { opacity: 1; }
+}
