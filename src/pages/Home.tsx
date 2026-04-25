@@ -490,31 +490,19 @@ function Nav() {
 
 // ─── SECTION 1 — Hero ────────────────────────────────────────────────────────
 function HeroSection() {
-  const line1Ref  = useRef<HTMLSpanElement>(null);
-  const line2Ref  = useRef<HTMLSpanElement>(null);
-  const done      = useRef(false);
-  const word      = useTypewriter(TW_WORDS);
+  // One ref for all static text — same pattern as main branch.
+  // Two-ref approach caused "Schluss mit" to stay hidden when the typewriter's
+  // frequent re-renders disrupted GSAP's split-word animation on line2.
+  const staticRef   = useRef<HTMLSpanElement>(null);
+  const gsapDone    = useRef(false);
+  const word        = useTypewriter(TW_WORDS);
   const [arrowVisible, setArrowVisible] = useState(true);
 
   useLayoutEffect(() => {
-    if (line1Ref.current) line1Ref.current.style.opacity = '0';
-    if (line2Ref.current) line2Ref.current.style.opacity = '0';
-  }, []);
-
-  useEffect(() => {
-    if (done.current) return;
-    done.current = true;
-    const tl = gsap.timeline();
-    if (line1Ref.current) {
-      gsap.set(line1Ref.current, { opacity: 1 });
-      const s1 = new SplitText(line1Ref.current, { type: 'words' });
-      tl.from(s1.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out' }, 0.1);
-    }
-    if (line2Ref.current) {
-      gsap.set(line2Ref.current, { opacity: 1 });
-      const s2 = new SplitText(line2Ref.current, { type: 'words' });
-      tl.from(s2.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out' }, 0.35);
-    }
+    if (gsapDone.current || !staticRef.current) return;
+    gsapDone.current = true;
+    const split = new SplitText(staticRef.current, { type: 'words' });
+    gsap.from(split.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out', delay: 0.1 });
   }, []);
 
   useEffect(() => {
@@ -530,15 +518,10 @@ function HeroSection() {
           <Label>KI-Automatisierung · Made in Germany</Label>
         </motion.div>
 
-        {/*
-          Typewriter is INSIDE the h1 — same pattern as main branch.
-          Line 1: "Euer Unternehmen läuft." (GSAP word-drop)
-          Line 2: "Schluss mit" (GSAP word-drop)
-          Line 3: rotating word in accent colour (hero-tw-line reserves height so layout never jumps)
-        */}
         <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-10">
-          <span ref={line1Ref} className="block">Euer Unternehmen läuft.</span>
-          <span ref={line2Ref} className="block">Schluss mit</span>
+          {/* All static text in one span — GSAP SplitText animates all words together */}
+          <span ref={staticRef} className="block">Euer Unternehmen läuft. Schluss mit</span>
+          {/* Typewriter span is separate so React re-renders from word changes don't touch the GSAP-split span */}
           <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
             {word}<span className="tw-cursor">|</span>
           </span>
