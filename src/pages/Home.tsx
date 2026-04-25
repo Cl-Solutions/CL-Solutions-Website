@@ -25,6 +25,9 @@ import {
 } from 'lucide-react';
 import { StarField } from '../components/StarField';
 import { CustomCursor } from '../components/CustomCursor';
+import { Spotlight } from '../components/ui/Spotlight';
+import { GlowCard } from '../components/ui/GlowCard';
+import { ShimmerButton } from '../components/ui/ShimmerButton';
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
 
@@ -474,16 +477,21 @@ function HeroSection() {
   }, []);
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 pb-16" style={{ scrollMarginTop: 80 }}>
-      <div className="max-w-5xl mx-auto text-center w-full">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 pb-16 overflow-hidden" style={{ scrollMarginTop: 80 }}>
+      {/* Spotlight follows cursor within hero */}
+      <Spotlight />
+
+      {/* Subtle radial gradient backdrop — fixed, centred on hero */}
+      <div className="pointer-events-none absolute inset-0 z-0"
+        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0,212,255,0.06) 0%, transparent 70%)' }} />
+
+      <div className="relative z-10 max-w-5xl mx-auto text-center w-full">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
           <Label>KI-Automatisierung · Made in Germany</Label>
         </motion.div>
 
         <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-10">
-          {/* All static text in one span — GSAP SplitText animates all words together */}
           <span ref={staticRef} className="block">Euer Unternehmen läuft. Schluss mit</span>
-          {/* Typewriter span is separate so React re-renders from word changes don't touch the GSAP-split span */}
           <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
             {word}<span className="tw-cursor">|</span>
           </span>
@@ -500,13 +508,15 @@ function HeroSection() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.1 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-7 py-4 bg-accent text-dark font-inter font-semibold text-base rounded-xl hover:bg-accent/90 transition-colors animate-pulse-glow">
+          <ShimmerButton
+            href="https://cal.eu/cl-solutions/30min"
+            target="_blank"
+            rel="noopener noreferrer">
             Kostenlose Prozessanalyse — 30 Min.
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </ShimmerButton>
           <button onClick={() => scrollToId('prozess')}
-            className="inline-flex items-center gap-2 px-7 py-4 font-inter font-medium text-base text-white border border-white/10 rounded-xl hover:border-accent/40 hover:text-accent transition-colors">
+            className="inline-flex items-center gap-2 px-7 py-4 font-inter font-medium text-base text-white border border-white/10 rounded-xl hover:border-accent/40 hover:text-accent hover:bg-accent/5 transition-all duration-200">
             Wie das funktioniert →
           </button>
         </motion.div>
@@ -591,13 +601,14 @@ function ProblemSection() {
               key={i}
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.15 + i * 0.1 }}
-              className={`${CARD} p-6 sm:p-7`}>
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
-                <p.icon className="w-5 h-5 text-accent" />
-              </div>
-              <h3 className="font-syne font-semibold text-base sm:text-lg text-white mb-2 leading-snug">{p.title}</h3>
-              <p className="font-inter text-gray-400 text-sm leading-relaxed">{p.desc}</p>
+              transition={{ duration: 0.5, delay: 0.15 + i * 0.1 }}>
+              <GlowCard className="p-6 sm:p-7 h-full hover:-translate-y-1.5 transition-transform duration-300">
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
+                  <p.icon className="w-5 h-5 text-accent" />
+                </div>
+                <h3 className="font-syne font-semibold text-base sm:text-lg text-white mb-2 leading-snug">{p.title}</h3>
+                <p className="font-inter text-gray-400 text-sm leading-relaxed">{p.desc}</p>
+              </GlowCard>
             </motion.div>
           ))}
         </div>
@@ -653,8 +664,8 @@ function ServicesSection() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.28 }}
-            className="glass-card rounded-2xl p-6 sm:p-8">
+            transition={{ duration: 0.28 }}>
+          <GlowCard className="p-6 sm:p-8" intensity="high">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <active.icon className="w-5 h-5 text-accent" />
@@ -669,6 +680,7 @@ function ServicesSection() {
                 </span>
               ))}
             </div>
+          </GlowCard>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -718,15 +730,16 @@ function AboutSection() {
                 key={i}
                 initial={{ opacity: 0, x: 20 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-                className={`${CARD} flex items-start gap-3 sm:gap-4 p-4 sm:p-5`}>
-                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
-                  <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
-                </div>
+                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
+                <GlowCard className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
+                    <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
+                  </div>
+                </GlowCard>
               </motion.div>
             ))}
 
@@ -856,8 +869,8 @@ function ShowcaseSection() {
               initial={{ opacity: 0, x: dir * 60 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: dir * -60 }}
-              transition={{ duration: 0.32 }}
-              className="glass-card rounded-2xl p-7 sm:p-10 border-dashed border border-accent/25">
+              transition={{ duration: 0.32 }}>
+            <GlowCard className="p-7 sm:p-10" intensity="medium">
 
               {/* Top row */}
               <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
@@ -882,6 +895,7 @@ function ShowcaseSection() {
 
               {/* Card counter */}
               <p className="font-inter text-gray-600 text-xs mt-6">{current + 1} / {total}</p>
+            </GlowCard>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -1149,11 +1163,10 @@ function CTASection() {
                     <p className="font-inter text-gray-500 text-xs">30 Min., kostenlos &amp; unverbindlich</p>
                   </div>
                 </div>
-                <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-                  className="w-full py-3.5 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
+                <ShimmerButton href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer" className="w-full justify-center py-3.5">
                   Jetzt Termin buchen
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </a>
+                  <ArrowRight className="w-4 h-4" />
+                </ShimmerButton>
               </div>
             </div>
 
@@ -1173,12 +1186,15 @@ function CTASection() {
                 ))}
               </div>
 
-              <button
-                data-tally-open="2Evere"
-                className="w-full py-3.5 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group mb-4">
+              <ShimmerButton as="button" onClick={() => {
+                const el = document.querySelector('[data-tally-open="2Evere"]') as HTMLElement;
+                el?.click();
+              }} className="w-full justify-center py-3.5 mb-4">
                 Jetzt Anfrage stellen
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+                <ArrowRight className="w-4 h-4" />
+              </ShimmerButton>
+              {/* Hidden trigger for Tally */}
+              <button data-tally-open="2Evere" className="hidden" aria-hidden />
 
               {/* Chatbot hint */}
               <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.06] mt-auto">

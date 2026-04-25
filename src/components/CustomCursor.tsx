@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
 export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
