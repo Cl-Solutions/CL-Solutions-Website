@@ -524,39 +524,36 @@ function HeroSection() {
   }, []);
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 pb-24" style={{ scrollMarginTop: 80 }}>
-      <div className="max-w-4xl mx-auto text-center w-full">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 pb-16" style={{ scrollMarginTop: 80 }}>
+      <div className="max-w-5xl mx-auto text-center w-full">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
           <Label>KI-Automatisierung · Made in Germany</Label>
         </motion.div>
 
-        <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-4">
+        {/*
+          Typewriter is INSIDE the h1 — same pattern as main branch.
+          Line 1: "Euer Unternehmen läuft." (GSAP word-drop)
+          Line 2: "Schluss mit" (GSAP word-drop)
+          Line 3: rotating word in accent colour (hero-tw-line reserves height so layout never jumps)
+        */}
+        <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-10">
           <span ref={line1Ref} className="block">Euer Unternehmen läuft.</span>
-          <span ref={line2Ref} className="block text-accent">Eure Prozesse laufen mit.</span>
-        </h1>
-
-        {/* Typewriter rotating line */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 1.0 }}
-          className="mb-8 sm:mb-10">
-          <span className="hero-tw-line block font-inter text-lg sm:text-xl md:text-2xl text-gray-300">
-            Schluss mit{' '}
-            <span className="text-accent font-medium">{word}</span>
-            <span className="tw-cursor">|</span>
+          <span ref={line2Ref} className="block">Schluss mit</span>
+          <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
+            {word}<span className="tw-cursor">|</span>
           </span>
-        </motion.div>
+        </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.1 }}
-          className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 sm:mb-12 leading-relaxed">
           Wir bauen KI-Systeme, die repetitive Arbeit übernehmen, Systeme verbinden und Anfragen automatisch qualifizieren — damit euer Team sich auf das konzentriert, was wirklich Wert schafft.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.25 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-7 py-4 bg-accent text-dark font-inter font-semibold text-base rounded-xl hover:bg-accent/90 transition-colors animate-pulse-glow">
