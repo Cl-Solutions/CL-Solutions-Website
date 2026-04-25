@@ -740,10 +740,11 @@ function AboutSection() {
             </span>
             <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
               className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
-              Wirtschaftsingenieure, die automatisieren.
+              Wir sind CL-Solutions
             </h2>
             <div className="space-y-3 sm:space-y-5 font-inter text-gray-400 text-sm sm:text-base lg:text-lg leading-relaxed mb-6">
-              <p>Berkay Aksoy und Marios Lysitsas haben als studierte Wirtschaftsingenieure und Controller nicht nur technisches Know-how — sie verstehen wie Unternehmen wirklich funktionieren. Kein Buzzword-Bingo. Kein Overengineering. Nur was wirklich wirkt.</p>
+              <p>Zwei junge Gründer mit einer klaren Mission: Deutschen Unternehmen den Zugang zu moderner KI-Technologie ermöglichen – ohne Buzzwords, ohne Überflüssiges.</p>
+              <p>Als studierte Wirtschaftsingenieure und Controller verbinden wir fundiertes technisches Know-how mit tiefem Verständnis für betriebswirtschaftliche Zusammenhänge.</p>
             </div>
             <p className="font-inter text-gray-600 text-sm">Made in Germany · DSGVO-konform · Ergebnisorientiert</p>
           </div>
