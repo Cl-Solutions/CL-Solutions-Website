@@ -182,12 +182,12 @@ const steps = [
 type StatDef =
   | { kind: 'count';     end: number; suffix: string; label: string }
   | { kind: 'static';    display: string;              label: string }
-  | { kind: 'week';                                    label: string }
+  | { kind: 'static-white'; display: string;           label: string }
   | { kind: 'countdown';                               label: string };
 
 const stats: StatDef[] = [
-  { kind: 'count',     end: 48, suffix: 'h',  label: 'Bis zum ersten Angebot' },
-  { kind: 'week',                              label: 'Bis zur ersten Live-Lösung' },
+  { kind: 'count',        end: 48, suffix: 'h',  label: 'Bis zum ersten Angebot' },
+  { kind: 'static-white', display: '1–2 Wochen',      label: 'Bis zur ersten Live-Lösung' },
   { kind: 'count',     end: 24, suffix: '/7', label: 'Verfügbarkeit eurer KI' },
   { kind: 'countdown',                         label: 'Manuelle Schritte nach Automatisierung' },
 ];
@@ -305,48 +305,6 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
     <div className="text-center">
       <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
         {count}<span className="text-accent">{suffix}</span>
-      </div>
-      <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
-    </div>
-  );
-}
-
-/** Week counter — digit fades between 1 and 2 with matching suffix.
- *  Fixed-width container prevents the stat from collapsing/expanding. */
-function WeekCounter({ label, active }: { label: string; active: boolean }) {
-  const [val, setVal] = useState(1);
-  useEffect(() => {
-    if (!active) return;
-    const id = setInterval(() => setVal(v => (v === 1 ? 2 : 1)), 2200);
-    return () => clearInterval(id);
-  }, [active]);
-  return (
-    <div className="text-center">
-      {/* Fixed-width box so "1 Woche" and "2 Wochen" never shift sibling stats */}
-      <div className="inline-flex items-baseline justify-center font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums"
-        style={{ minWidth: '7rem' }}>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={val}
-            initial={{ opacity: 0, y: -14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 14 }}
-            transition={{ duration: 0.25 }}>
-            {val}
-          </motion.span>
-        </AnimatePresence>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={val === 1 ? 'woche' : 'wochen'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="text-accent ml-1.5"
-            style={{ fontSize: '0.62em' }}>
-            {val === 1 ? 'Woche' : 'Wochen'}
-          </motion.span>
-        </AnimatePresence>
       </div>
       <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
     </div>
@@ -1039,13 +997,11 @@ function StatsSection() {
                 className="min-w-0 overflow-hidden">
                 {s.kind === 'count'
                   ? <Counter end={s.end} suffix={s.suffix} label={s.label} active={inView} />
-                  : s.kind === 'week'
-                  ? <WeekCounter label={s.label} active={inView} />
                   : s.kind === 'countdown'
                   ? <CountdownStat label={s.label} active={inView} />
                   : <div className="text-center">
-                      <div className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl text-white">{s.display}</div>
-                      <p className="font-inter text-gray-400 text-sm sm:text-base mt-3">{s.label}</p>
+                      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight">{s.display}</div>
+                      <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{s.label}</p>
                     </div>
                 }
               </motion.div>
