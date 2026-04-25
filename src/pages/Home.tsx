@@ -715,81 +715,75 @@ function ServicesSection() {
 }
 
 // ─── SECTION 5 — Über uns ─────────────────────────────────────────────────────
+const aboutHighlights = [
+  { icon: Users,  title: 'Berkay Aksoy & Marios Lysitsas', desc: 'Wir verstehen euer Business. Dann automatisieren wir es.' },
+  { icon: MapPin, title: 'Made in Germany',                 desc: 'Deutsch, zuverlässig, DSGVO-konform' },
+  { icon: Target, title: 'Ergebnisorientiert',              desc: 'Wir messen uns an eurem ROI' },
+];
+
 function AboutSection() {
   const ref    = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-8% 0px' });
   const { headRef, subRef } = useSplitHeadline(inView);
 
-  const highlights = [
-    { icon: Users,  label: 'Berkay Aksoy & Marios Lysitsas', sub: 'Wirtschaftsingenieure & Gründer' },
-    { icon: MapPin, label: 'Made in Germany',                 sub: 'Deutsch, zuverlässig, DSGVO-konform' },
-    { icon: Target, label: 'Ergebnisorientiert',              sub: 'Kein Overengineering — nur was wirkt' },
-  ];
-
   return (
     <section id="ueber-uns" style={{ scrollMarginTop: 80 }}
       className="py-24 sm:py-32 px-6">
       <div ref={ref} className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
 
-          {/* Left */}
+          {/* Left — label + headline + text (matches main layout exactly) */}
           <div>
-            <span ref={subRef as React.RefObject<HTMLSpanElement>}>
-              <Label>Wer wir sind</Label>
+            <span ref={subRef as React.RefObject<HTMLSpanElement>}
+              className="font-inter text-accent text-sm font-medium tracking-wider uppercase block mb-3 sm:mb-4">
+              Wer wir sind
             </span>
             <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
-              className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-6 leading-tight">
+              className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 sm:mb-6">
               Wirtschaftsingenieure, die automatisieren.
             </h2>
-            <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-8">
-              Berkay Aksoy und Marios Lysitsas haben als studierte Wirtschaftsingenieure und Controller nicht nur technisches Know-how — sie verstehen wie Unternehmen wirklich funktionieren. Kein Buzzword-Bingo. Kein Overengineering. Nur was wirklich wirkt.
-            </p>
-
-            {/* Team badges */}
-            <div className="space-y-3 mb-8">
-              {[
-                { init: 'B', name: 'Berkay Aksoy',    role: 'Wirtschaftsingenieur & KI-Spezialist',       grad: 'from-accent to-accent/50', text: 'text-dark' },
-                { init: 'M', name: 'Marios Lysitsas', role: 'Controller & Automatisierungsarchitekt',      grad: 'from-white to-gray-400',   text: 'text-dark' },
-              ].map((p) => (
-                <motion.div
-                  key={p.init}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={inView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="glass-card rounded-xl p-4 flex items-center gap-4">
-                  <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${p.grad} flex items-center justify-center flex-shrink-0 ring-2 ring-[#0a0a0a]`}>
-                    <span className={`font-syne font-bold ${p.text}`}>{p.init}</span>
-                  </div>
-                  <div>
-                    <p className="font-syne font-semibold text-white text-sm">{p.name}</p>
-                    <p className="font-inter text-gray-400 text-xs">{p.role}</p>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="space-y-3 sm:space-y-5 font-inter text-gray-400 text-sm sm:text-base lg:text-lg leading-relaxed mb-6">
+              <p>Berkay Aksoy und Marios Lysitsas haben als studierte Wirtschaftsingenieure und Controller nicht nur technisches Know-how — sie verstehen wie Unternehmen wirklich funktionieren. Kein Buzzword-Bingo. Kein Overengineering. Nur was wirklich wirkt.</p>
             </div>
-
             <p className="font-inter text-gray-600 text-sm">Made in Germany · DSGVO-konform · Ergebnisorientiert</p>
           </div>
 
-          {/* Right — highlight cards */}
-          <div className="space-y-4">
-            {highlights.map((h, i) => (
+          {/* Right — 3 highlight cards + B/M avatar row (matches main layout exactly) */}
+          <div className="space-y-3 sm:space-y-4">
+            {aboutHighlights.map((h, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: 24 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.2 + i * 0.12 }}
-                className={`${CARD} flex items-start gap-4 p-5`}>
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <h.icon className="w-5 h-5 text-accent" />
+                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+                className={`${CARD} flex items-start gap-3 sm:gap-4 p-4 sm:p-5`}>
+                <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="font-syne font-semibold text-white text-sm sm:text-base">{h.label}</p>
-                  <p className="font-inter text-gray-400 text-xs sm:text-sm mt-0.5">{h.sub}</p>
+                  <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
+                  <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
                 </div>
               </motion.div>
             ))}
+
+            {/* Avatar row — identical to main */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
+              <div className="flex -space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">M</div>
+              </div>
+              <div>
+                <p className="font-inter text-white text-sm">Berkay &amp; Marios</p>
+                <p className="font-inter text-gray-500 text-xs">Gründer, CL-Solutions</p>
+              </div>
+            </motion.div>
           </div>
+
         </div>
       </div>
     </section>
