@@ -877,15 +877,13 @@ function ShowcaseSection() {
               transition={{ duration: 0.32 }}>
             <GlowCard className="p-7 sm:p-10" intensity="medium">
 
-              {/* Top row: icon + badge left, flow animation right */}
-              <div className="flex items-center justify-between mb-6 gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl flex-shrink-0">{card.emoji}</span>
-                  <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap">
-                    {card.category}
-                  </span>
-                </div>
-                <div className="flex-shrink-0 hidden sm:block w-48 md:w-56">
+              {/* Top row: emoji → badge → animation fills rest */}
+              <div className="flex items-center gap-3 mb-6 min-w-0">
+                <span className="text-3xl flex-shrink-0">{card.emoji}</span>
+                <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                  {card.category}
+                </span>
+                <div className="flex-1 min-w-0 hidden sm:block">
                   <ShowcaseFlow index={current} />
                 </div>
               </div>
