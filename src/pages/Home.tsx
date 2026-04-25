@@ -877,24 +877,16 @@ function ShowcaseSection() {
               transition={{ duration: 0.32 }}>
             <GlowCard className="p-7 sm:p-10" intensity="medium">
 
-              {/* Animated flow visualisation */}
-              <ShowcaseFlow index={current} />
-
-              {/* Top row */}
-              <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{card.emoji}</span>
-                  <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
+              {/* Top row: icon + badge left, flow animation right */}
+              <div className="flex items-center justify-between mb-6 gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-3xl flex-shrink-0">{card.emoji}</span>
+                  <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap">
                     {card.category}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-inter text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-3 py-1.5 rounded-full">
-                    {card.badge}
-                  </span>
-                  <span className="font-inter text-xs text-amber-400 bg-amber-400/10 border border-amber-400/25 px-2.5 py-1.5 rounded-full">
-                    Platzhalter — wird befüllt
-                  </span>
+                <div className="flex-shrink-0 hidden sm:block w-48 md:w-56">
+                  <ShowcaseFlow index={current} />
                 </div>
               </div>
 
@@ -928,9 +920,6 @@ function ShowcaseSection() {
           </button>
         </div>
 
-        <p className="font-inter text-gray-600 text-xs text-center mt-4">
-          Pfeiltasten ← → zum Navigieren · Touch-Swipe auf Mobile
-        </p>
       </div>
     </section>
   );
