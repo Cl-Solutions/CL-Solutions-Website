@@ -178,6 +178,15 @@
   text-underline-offset: 3px;
 }
 
+/* ── Hero typewriter line — reserve height so layout doesn't jump ─────────── */
+.hero-tw-line {
+  min-height: 2.6em;
+  display: block;
+}
+@media (min-width: 640px) {
+  .hero-tw-line { min-height: 1.3em; }
+}
+
 @keyframes scroll-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(6px); }

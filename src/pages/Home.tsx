@@ -19,12 +19,44 @@ import {
   Clock, TrendingUp, Zap, MessageSquare,
   RefreshCw, Link2,
   Search, Cog,
-  ArrowRight, ChevronLeft, ChevronRight,
+  ArrowRight, ChevronLeft, ChevronRight, ChevronDown,
   Plus, Minus, Menu, X, Calendar,
   Users, MapPin, Target, CheckCircle,
 } from 'lucide-react';
 import { StarField } from '../components/StarField';
 import { CustomCursor } from '../components/CustomCursor';
+
+// ─── Typewriter ──────────────────────────────────────────────────────────────
+
+const TW_WORDS = ['Zeitverlust.', 'verpassten Anfragen.', 'manueller Arbeit.', 'langsamen Prozessen.', 'ungenutztem Potenzial.'];
+
+function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
+  const [state, setState] = useState<{ wordIdx: number; display: string; phase: 'typing' | 'pausing' | 'deleting' }>({
+    wordIdx: 0, display: '', phase: 'typing',
+  });
+  useEffect(() => {
+    const { wordIdx, display, phase } = state;
+    const word = words[wordIdx];
+    let timer: ReturnType<typeof setTimeout>;
+    if (phase === 'typing') {
+      if (display.length < word.length) {
+        timer = setTimeout(() => setState(s => ({ ...s, display: word.slice(0, s.display.length + 1) })), typeMs);
+      } else {
+        timer = setTimeout(() => setState(s => ({ ...s, phase: 'pausing' })), pauseMs);
+      }
+    } else if (phase === 'pausing') {
+      timer = setTimeout(() => setState(s => ({ ...s, phase: 'deleting' })), 0);
+    } else {
+      if (display.length > 0) {
+        timer = setTimeout(() => setState(s => ({ ...s, display: s.display.slice(0, -1) })), deleteMs);
+      } else {
+        setState(s => ({ wordIdx: (s.wordIdx + 1) % words.length, display: '', phase: 'typing' }));
+      }
+    }
+    return () => clearTimeout(timer);
+  }, [state, words, typeMs, deleteMs, pauseMs]);
+  return state.display;
+}
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -132,6 +164,13 @@ const showcaseCards = [
     desc: 'KI-Agent qualifiziert eingehende Leads automatisch, scored sie nach Priorität und übergibt nur kaufbereite Kontakte ans Vertriebsteam.',
     badge: '3x schnellere Reaktionszeit',
   },
+  {
+    emoji: '🌐',
+    category: 'KI-Website',
+    title: '[Projektname Platzhalter]',
+    desc: 'Website von Anfang an mit integriertem KI-Chatbot konzipiert — beantwortet Besucherfragen, qualifiziert Interessenten und leitet Terminbuchungen ein, rund um die Uhr.',
+    badge: 'Leads automatisch qualifiziert',
+  },
 ];
 
 const steps = [
@@ -141,14 +180,16 @@ const steps = [
 ];
 
 type StatDef =
-  | { kind: 'count'; end: number; suffix: string; label: string }
-  | { kind: 'static'; display: string; label: string };
+  | { kind: 'count';     end: number; suffix: string; label: string }
+  | { kind: 'static';    display: string;              label: string }
+  | { kind: 'week';                                    label: string }
+  | { kind: 'countdown';                               label: string };
 
 const stats: StatDef[] = [
-  { kind: 'count',  end: 48,  suffix: 'h',  label: 'Bis zum ersten Angebot' },
-  { kind: 'static', display: '1–2 Wo.',     label: 'Bis zur ersten Live-Lösung' },
-  { kind: 'count',  end: 24,  suffix: '/7', label: 'Verfügbarkeit eurer KI' },
-  { kind: 'count',  end: 0,   suffix: '',   label: 'Manuelle Schritte nach Automatisierung' },
+  { kind: 'count',     end: 48, suffix: 'h',  label: 'Bis zum ersten Angebot' },
+  { kind: 'week',                              label: 'Bis zur ersten Live-Lösung' },
+  { kind: 'count',     end: 24, suffix: '/7', label: 'Verfügbarkeit eurer KI' },
+  { kind: 'countdown',                         label: 'Manuelle Schritte nach Automatisierung' },
 ];
 
 const techLogos: { type: 'img' | 'text'; src?: string; alt?: string; label?: string }[] = [
@@ -270,6 +311,90 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
   );
 }
 
+/** Week counter — digit fades between 1 and 2 with matching suffix. */
+function WeekCounter({ label, active }: { label: string; active: boolean }) {
+  const [val, setVal] = useState(1);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setVal(v => (v === 1 ? 2 : 1)), 2200);
+    return () => clearInterval(id);
+  }, [active]);
+  return (
+    <div className="text-center">
+      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums flex items-baseline justify-center gap-2">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={val}
+            initial={{ opacity: 0, y: -14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 14 }}
+            transition={{ duration: 0.25 }}>
+            {val}
+          </motion.span>
+        </AnimatePresence>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={val === 1 ? 'woche' : 'wochen'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="text-accent text-3xl sm:text-4xl md:text-5xl">
+            {val === 1 ? 'Woche' : 'Wochen'}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+      <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
+    </div>
+  );
+}
+
+/** Countdown — runs 10 → 0 once when active. */
+function CountdownStat({ label, active }: { label: string; active: boolean }) {
+  const [count, setCount] = useState(10);
+  const started = useRef(false);
+  useEffect(() => {
+    if (!active || started.current) return;
+    started.current = true;
+    let c = 10;
+    const id = setInterval(() => {
+      c -= 1;
+      setCount(c);
+      if (c <= 0) clearInterval(id);
+    }, 180);
+    return () => clearInterval(id);
+  }, [active]);
+  return (
+    <div className="text-center">
+      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
+        {count}
+      </div>
+      <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
+    </div>
+  );
+}
+
+/** Thin scroll-progress bar pinned to top of viewport. */
+function ScrollProgressBar() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const update = () => {
+      const total = document.body.scrollHeight - window.innerHeight;
+      setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[100] h-[2px] pointer-events-none">
+      <div
+        className="h-full transition-[width] duration-75 ease-linear"
+        style={{ width: `${progress}%`, background: 'linear-gradient(to right, #00E5FF, #00b8ff)' }}
+      />
+    </div>
+  );
+}
+
 // ─── Section label ────────────────────────────────────────────────────────────
 function Label({ children }: { children: React.ReactNode }) {
   return (
@@ -365,9 +490,11 @@ function Nav() {
 
 // ─── SECTION 1 — Hero ────────────────────────────────────────────────────────
 function HeroSection() {
-  const line1Ref = useRef<HTMLSpanElement>(null);
-  const line2Ref = useRef<HTMLSpanElement>(null);
-  const done     = useRef(false);
+  const line1Ref  = useRef<HTMLSpanElement>(null);
+  const line2Ref  = useRef<HTMLSpanElement>(null);
+  const done      = useRef(false);
+  const word      = useTypewriter(TW_WORDS);
+  const [arrowVisible, setArrowVisible] = useState(true);
 
   useLayoutEffect(() => {
     if (line1Ref.current) line1Ref.current.style.opacity = '0';
@@ -390,28 +517,46 @@ function HeroSection() {
     }
   }, []);
 
+  useEffect(() => {
+    const h = () => { if (window.scrollY > 120) setArrowVisible(false); };
+    window.addEventListener('scroll', h, { passive: true });
+    return () => window.removeEventListener('scroll', h);
+  }, []);
+
   return (
-    <section id="hero" className="min-h-screen flex items-center justify-center px-6 pt-20 pb-12" style={{ scrollMarginTop: 80 }}>
+    <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 pb-24" style={{ scrollMarginTop: 80 }}>
       <div className="max-w-4xl mx-auto text-center w-full">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
           <Label>KI-Automatisierung · Made in Germany</Label>
         </motion.div>
 
-        <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-8">
+        <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-4">
           <span ref={line1Ref} className="block">Euer Unternehmen läuft.</span>
           <span ref={line2Ref} className="block text-accent">Eure Prozesse laufen mit.</span>
         </h1>
 
+        {/* Typewriter rotating line */}
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.0 }}
+          className="mb-8 sm:mb-10">
+          <span className="hero-tw-line block font-inter text-lg sm:text-xl md:text-2xl text-gray-300">
+            Schluss mit{' '}
+            <span className="text-accent font-medium">{word}</span>
+            <span className="tw-cursor">|</span>
+          </span>
+        </motion.div>
+
         <motion.p
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.9 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
           className="font-inter text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
           Wir bauen KI-Systeme, die repetitive Arbeit übernehmen, Systeme verbinden und Anfragen automatisch qualifizieren — damit euer Team sich auf das konzentriert, was wirklich Wert schafft.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.1 }}
+          transition={{ duration: 0.6, delay: 1.25 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-7 py-4 bg-accent text-dark font-inter font-semibold text-base rounded-xl hover:bg-accent/90 transition-colors animate-pulse-glow">
@@ -424,6 +569,23 @@ function HeroSection() {
           </button>
         </motion.div>
       </div>
+
+      {/* Scroll arrow */}
+      <AnimatePresence>
+        {arrowVisible && (
+          <motion.button
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, delay: 1.8 }}
+            onClick={() => scrollToId('problem')}
+            aria-label="Nach unten scrollen"
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 text-accent/50 hover:text-accent/80 transition-colors animate-scroll-bounce">
+            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-5 h-5 -mt-3" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -897,6 +1059,10 @@ function StatsSection() {
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
                 {s.kind === 'count'
                   ? <Counter end={s.end} suffix={s.suffix} label={s.label} active={inView} />
+                  : s.kind === 'week'
+                  ? <WeekCounter label={s.label} active={inView} />
+                  : s.kind === 'countdown'
+                  ? <CountdownStat label={s.label} active={inView} />
                   : <div className="text-center">
                       <div className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl text-white">{s.display}</div>
                       <p className="font-inter text-gray-400 text-sm sm:text-base mt-3">{s.label}</p>
@@ -1018,9 +1184,10 @@ function CTASection() {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
           {/* Left */}
-          <motion.div initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}>
+          <motion.div initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}
+            className="glass-card rounded-2xl p-6 sm:p-8">
             <Label>Kontakt</Label>
-            <h2 className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-5 leading-tight">
+            <h2 className="font-syne font-bold text-3xl sm:text-4xl text-white mb-5 leading-tight">
               Zeigt uns einen Prozess, der euch täglich Zeit kostet.
             </h2>
             <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-2">
@@ -1031,19 +1198,19 @@ function CTASection() {
             </p>
 
             {/* Calendar card */}
-            <div className={`${CARD} p-5 sm:p-6`}>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+            <div className="space-y-3 mb-0">
+              <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Calendar className="w-6 h-6 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-syne font-semibold text-white">Termin vereinbaren</h3>
-                  <p className="font-inter text-gray-500 text-sm">30 Min., kostenlos &amp; unverbindlich</p>
+                  <h3 className="font-syne font-semibold text-white text-sm">Termin vereinbaren</h3>
+                  <p className="font-inter text-gray-500 text-xs">30 Min., kostenlos &amp; unverbindlich</p>
                 </div>
               </div>
               <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-                className="w-full py-3 bg-accent text-dark font-inter font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
-                Jetzt Termin buchen →
+                className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
+                Jetzt Termin buchen
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
@@ -1144,6 +1311,7 @@ export function Home() {
   return (
     <div className="bg-[#0a0a0a]" onMouseMove={handleMouseMove}>
       <CustomCursor />
+      <ScrollProgressBar />
       <MouseGlow />
 
       {/* Fixed starfield background */}
