@@ -187,7 +187,7 @@ type StatDef =
 
 const stats: StatDef[] = [
   { kind: 'count',        end: 48, suffix: 'h',  label: 'Bis zum ersten Angebot' },
-  { kind: 'static-white', display: '1–2 Wochen',      label: 'Bis zur ersten Live-Lösung' },
+  { kind: 'static-white', display: '1–2',              label: 'Bis zur ersten Live-Lösung' },
   { kind: 'count',     end: 24, suffix: '/7', label: 'Verfügbarkeit eurer KI' },
   { kind: 'countdown',                         label: 'Manuelle Schritte nach Automatisierung' },
 ];
@@ -993,14 +993,14 @@ function StatsSection() {
           {/* 4 stats — 2×2 mobile, 4-col desktop. Each cell gets equal min-width. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10">
             {stats.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
-                className="min-w-0 overflow-hidden">
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
                 {s.kind === 'count'
                   ? <Counter end={s.end} suffix={s.suffix} label={s.label} active={inView} />
                   : s.kind === 'countdown'
                   ? <CountdownStat label={s.label} active={inView} />
                   : <div className="text-center">
-                      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white leading-tight">{s.display}</div>
+                      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums leading-none">{s.display}</div>
+                      <div className="font-syne font-semibold text-lg sm:text-xl text-accent mt-1">Wochen</div>
                       <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{s.label}</p>
                     </div>
                 }
