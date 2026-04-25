@@ -117,25 +117,26 @@ function Flow0() {
 }
 
 // ─── Flow 1 — KI-Kommunikation ────────────────────────────────────────────────
-// Rings start from r=48 (just outside node's circumscribed radius ~47 px)
-// so they only ever appear AROUND the node, never over the text.
+// Rings rendered BEFORE the node rect so the node covers their interior.
+// Text (painted last) sits cleanly on top — rings only show outside the box.
 function Flow1() {
   const n1cx = N1.x + N1.w / 2; // 52
   return (
     <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full">
       <Arrow {...A1} /><Arrow {...A2} />
-      <Node {...N1} label="Eingehend" sub="Anruf" />
-      <Node {...N2} label="KI-Agent" glow />
-      <Node {...N3} label="Termin" sub="gebucht" />
-      {/* Rings rendered AFTER node so they wrap around it cleanly */}
+      {/* Rings behind the node */}
       {[0, 1, 2].map((i) => (
         <motion.circle key={i} cx={n1cx} cy={CY} fill="none"
           stroke={C} strokeWidth={1.2}
-          initial={{ r: 48, opacity: 0.5 }}
-          animate={{ r: [48, 68], opacity: [0.5, 0] }}
+          initial={{ r: 7, opacity: 0.55 }}
+          animate={{ r: [7, 26], opacity: [0.55, 0] }}
           transition={{ duration: 1.6, delay: i * 0.52, repeat: Infinity, ease: 'easeOut' }}
         />
       ))}
+      {/* Nodes on top */}
+      <Node {...N1} label="Eingehend" sub="Anruf" />
+      <Node {...N2} label="KI-Agent" glow />
+      <Node {...N3} label="Termin" sub="gebucht" />
       <Pulse {...A1} duration={1.2} delay={0.3} />
       <Pulse {...A2} duration={1.2} delay={1.5} />
       <Check x={N3.x + N3.w / 2} y={N3.y - 5} delay={1.7} />
@@ -252,6 +253,7 @@ function Flow5() {
           transition={{ duration: 0.68, delay: i * 0.2, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
+      <Node {...N3} label="CRM" sub="erfasst" />
       <Pulse {...A1} duration={1.2} delay={0.5} />
       <Pulse {...A2} duration={1.2} delay={1.7} />
       <motion.text x={N3.x + N3.w / 2} y={N3.y - 5}
