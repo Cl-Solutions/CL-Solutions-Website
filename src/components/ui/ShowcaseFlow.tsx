@@ -117,21 +117,25 @@ function Flow0() {
 }
 
 // ─── Flow 1 — KI-Kommunikation ────────────────────────────────────────────────
+// Rings start from r=48 (just outside node's circumscribed radius ~47 px)
+// so they only ever appear AROUND the node, never over the text.
 function Flow1() {
+  const n1cx = N1.x + N1.w / 2; // 52
   return (
     <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full">
-      {[0, 1, 2].map((i) => (
-        <motion.circle key={i} cx={N1.x + N1.w / 2} cy={CY} fill="none"
-          stroke={C} strokeWidth={1.2}
-          initial={{ r: 7, opacity: 0.55 }}
-          animate={{ r: [7, 24], opacity: [0.55, 0] }}
-          transition={{ duration: 1.6, delay: i * 0.52, repeat: Infinity, ease: 'easeOut' }}
-        />
-      ))}
       <Arrow {...A1} /><Arrow {...A2} />
       <Node {...N1} label="Eingehend" sub="Anruf" />
       <Node {...N2} label="KI-Agent" glow />
       <Node {...N3} label="Termin" sub="gebucht" />
+      {/* Rings rendered AFTER node so they wrap around it cleanly */}
+      {[0, 1, 2].map((i) => (
+        <motion.circle key={i} cx={n1cx} cy={CY} fill="none"
+          stroke={C} strokeWidth={1.2}
+          initial={{ r: 48, opacity: 0.5 }}
+          animate={{ r: [48, 68], opacity: [0.5, 0] }}
+          transition={{ duration: 1.6, delay: i * 0.52, repeat: Infinity, ease: 'easeOut' }}
+        />
+      ))}
       <Pulse {...A1} duration={1.2} delay={0.3} />
       <Pulse {...A2} duration={1.2} delay={1.5} />
       <Check x={N3.x + N3.w / 2} y={N3.y - 5} delay={1.7} />
@@ -213,19 +217,38 @@ function Flow4() {
 }
 
 // ─── Flow 5 — KI-Website ──────────────────────────────────────────────────────
+// Chatbot node rendered manually: label at top, typing dots in lower half.
 function Flow5() {
-  const chatCX = N2.x + N2.w / 2;
+  const chatCX = N2.x + N2.w / 2;           // 230
+  const dotsY  = N2.y + N2.h - 10;          // 46 — lower portion of node
   return (
     <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full">
       <Arrow {...A1} /><Arrow {...A2} />
       <Node {...N1} label="Besucher" sub="Website" />
-      <Node {...N2} label="Chatbot" glow />
-      <Node {...N3} label="CRM" sub="erfasst" />
+
+      {/* Chatbot node — manual so label + dots don't overlap */}
+      <g>
+        <motion.rect
+          x={N2.x - 4} y={N2.y - 4} width={N2.w + 8} height={N2.h + 8} rx={9}
+          fill="none" stroke={C} strokeWidth={1.2}
+          animate={{ opacity: [0.12, 0.52, 0.12] }}
+          transition={{ duration: 2.0, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <rect x={N2.x} y={N2.y} width={N2.w} height={N2.h} rx={5}
+          fill={NB} stroke={NA} strokeWidth={1.2} />
+        {/* Label pinned near top of node */}
+        <text x={chatCX} y={N2.y + 15}
+          textAnchor="middle" fill={LA}
+          fontSize={11} fontFamily={F} fontWeight="700"
+        >Chatbot</text>
+      </g>
+
+      {/* Typing dots bounce in lower half — well below the label */}
       {[-10, 0, 10].map((offset, i) => (
         <motion.circle key={i} r={3} cx={chatCX + offset}
           fill="rgba(255,255,255,0.52)"
-          initial={{ cy: CY + 2 }}
-          animate={{ cy: [CY + 2, CY - 5, CY + 2] }}
+          initial={{ cy: dotsY }}
+          animate={{ cy: [dotsY, dotsY - 6, dotsY] }}
           transition={{ duration: 0.68, delay: i * 0.2, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
