@@ -137,42 +137,42 @@ const showcaseCards = [
   {
     emoji: '🔄',
     category: 'Prozessautomatisierung',
-    title: '[Projektname Platzhalter]',
+    title: 'Datenfluss ohne Brüche',
     desc: 'Vollautomatische Synchronisation zwischen CRM und Buchhaltungssystem. Manuelle Datenpflege komplett eliminiert.',
     badge: '8h/Woche eingespart',
   },
   {
     emoji: '💬',
     category: 'KI-Kommunikation',
-    title: '[Projektname Platzhalter]',
+    title: '24/7 KI-Telefonassistent',
     desc: 'Voice Agent übernimmt eingehende Anrufe außerhalb der Geschäftszeiten, qualifiziert Anfragen und bucht Termine automatisch.',
     badge: '24/7 Erreichbarkeit',
   },
   {
     emoji: '🔗',
     category: 'System-Integration',
-    title: '[Projektname Platzhalter]',
+    title: 'Vollautomatische Bestellabwicklung',
     desc: 'API-Verbindung zwischen Shop-System, Lager und Versanddienstleister. Bestellungen laufen vollautomatisch durch.',
     badge: '0 manuelle Schritte',
   },
   {
     emoji: '⚡',
     category: 'Custom KI-Lösung',
-    title: '[Projektname Platzhalter]',
+    title: 'Intelligente Dokumentenverarbeitung',
     desc: 'Dokumenten-KI extrahiert relevante Daten aus eingehenden PDFs und überträgt sie strukturiert ins interne System.',
     badge: '90% schneller',
   },
   {
     emoji: '📊',
     category: 'Individuelle KI-Lösung',
-    title: '[Projektname Platzhalter]',
+    title: 'Automatisches Lead-Scoring',
     desc: 'KI-Agent qualifiziert eingehende Leads automatisch, scored sie nach Priorität und übergibt nur kaufbereite Kontakte ans Vertriebsteam.',
     badge: '3x schnellere Reaktionszeit',
   },
   {
     emoji: '🌐',
     category: 'KI-Website',
-    title: '[Projektname Platzhalter]',
+    title: 'KI-Website mit eingebautem Vertrieb',
     desc: 'Website von Anfang an mit integriertem KI-Chatbot konzipiert — beantwortet Besucherfragen, qualifiziert Interessenten und leitet Terminbuchungen ein, rund um die Uhr.',
     badge: 'Leads automatisch qualifiziert',
   },
@@ -893,11 +893,16 @@ function ShowcaseSection() {
                 </div>
               </div>
 
-              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white/50 mb-3 italic">{card.title}</h3>
-              <p className="font-inter text-gray-300 text-base sm:text-lg leading-relaxed">{card.desc}</p>
+              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2">{card.title}</h3>
+              <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-5">{card.desc}</p>
 
-              {/* Card counter */}
-              <p className="font-inter text-gray-600 text-xs mt-6">{current + 1} / {total}</p>
+              {/* Result badge + counter */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <span className="font-inter text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-3 py-1.5 rounded-full">
+                  ✓ {card.badge}
+                </span>
+                <p className="font-inter text-gray-600 text-xs">{current + 1} / {total}</p>
+              </div>
             </GlowCard>
             </motion.div>
           </AnimatePresence>
