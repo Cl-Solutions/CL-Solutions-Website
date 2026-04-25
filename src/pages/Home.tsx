@@ -28,6 +28,7 @@ import { CustomCursor } from '../components/CustomCursor';
 import { Spotlight } from '../components/ui/Spotlight';
 import { GlowCard } from '../components/ui/GlowCard';
 import { ShimmerButton } from '../components/ui/ShimmerButton';
+import { GridBeam } from '../components/ui/GridBeam';
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
 
@@ -643,17 +644,20 @@ function ServicesSection() {
         {/* 4 clickable tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           {services.map((s, i) => (
-            <button
+            <motion.button
               key={s.id}
               onClick={() => setActiveIdx(i)}
-              className={`text-left p-4 rounded-2xl border transition-all duration-300 ${
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+              className={`text-left p-4 rounded-2xl border transition-colors duration-300 ${
                 activeIdx === i
-                  ? 'bg-accent/10 border-accent/50 shadow-[0_0_20px_rgba(0,229,255,0.08)]'
+                  ? 'bg-accent/10 border-accent/50 shadow-[0_0_24px_rgba(0,212,255,0.15),0_0_0_1px_rgba(0,212,255,0.3)]'
                   : 'glass-card glass-card-interactive'
               }`}>
               <span className="text-xl mb-2 block">{s.emoji}</span>
               <span className="font-syne font-semibold text-white text-sm sm:text-base leading-tight block">{s.title}</span>
-            </button>
+            </motion.button>
           ))}
         </div>
 
@@ -936,8 +940,9 @@ function ProcessSection() {
 
   return (
     <section id="prozess" style={{ scrollMarginTop: 80 }}
-      className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
-      <div ref={ref} className="max-w-2xl mx-auto">
+      className="relative py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)] overflow-hidden">
+      <GridBeam />
+      <div ref={ref} className="relative z-10 max-w-2xl mx-auto">
         <div className="text-center mb-14">
           <span ref={subRef as React.RefObject<HTMLSpanElement>}>
             <Label>Drei Schritte bis zu eurer Lösung</Label>
@@ -967,7 +972,7 @@ function ProcessSection() {
                 animate={inView ? { opacity: 1, x: 0 } : {}}
                 transition={{ duration: 0.5, delay: 0.3 + i * 0.25 }}>
                 <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: '#00E5FF' }}>
+                  style={{ background: '#00E5FF', boxShadow: '0 0 16px rgba(0,212,255,0.5), 0 0 32px rgba(0,212,255,0.2)' }}>
                   <span className="font-syne font-bold text-sm" style={{ color: '#0a0a0a' }}>{step.num}</span>
                 </div>
                 <div className="pt-1 pb-2">
@@ -991,8 +996,9 @@ function StatsSection() {
 
   return (
     <section id="zahlen" style={{ scrollMarginTop: 80 }}
-      className="py-24 sm:py-32 px-6">
-      <div ref={ref} className="max-w-5xl mx-auto">
+      className="relative py-24 sm:py-32 px-6 overflow-hidden">
+      <GridBeam />
+      <div ref={ref} className="relative z-10 max-w-5xl mx-auto">
         <div className="text-center mb-14">
           <span ref={subRef as React.RefObject<HTMLSpanElement>}>
             <Label>In Zahlen</Label>
@@ -1079,7 +1085,7 @@ function FAQSection() {
               initial={{ opacity: 0, y: 12 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: 0.1 + i * 0.07 }}
-              className="glass-card glass-card-interactive rounded-xl px-5">
+              className="glass-card rounded-xl px-5 hover:border-accent/25 hover:shadow-[0_0_20px_rgba(0,212,255,0.06)] transition-all duration-300">
               <button
                 onClick={() => setOpen(open === i ? null : i)}
                 className="w-full py-5 flex items-center justify-between text-left group">
