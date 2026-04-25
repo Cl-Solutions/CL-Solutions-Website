@@ -311,7 +311,8 @@ function Counter({ end, suffix, label, active }: { end: number; suffix: string; 
   );
 }
 
-/** Week counter — digit fades between 1 and 2 with matching suffix. */
+/** Week counter — digit fades between 1 and 2 with matching suffix.
+ *  Fixed-width container prevents the stat from collapsing/expanding. */
 function WeekCounter({ label, active }: { label: string; active: boolean }) {
   const [val, setVal] = useState(1);
   useEffect(() => {
@@ -321,7 +322,9 @@ function WeekCounter({ label, active }: { label: string; active: boolean }) {
   }, [active]);
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums flex items-baseline justify-center gap-2">
+      {/* Fixed-width box so "1 Woche" and "2 Wochen" never shift sibling stats */}
+      <div className="inline-flex items-baseline justify-center font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums"
+        style={{ minWidth: '7rem' }}>
         <AnimatePresence mode="wait">
           <motion.span
             key={val}
@@ -339,7 +342,8 @@ function WeekCounter({ label, active }: { label: string; active: boolean }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="text-accent text-3xl sm:text-4xl md:text-5xl">
+            className="text-accent ml-1.5"
+            style={{ fontSize: '0.62em' }}>
             {val === 1 ? 'Woche' : 'Wochen'}
           </motion.span>
         </AnimatePresence>
@@ -1028,10 +1032,11 @@ function StatsSection() {
         </div>
 
         <div className="glass-card rounded-2xl p-8 sm:p-12">
-          {/* 4 stats — 2×2 mobile, 4-col desktop */}
+          {/* 4 stats — 2×2 mobile, 4-col desktop. Each cell gets equal min-width. */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10">
             {stats.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+                className="min-w-0 overflow-hidden">
                 {s.kind === 'count'
                   ? <Counter end={s.end} suffix={s.suffix} label={s.label} active={inView} />
                   : s.kind === 'week'
@@ -1143,7 +1148,6 @@ function CTASection() {
   const ref    = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-8% 0px' });
 
-  // Load Tally embed script
   useEffect(() => {
     const script = document.createElement('script');
     script.src   = 'https://tally.so/widgets/embed.js';
@@ -1155,72 +1159,82 @@ function CTASection() {
   return (
     <section id="kontakt" style={{ scrollMarginTop: 80 }}
       className="py-24 sm:py-32 px-6">
-      <div ref={ref} className="max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+      <div ref={ref} className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="glass-card rounded-2xl overflow-hidden">
 
-          {/* Left */}
-          <motion.div initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6 }}
-            className="glass-card rounded-2xl p-6 sm:p-8">
-            <Label>Kontakt</Label>
-            <h2 className="font-syne font-bold text-3xl sm:text-4xl text-white mb-5 leading-tight">
-              Zeigt uns einen Prozess, der euch täglich Zeit kostet.
-            </h2>
-            <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-2">
-              In 30 Minuten analysieren wir gemeinsam, was sich automatisieren lässt — konkret, kostenlos, ohne Verkaufsgespräch.
-            </p>
-            <p className="font-inter text-gray-600 text-sm mb-8">
-              Kein Risiko — das Erstgespräch ist kostenlos &amp; vollständig unverbindlich.
-            </p>
+          {/* Inner two-column layout */}
+          <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[rgba(0,229,255,0.12)]">
 
-            {/* Calendar card */}
-            <div className="space-y-3 mb-0">
-              <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
-                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-6 h-6 text-accent" />
+            {/* ── Left column ── */}
+            <div className="p-7 sm:p-10 flex flex-col">
+              <Label>Kontakt</Label>
+              <h2 className="font-syne font-bold text-2xl sm:text-3xl text-white mb-4 leading-tight">
+                Zeigt uns einen Prozess, der euch täglich Zeit kostet.
+              </h2>
+              <p className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed mb-1">
+                In 30 Minuten analysieren wir gemeinsam, was sich automatisieren lässt — konkret, kostenlos, ohne Verkaufsgespräch.
+              </p>
+              <p className="font-inter text-gray-600 text-xs sm:text-sm mb-8">
+                Kein Risiko — das Erstgespräch ist kostenlos &amp; vollständig unverbindlich.
+              </p>
+
+              {/* Termin-Card */}
+              <div className="mt-auto space-y-3">
+                <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                  <div className="w-11 h-11 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-accent" />
+                  </div>
+                  <div>
+                    <p className="font-syne font-semibold text-white text-sm">Termin vereinbaren</p>
+                    <p className="font-inter text-gray-500 text-xs">30 Min., kostenlos &amp; unverbindlich</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-syne font-semibold text-white text-sm">Termin vereinbaren</h3>
-                  <p className="font-inter text-gray-500 text-xs">30 Min., kostenlos &amp; unverbindlich</p>
-                </div>
+                <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
+                  className="w-full py-3.5 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
+                  Jetzt Termin buchen
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </a>
               </div>
-              <a href="https://cal.eu/cl-solutions/30min" target="_blank" rel="noopener noreferrer"
-                className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group animate-pulse-glow">
-                Jetzt Termin buchen
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
             </div>
-          </motion.div>
 
-          {/* Right */}
-          <motion.div initial={{ opacity: 0, x: 24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.6, delay: 0.1 }}>
-            <div className="glass-card glass-card-interactive rounded-2xl p-6 sm:p-8 mb-4">
+            {/* ── Right column ── */}
+            <div className="p-7 sm:p-10 flex flex-col">
               <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2">Erstberatung anfragen</h3>
-              <p className="font-inter text-gray-400 text-sm sm:text-base mb-6">Wir klären euren Bedarf persönlich, bevor ihr euch entscheidet.</p>
+              <p className="font-inter text-gray-400 text-sm sm:text-base mb-7">
+                Wir klären euren Bedarf persönlich, bevor ihr euch entscheidet.
+              </p>
+
               <div className="space-y-3 mb-8">
                 {['Kostenlose Analyse eurer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
                     <span className="font-inter text-gray-300 text-sm">{item}</span>
                   </div>
                 ))}
               </div>
+
               <button
                 data-tally-open="2Evere"
-                className="w-full py-4 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group">
+                className="w-full py-3.5 px-6 bg-accent text-dark font-syne font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-accent/90 transition-colors group mb-4">
                 Jetzt Anfrage stellen
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
+
+              {/* Chatbot hint */}
+              <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.06] mt-auto">
+                <MessageSquare className="w-4 h-4 text-accent flex-shrink-0" />
+                <p className="font-inter text-gray-400 text-xs sm:text-sm">
+                  Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
+                </p>
+              </div>
             </div>
 
-            {/* Chatbot hint */}
-            <div className="flex items-center gap-3 p-4 glass-card rounded-xl">
-              <MessageSquare className="w-5 h-5 text-accent flex-shrink-0" />
-              <p className="font-inter text-gray-400 text-sm">
-                Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
-              </p>
-            </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
