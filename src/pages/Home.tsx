@@ -30,37 +30,59 @@ import { GlowCard } from '../components/ui/GlowCard';
 import { ShimmerButton } from '../components/ui/ShimmerButton';
 import { GridBeam } from '../components/ui/GridBeam';
 import { ShowcaseFlow } from '../components/ui/ShowcaseFlow';
+import { AnimatedDemo } from '../components/ui/AnimatedDemo';
 
-// ─── Typewriter ──────────────────────────────────────────────────────────────
+// ─── GSAP word carousel ───────────────────────────────────────────────────────
 
 const TW_WORDS = ['Zeitverlust.', 'verpassten Anfragen.', 'manueller Arbeit.', 'langsamen Prozessen.', 'ungenutztem Potenzial.'];
 
-function useTypewriter(words: string[], typeMs = 80, deleteMs = 40, pauseMs = 2000) {
-  const [state, setState] = useState<{ wordIdx: number; display: string; phase: 'typing' | 'pausing' | 'deleting' }>({
-    wordIdx: 0, display: '', phase: 'typing',
-  });
-  useEffect(() => {
-    const { wordIdx, display, phase } = state;
-    const word = words[wordIdx];
-    let timer: ReturnType<typeof setTimeout>;
-    if (phase === 'typing') {
-      if (display.length < word.length) {
-        timer = setTimeout(() => setState(s => ({ ...s, display: word.slice(0, s.display.length + 1) })), typeMs);
-      } else {
-        timer = setTimeout(() => setState(s => ({ ...s, phase: 'pausing' })), pauseMs);
-      }
-    } else if (phase === 'pausing') {
-      timer = setTimeout(() => setState(s => ({ ...s, phase: 'deleting' })), 0);
-    } else {
-      if (display.length > 0) {
-        timer = setTimeout(() => setState(s => ({ ...s, display: s.display.slice(0, -1) })), deleteMs);
-      } else {
-        setState(s => ({ wordIdx: (s.wordIdx + 1) % words.length, display: '', phase: 'typing' }));
-      }
-    }
-    return () => clearTimeout(timer);
-  }, [state, words, typeMs, deleteMs, pauseMs]);
-  return state.display;
+/**
+ * GSAP-powered vertical word carousel.
+ * No React state → zero re-renders per tick.
+ * Words slide out upward (y→-32, fade) and enter from below (y:36→0, fade).
+ */
+function useGsapCarousel(words: string[]) {
+  const wordRef  = useRef<HTMLSpanElement>(null);
+  const alive    = useRef(true);
+  const idxRef   = useRef(0);
+  const timerRef = useRef<gsap.core.Tween | null>(null);
+
+  useLayoutEffect(() => {
+    const el = wordRef.current;
+    if (!el) return;
+    alive.current  = true;
+    idxRef.current = 0;
+    el.textContent = words[0];
+    gsap.set(el, { y: 0, opacity: 1 });
+
+    const schedule = () => {
+      // Store the delayedCall so cleanup can kill it explicitly
+      timerRef.current = gsap.delayedCall(2.6, () => {
+        if (!alive.current) return;
+        gsap.to(el, {
+          y: -32, opacity: 0, duration: 0.38, ease: 'power2.in',
+          onComplete() {
+            if (!alive.current) return;
+            idxRef.current = (idxRef.current + 1) % words.length;
+            el.textContent = words[idxRef.current];
+            gsap.fromTo(el,
+              { y: 36, opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.52, ease: 'power3.out', onComplete: schedule }
+            );
+          },
+        });
+      });
+    };
+    schedule();
+
+    return () => {
+      alive.current = false;
+      timerRef.current?.kill();   // kills the pending delayedCall
+      gsap.killTweensOf(el);      // kills any in-progress tweens on the element
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return wordRef;
 }
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────
@@ -137,43 +159,49 @@ const showcaseCards = [
   {
     emoji: '🔄',
     category: 'Prozessautomatisierung',
-    title: 'Datenfluss ohne Brüche',
-    desc: 'Vollautomatische Synchronisation zwischen CRM und Buchhaltungssystem. Manuelle Datenpflege komplett eliminiert.',
+    branche: 'Handwerksbetrieb',
+    title: 'Arbeitszeiterfassung & Rechnungsstellung automatisiert',
+    desc: 'Ein Handwerksbetrieb erfasste Arbeitszeiten manuell in Excel und stellte Rechnungen per Hand aus. Heute läuft beides vollautomatisch — Zeiten werden erfasst, Rechnungen generiert und direkt versendet.',
     badge: '8h/Woche eingespart',
   },
   {
     emoji: '💬',
     category: 'KI-Kommunikation',
+    branche: 'Arztpraxis',
     title: '24/7 KI-Telefonassistent',
-    desc: 'Voice Agent übernimmt eingehende Anrufe außerhalb der Geschäftszeiten, qualifiziert Anfragen und bucht Termine automatisch.',
+    desc: 'Eine Arztpraxis war außerhalb der Sprechzeiten nicht erreichbar — Patienten sprachen auf Anrufbeantworter. Der Voice Agent übernimmt jetzt eingehende Anrufe, qualifiziert das Anliegen und bucht Termine direkt ins System.',
     badge: '24/7 Erreichbarkeit',
   },
   {
     emoji: '🔗',
     category: 'System-Integration',
+    branche: 'E-Commerce',
     title: 'Vollautomatische Bestellabwicklung',
-    desc: 'API-Verbindung zwischen Shop-System, Lager und Versanddienstleister. Bestellungen laufen vollautomatisch durch.',
+    desc: 'Ein Online-Händler pflegte Bestellungen manuell zwischen Shop, Lager und Versanddienstleister. Die API-Integration verbindet alle drei Systeme — jede Bestellung läuft seitdem ohne einen einzigen manuellen Schritt durch.',
     badge: '0 manuelle Schritte',
   },
   {
     emoji: '⚡',
     category: 'Custom KI-Lösung',
+    branche: 'Immobilienmakler',
     title: 'Intelligente Dokumentenverarbeitung',
-    desc: 'Dokumenten-KI extrahiert relevante Daten aus eingehenden PDFs und überträgt sie strukturiert ins interne System.',
+    desc: 'Ein Immobilienbüro erhielt täglich Dutzende PDFs mit Exposés, Verträgen und Anfragen. Die Dokumenten-KI extrahiert relevante Daten automatisch und überträgt sie strukturiert ins CRM — ohne manuelle Eingabe.',
     badge: '90% schneller',
   },
   {
     emoji: '📊',
     category: 'Individuelle KI-Lösung',
+    branche: 'Unternehmensberatung',
     title: 'Automatisches Lead-Scoring',
-    desc: 'KI-Agent qualifiziert eingehende Leads automatisch, scored sie nach Priorität und übergibt nur kaufbereite Kontakte ans Vertriebsteam.',
+    desc: 'Eine Beratungsfirma verlor Zeit damit, unqualifizierte Anfragen zu sichten. Der KI-Agent bewertet eingehende Leads automatisch nach Priorität und übergibt nur kaufbereite Kontakte — das Vertriebsteam fokussiert sich nur noch auf echte Chancen.',
     badge: '3x schnellere Reaktionszeit',
   },
   {
     emoji: '🌐',
     category: 'KI-Website',
+    branche: 'Dienstleister',
     title: 'KI-Website mit eingebautem Vertrieb',
-    desc: 'Website von Anfang an mit integriertem KI-Chatbot konzipiert — beantwortet Besucherfragen, qualifiziert Interessenten und leitet Terminbuchungen ein, rund um die Uhr.',
+    desc: 'Für einen lokalen Dienstleister wurde die Website von Anfang an mit integriertem KI-Chatbot konzipiert — beantwortet Besucherfragen, qualifiziert Interessenten und leitet Terminbuchungen ein, rund um die Uhr.',
     badge: 'Leads automatisch qualifiziert',
   },
 ];
@@ -276,7 +304,16 @@ function useSplitHeadline(inView: boolean) {
     if (head) {
       gsap.set(head, { opacity: 1 });
       const split = new SplitText(head, { type: 'words' });
-      gsap.from(split.words, { y: -50, opacity: 0, duration: 0.65, stagger: 0.07, ease: 'power3.out' });
+      gsap.from(split.words, {
+        y: -40,
+        rotateX: 55,
+        opacity: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        ease: 'power3.out',
+        transformOrigin: '50% 0%',
+        transformPerspective: 600,
+      });
     }
     if (sub) {
       gsap.set(sub, { opacity: 1 });
@@ -287,54 +324,87 @@ function useSplitHeadline(inView: boolean) {
   return { headRef, subRef };
 }
 
-/** Animated count-up number. */
+/** Animated count-up — GSAP proxy, no React state ticking, scale punch on complete. */
 function Counter({ end, suffix, label, active }: { end: number; suffix: string; label: string; active: boolean }) {
-  const [count, setCount] = useState(0);
+  const numRef  = useRef<HTMLSpanElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const done    = useRef(false);
+
   useEffect(() => {
-    if (!active) return;
-    // For 0: immediately show without animation
-    if (end === 0) { setCount(0); return; }
-    let startTs: number | null = null;
-    let raf: number;
-    const tick = (ts: number) => {
-      if (!startTs) startTs = ts;
-      const p = Math.min((ts - startTs) / 2000, 1);
-      setCount(Math.floor((1 - Math.pow(1 - p, 4)) * end));
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else setCount(end);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    if (!active || done.current || !numRef.current) return;
+    done.current = true;
+    const el   = numRef.current;
+    const wrap = wrapRef.current;
+    const proxy = { val: 0 };
+    gsap.to(proxy, {
+      val: end,
+      duration: 2.2,
+      ease: 'power3.out',
+      onUpdate() { el.textContent = String(Math.floor(proxy.val)); },
+      onComplete() {
+        el.textContent = String(end);
+        if (wrap) gsap.fromTo(wrap, { scale: 1 }, { scale: 1.07, yoyo: true, repeat: 1, duration: 0.18, ease: 'power2.out' });
+      },
+    });
   }, [active, end]);
+
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
-        {count}<span className="text-accent">{suffix}</span>
+      <div ref={wrapRef} className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
+        <span ref={numRef}>0</span><span className="text-accent">{suffix}</span>
       </div>
       <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
     </div>
   );
 }
 
-/** Countdown — runs 10 → 0 once when active. */
+/** Countdown — accelerating 10 → 0, cyan glow burst at zero. */
 function CountdownStat({ label, active }: { label: string; active: boolean }) {
-  const [count, setCount] = useState(10);
-  const started = useRef(false);
+  const numRef  = useRef<HTMLSpanElement>(null);
+  const done    = useRef(false);
+  const alive   = useRef(true);
+  const [atZero, setAtZero] = useState(false);
+
   useEffect(() => {
-    if (!active || started.current) return;
-    started.current = true;
+    alive.current = true;
+    return () => { alive.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!active || done.current || !numRef.current) return;
+    done.current = true;
+    const el = numRef.current;
     let c = 10;
-    const id = setInterval(() => {
+    el.textContent = '10';
+
+    const step = () => {
+      if (!alive.current) return;
       c -= 1;
-      setCount(c);
-      if (c <= 0) clearInterval(id);
-    }, 180);
-    return () => clearInterval(id);
+      el.textContent = String(c);
+      // Bounce on each tick
+      gsap.fromTo(el, { scale: 1.22 }, { scale: 1, duration: 0.24, ease: 'back.out(2.5)' });
+      if (c > 0) {
+        // Accelerate: 380ms → 75ms over 10 steps
+        const delay = Math.max(0.075, 0.38 - (10 - c) * 0.031);
+        gsap.delayedCall(delay, step);
+      } else {
+        if (alive.current) setAtZero(true);
+        // Final punch
+        gsap.fromTo(el, { scale: 1 }, { scale: 1.15, yoyo: true, repeat: 1, duration: 0.22, ease: 'power2.out' });
+      }
+    };
+    gsap.delayedCall(0.55, step);
   }, [active]);
+
   return (
     <div className="text-center">
-      <div className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl text-white tabular-nums">
-        {count}
+      <div
+        className="font-syne font-bold text-5xl sm:text-6xl md:text-7xl tabular-nums transition-colors duration-500"
+        style={{
+          color: atZero ? '#00D4FF' : 'white',
+          textShadow: atZero ? '0 0 28px rgba(0,212,255,0.75), 0 0 56px rgba(0,212,255,0.35)' : undefined,
+        }}>
+        <span ref={numRef}>10</span>
       </div>
       <p className="font-inter text-gray-400 text-base sm:text-lg mt-3">{label}</p>
     </div>
@@ -461,12 +531,9 @@ function Nav() {
 
 // ─── SECTION 1 — Hero ────────────────────────────────────────────────────────
 function HeroSection() {
-  // One ref for all static text — same pattern as main branch.
-  // Two-ref approach caused "Schluss mit" to stay hidden when the typewriter's
-  // frequent re-renders disrupted GSAP's split-word animation on line2.
-  const staticRef   = useRef<HTMLSpanElement>(null);
-  const gsapDone    = useRef(false);
-  const word        = useTypewriter(TW_WORDS);
+  const staticRef      = useRef<HTMLSpanElement>(null);
+  const gsapDone       = useRef(false);
+  const wordRef        = useGsapCarousel(TW_WORDS);
   const [arrowVisible, setArrowVisible] = useState(true);
 
   useLayoutEffect(() => {
@@ -498,8 +565,8 @@ function HeroSection() {
 
         <h1 className="font-syne font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-6 sm:mb-10">
           <span ref={staticRef} className="block">Euer Unternehmen läuft. Schluss mit</span>
-          <span className="hero-tw-line block" style={{ color: '#00E5FF' }}>
-            {word}<span className="tw-cursor">|</span>
+          <span className="hero-tw-line block" style={{ color: '#00E5FF', overflow: 'hidden' }}>
+            <span ref={wordRef} style={{ display: 'inline-block' }} />
           </span>
         </h1>
 
@@ -605,9 +672,9 @@ function ProblemSection() {
           {problems.map((p, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.15 + i * 0.1 }}>
+              initial={{ opacity: 0, y: 30, filter: 'blur(6px)' }}
+              animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+              transition={{ duration: 0.55, delay: 0.15 + i * 0.1 }}>
               <GlowCard className="p-6 sm:p-7 h-full hover:-translate-y-1.5 transition-transform duration-300">
                 <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
                   <p.icon className="w-5 h-5 text-accent" />
@@ -737,8 +804,8 @@ function AboutSection() {
             {aboutHighlights.map((h, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: 20 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
+                initial={{ opacity: 0, x: 20, filter: 'blur(5px)' }}
+                animate={inView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
                 whileHover={{ y: -3 }}
                 transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
                 <GlowCard className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5">
@@ -791,40 +858,18 @@ function DemoSection() {
             <Label>In Aktion</Label>
           </span>
           <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
-            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white text-center">
             Nicht erklären. Zeigen.
           </h2>
         </div>
 
-        {/* Video placeholder */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="relative w-full rounded-2xl border-2 border-dashed border-accent/40 bg-[rgba(0,229,255,0.03)] overflow-hidden"
-          style={{ aspectRatio: '16/9' }}>
-          {/* Placeholder badge */}
-          <div className="absolute top-4 left-4 z-10">
-            <span className="font-inter text-xs font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full">
-              Platzhalter
-            </span>
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 gap-4">
-            {/* Play icon */}
-            <div className="w-16 h-16 rounded-full border-2 border-accent/40 flex items-center justify-center mb-2">
-              <div className="w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[18px] border-l-accent/60 ml-1" />
-            </div>
-            <p className="font-syne font-semibold text-white text-lg sm:text-xl">Demo-Video Platzhalter</p>
-            <p className="font-inter text-gray-500 text-sm max-w-md">
-              Hier kommt ein 90-Sekunden-Screenrecording eines echten automatisierten Workflows.<br />
-              <span className="text-gray-600">Format: MP4 · Geplant: KW XX</span>
-            </p>
-          </div>
+        >
+          <AnimatedDemo />
         </motion.div>
-
-        <p className="font-inter text-gray-600 text-xs sm:text-sm text-center mt-5">
-          Beispiel-Flows: Lead-Qualifizierung · CRM-Automatisierung · Voice Agent Eingang
-        </p>
       </div>
     </section>
   );
@@ -852,11 +897,11 @@ function ShowcaseSection() {
       <div ref={ref} className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <span ref={subRef as React.RefObject<HTMLSpanElement>}>
-            <Label>Umgesetzte Lösungen</Label>
+            <Label>Echte Projekte · Echte Ergebnisse</Label>
           </span>
           <h2 ref={headRef as React.RefObject<HTMLHeadingElement>}
-            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white">
-            Was wir gebaut haben
+            className="font-syne font-bold text-3xl sm:text-4xl md:text-5xl text-white text-center">
+            Aus der Praxis
           </h2>
         </div>
 
@@ -876,21 +921,26 @@ function ShowcaseSection() {
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ opacity: 0, x: dir * 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: dir * -60 }}
-              transition={{ duration: 0.32 }}>
+              initial={{ opacity: 0, x: dir * 80, scale: 0.96, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, x: dir * -80, scale: 0.96, filter: 'blur(6px)' }}
+              transition={{ duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}>
             <GlowCard className="p-7 sm:p-10" intensity="medium">
 
-              {/* Top row: emoji → badge → animation fills rest */}
-              <div className="flex items-center gap-3 mb-6 min-w-0">
+              {/* Top row: emoji → category badge → branche tag */}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="text-3xl flex-shrink-0">{card.emoji}</span>
-                <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                <span className="font-inter text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full whitespace-nowrap">
                   {card.category}
                 </span>
-                <div className="flex-1 min-w-0 hidden sm:block">
-                  <ShowcaseFlow index={current} />
-                </div>
+                <span className="font-inter text-xs font-medium text-gray-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full whitespace-nowrap">
+                  {card.branche}
+                </span>
+              </div>
+
+              {/* Flow animation — full width */}
+              <div className="mb-5 hidden sm:block">
+                <ShowcaseFlow index={current} />
               </div>
 
               <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2">{card.title}</h3>

@@ -42,12 +42,22 @@ function Node({ x, y, w, h, label, sub, glow = false }: {
   return (
     <g>
       {glow && (
-        <motion.rect
-          x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={9}
-          fill="none" stroke={C} strokeWidth={1.2}
-          animate={{ opacity: [0.12, 0.52, 0.12] }}
-          transition={{ duration: 2.0, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <>
+          {/* Outer ring — slow, wide */}
+          <motion.rect
+            x={x - 10} y={y - 10} width={w + 20} height={h + 20} rx={14}
+            fill="none" stroke={C} strokeWidth={0.7}
+            animate={{ opacity: [0.04, 0.24, 0.04] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          />
+          {/* Inner ring */}
+          <motion.rect
+            x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={9}
+            fill="none" stroke={C} strokeWidth={1.2}
+            animate={{ opacity: [0.12, 0.55, 0.12] }}
+            transition={{ duration: 2.0, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </>
       )}
       <rect x={x} y={y} width={w} height={h} rx={5}
         fill={NB} stroke={glow ? NA : NS} strokeWidth={1.2} />
@@ -70,7 +80,11 @@ function Node({ x, y, w, h, label, sub, glow = false }: {
 function Arrow({ x1, x2 }: { x1: number; x2: number }) {
   return (
     <g>
-      <line x1={x1} y1={CY} x2={x2} y2={CY} stroke={CD} strokeWidth={2} />
+      <motion.line
+        x1={x1} y1={CY} x2={x2} y2={CY} stroke={CD} strokeWidth={2}
+        animate={{ opacity: [0.35, 0.80, 0.35] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+      />
       <polygon points={`${x2},${CY} ${x2 - 7},${CY - 3.5} ${x2 - 7},${CY + 3.5}`} fill={CD} />
     </g>
   );
@@ -81,13 +95,24 @@ function Pulse({ x1, x2, duration = 1.2, delay = 0, color = C, r = 4.5 }: {
   duration?: number; delay?: number; color?: string; r?: number;
 }) {
   return (
-    <motion.circle
-      r={r} cy={CY} fill={color}
-      style={{ filter: `drop-shadow(0 0 5px ${color})` }}
-      initial={{ cx: x1 }}
-      animate={{ cx: [x1, x2] }}
-      transition={{ duration, delay, repeat: Infinity, repeatDelay: 0.5, ease: 'linear' }}
-    />
+    <>
+      {/* Outer halo */}
+      <motion.circle
+        r={r + 3.5} cy={CY} fill="none" stroke={color} strokeWidth={1}
+        style={{ opacity: 0.28 }}
+        initial={{ cx: x1 }}
+        animate={{ cx: [x1, x2] }}
+        transition={{ duration, delay, repeat: Infinity, repeatDelay: 0.5, ease: 'linear' }}
+      />
+      {/* Core comet — double drop-shadow for stronger glow */}
+      <motion.circle
+        r={r} cy={CY} fill={color}
+        style={{ filter: `drop-shadow(0 0 6px ${color}) drop-shadow(0 0 14px ${color})` }}
+        initial={{ cx: x1 }}
+        animate={{ cx: [x1, x2] }}
+        transition={{ duration, delay, repeat: Infinity, repeatDelay: 0.5, ease: 'linear' }}
+      />
+    </>
   );
 }
 
@@ -102,14 +127,14 @@ function Check({ x, y, delay = 0 }: { x: number; y: number; delay?: number }) {
   );
 }
 
-// ─── Flow 0 — Prozessautomatisierung ─────────────────────────────────────────
+// ─── Flow 0 — Arbeitszeiterfassung (Handwerksbetrieb) ────────────────────────
 function Flow0() {
   return (
     <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full">
       <Arrow {...A1} /><Arrow {...A2} />
-      <Node {...N1} label="CRM" />
+      <Node {...N1} label="Zeiterfassung" />
       <Node {...N2} label="Automation" glow />
-      <Node {...N3} label="Finanzen" />
+      <Node {...N3} label="Rechnung" />
       <Pulse {...A1} duration={1.1} delay={0} />
       <Pulse {...A2} duration={1.1} delay={1.15} />
     </svg>
