@@ -404,8 +404,9 @@ const SCENE_LABELS = ['KI-Chatbot', 'Automatisierung', 'Lead-Pipeline', 'Systeme
 
 // ─── AnimatedDemo (main export) ───────────────────────────────────────────────
 export function AnimatedDemo() {
-  const [scene,   setScene]   = useState(0);
-  const [running, setRunning] = useState(false);
+  const [scene,    setScene]    = useState(0);
+  const [running,  setRunning]  = useState(false);
+  const [timerKey, setTimerKey] = useState(0); // bump to restart the interval
   const containerRef = useRef<HTMLDivElement>(null);
   const inView       = useInView(containerRef, { once: false, margin: '-12% 0px' });
 
@@ -413,11 +414,17 @@ export function AnimatedDemo() {
     if (inView && !running) setRunning(true);
   }, [inView]);
 
+  // Restart interval whenever timerKey changes (manual tab click) or running starts
   useEffect(() => {
     if (!running) return;
     const iv = setInterval(() => setScene(s => (s + 1) % TOTAL_SCENES), SCENE_MS);
     return () => clearInterval(iv);
-  }, [running]);
+  }, [running, timerKey]);
+
+  const goToScene = (i: number) => {
+    setScene(i);
+    setTimerKey(k => k + 1); // reset timer from zero
+  };
 
   const SceneComponent = SCENES[scene];
 
@@ -453,7 +460,7 @@ export function AnimatedDemo() {
       {/* Bottom tabs */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2, display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px 12px' }}>
         {SCENE_LABELS.map((label, i) => (
-          <button key={i} onClick={() => setScene(i)} style={{
+          <button key={i} onClick={() => goToScene(i)} style={{
             flex: 1, height: 28,
             background: i === scene ? 'rgba(0,212,255,0.12)' : 'transparent',
             border: `1px solid ${i === scene ? 'rgba(0,212,255,0.35)' : 'rgba(255,255,255,0.08)'}`,

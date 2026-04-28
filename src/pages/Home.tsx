@@ -939,7 +939,7 @@ function ShowcaseSection() {
               </div>
 
               {/* Flow animation — full width */}
-              <div className="mb-5 hidden sm:block">
+              <div className="mb-5">
                 <ShowcaseFlow index={current} />
               </div>
 
