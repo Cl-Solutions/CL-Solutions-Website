@@ -8,6 +8,10 @@ export function BlogPost() {
   const post = slug ? getPostBySlug(slug) : undefined;
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
+  useEffect(() => {
     if (!post) return;
     const pageTitle = `${post.title} | CL-Solutions`;
     document.title = pageTitle;
