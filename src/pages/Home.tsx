@@ -852,7 +852,7 @@ function DemoSection() {
   return (
     <section id="demo" style={{ scrollMarginTop: 80 }}
       className="py-24 sm:py-32 px-6 bg-[rgba(0,229,255,0.015)]">
-      <div ref={ref} className="max-w-5xl mx-auto">
+      <div ref={ref} className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
           <span ref={subRef as React.RefObject<HTMLSpanElement>}>
             <Label>In Aktion</Label>

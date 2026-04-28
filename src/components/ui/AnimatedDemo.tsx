@@ -77,22 +77,22 @@ function Scene1({ active, isMobile }: { active: boolean; isMobile: boolean }) {
       animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       style={{
-        width: isMobile ? '100%' : 128,
+        width: isMobile ? '100%' : 180,
         maxWidth: isMobile ? 200 : undefined,
         background: 'rgba(0,0,0,0.5)',
         border: `1px solid ${C}25`,
-        borderRadius: 10,
-        padding: isMobile ? '8px 10px' : 12,
+        borderRadius: 12,
+        padding: isMobile ? '8px 10px' : 18,
         flexShrink: 0,
       }}
     >
-      <div style={{ fontFamily: FS, fontSize: 9, color: C, fontWeight: 700, marginBottom: 6, textAlign: 'center', letterSpacing: '0.06em' }}>Mai 2025</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, marginBottom: 2 }}>
+      <div style={{ fontFamily: FS, fontSize: isMobile ? 9 : 12, color: C, fontWeight: 700, marginBottom: 8, textAlign: 'center', letterSpacing: '0.06em' }}>Mai 2025</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? 1 : 2, marginBottom: isMobile ? 2 : 4 }}>
         {['M','D','M','D','F','S','S'].map((d, i) => (
-          <div key={i} style={{ fontFamily: F, fontSize: 7, color: 'rgba(255,255,255,0.25)', textAlign: 'center', paddingBottom: 2 }}>{d}</div>
+          <div key={i} style={{ fontFamily: F, fontSize: isMobile ? 7 : 10, color: 'rgba(255,255,255,0.25)', textAlign: 'center', paddingBottom: 2 }}>{d}</div>
         ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? 1 : 2 }}>
         {CAL_DAYS.map(d => {
           const isNew = d === 14, isBooked = BOOKED.includes(d) && d !== 14;
           return (
@@ -100,7 +100,7 @@ function Scene1({ active, isMobile }: { active: boolean; isMobile: boolean }) {
               initial={isNew ? { scale: 0 } : {}}
               animate={isNew ? { scale: 1 } : {}}
               transition={isNew ? { delay: 0.3, type: 'spring', stiffness: 300 } : {}}
-              style={{ fontFamily: F, fontSize: 7, textAlign: 'center', padding: '2px 0', borderRadius: 2, background: isNew ? C : 'transparent', color: isNew ? '#000' : isBooked ? '#34d399' : 'rgba(255,255,255,0.35)', fontWeight: isNew || isBooked ? 700 : 400 }}>
+              style={{ fontFamily: F, fontSize: isMobile ? 7 : 10, textAlign: 'center', padding: isMobile ? '2px 0' : '3px 0', borderRadius: 3, background: isNew ? C : 'transparent', color: isNew ? '#000' : isBooked ? '#34d399' : 'rgba(255,255,255,0.35)', fontWeight: isNew || isBooked ? 700 : 400 }}>
               {d}
             </motion.div>
           );
@@ -158,35 +158,35 @@ function Scene1({ active, isMobile }: { active: boolean; isMobile: boolean }) {
 
   // Desktop layout
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '44px 20px 48px' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 28, padding: '50px 40px 60px' }}>
       <SceneLabel>KI-Chatbot · &lt;1 Sekunde Reaktionszeit</SceneLabel>
-      <div style={{ flex: 1, maxWidth: 260, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {step >= 1 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px 10px 10px 2px', padding: '8px 11px', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', maxWidth: '88%', lineHeight: 1.5 }}>
+            style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px 12px 12px 2px', padding: '11px 15px', fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.8)', maxWidth: '88%', lineHeight: 1.5 }}>
             Wann haben Sie einen freien Termin für ein Angebot?
           </motion.div>
         )}
         {step === 2 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ alignSelf: 'flex-end', background: CL, border: `1px solid ${C}35`, borderRadius: '10px 10px 2px 10px', padding: '10px 14px', display: 'flex', gap: 4, alignItems: 'center' }}>
+            style={{ alignSelf: 'flex-end', background: CL, border: `1px solid ${C}35`, borderRadius: '12px 12px 2px 12px', padding: '12px 18px', display: 'flex', gap: 5, alignItems: 'center' }}>
             {[0,1,2].map(i => (
-              <motion.div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: C }}
-                animate={{ y: [0, -4, 0] }} transition={{ duration: 0.55, delay: i * 0.14, repeat: Infinity }} />
+              <motion.div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: C }}
+                animate={{ y: [0, -5, 0] }} transition={{ duration: 0.55, delay: i * 0.14, repeat: Infinity }} />
             ))}
           </motion.div>
         )}
         {step >= 3 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            style={{ alignSelf: 'flex-end', background: CB, border: `1px solid ${C}35`, borderRadius: '10px 10px 2px 10px', padding: '8px 11px', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.82)', maxWidth: '88%', lineHeight: 1.5 }}>
+            style={{ alignSelf: 'flex-end', background: CB, border: `1px solid ${C}35`, borderRadius: '12px 12px 2px 12px', padding: '11px 15px', fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.82)', maxWidth: '88%', lineHeight: 1.5 }}>
             Gerne!{' '}<span style={{ color: C, fontWeight: 600 }}>Di. 14. Mai · 10:00 Uhr</span>{' '}— Termin direkt eintragen?
           </motion.div>
         )}
         {step >= 5 && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            style={{ alignSelf: 'center', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.28)', borderRadius: 20, padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#34d399', fontSize: 11 }}>✓</span>
-            <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>Termin automatisch eingetragen</span>
+            style={{ alignSelf: 'center', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.28)', borderRadius: 20, padding: '7px 18px', display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ color: '#34d399', fontSize: 13 }}>✓</span>
+            <span style={{ fontFamily: F, fontSize: 13, color: '#34d399', fontWeight: 600 }}>Termin automatisch eingetragen</span>
           </motion.div>
         )}
       </div>
@@ -280,37 +280,37 @@ function Scene2({ active, isMobile }: { active: boolean; isMobile: boolean }) {
 
   // Desktop layout
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '44px 20px 48px' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: '50px 28px 60px' }}>
       <SceneLabel>Prozessautomatisierung · Kein manueller Aufwand</SceneLabel>
       {step >= 1 && (
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.25)', borderRadius: 10, padding: '8px 18px' }}>
-          <span style={{ fontSize: 16 }}>⚡</span>
+          style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.25)', borderRadius: 12, padding: '10px 24px' }}>
+          <span style={{ fontSize: 22 }}>⚡</span>
           <div>
-            <div style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,180,0,0.7)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Trigger</div>
-            <div style={{ fontFamily: FS, fontSize: 13, color: 'white', fontWeight: 600 }}>Neue Bestellung eingegangen</div>
+            <div style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,180,0,0.7)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Trigger</div>
+            <div style={{ fontFamily: FS, fontSize: 16, color: 'white', fontWeight: 600 }}>Neue Bestellung eingegangen</div>
           </div>
         </motion.div>
       )}
       {step >= 2 && (
         <motion.div initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }}
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', transformOrigin: 'top' }}>
-          <div style={{ width: 1.5, height: 16, background: 'rgba(0,212,255,0.3)' }} />
+          <div style={{ width: 2, height: 20, background: 'rgba(0,212,255,0.3)' }} />
           <motion.div
             animate={{ boxShadow: [`0 0 0px ${C}40`, `0 0 18px ${C}60`, `0 0 0px ${C}40`] }}
             transition={{ duration: 1.8, repeat: Infinity }}
-            style={{ background: CB, border: `1.5px solid ${C}60`, borderRadius: 10, padding: '6px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            style={{ background: CB, border: `1.5px solid ${C}60`, borderRadius: 12, padding: '8px 28px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.2, repeat: Infinity }}
-              style={{ width: 7, height: 7, borderRadius: '50%', background: C }} />
-            <span style={{ fontFamily: FS, fontSize: 12, color: C, fontWeight: 700 }}>KI verarbeitet</span>
+              style={{ width: 9, height: 9, borderRadius: '50%', background: C }} />
+            <span style={{ fontFamily: FS, fontSize: 15, color: C, fontWeight: 700 }}>KI verarbeitet</span>
           </motion.div>
-          <div style={{ width: 1.5, height: 16, background: 'rgba(0,212,255,0.3)' }} />
-          <svg viewBox="0 0 280 24" style={{ width: 280, height: 24, overflow: 'visible' }}>
+          <div style={{ width: 2, height: 20, background: 'rgba(0,212,255,0.3)' }} />
+          <svg viewBox="0 0 360 28" style={{ width: 360, height: 28, overflow: 'visible' }}>
             {PROC_ACTIONS.map((_, i) => {
-              const targets = [-105, -35, 35, 105];
+              const targets = [-135, -45, 45, 135];
               return (
-                <motion.path key={i} d={`M 140 0 L ${140 + targets[i]} 24`}
+                <motion.path key={i} d={`M 180 0 L ${180 + targets[i]} 28`}
                   stroke="rgba(0,212,255,0.25)" strokeWidth={1.5} fill="none"
                   initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
                   transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }} />
@@ -320,26 +320,26 @@ function Scene2({ active, isMobile }: { active: boolean; isMobile: boolean }) {
         </motion.div>
       )}
       {step >= 2 && (
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           {PROC_ACTIONS.map((action, i) => (
             <motion.div key={i}
               initial={{ opacity: 0, y: 12, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: action.delay - 1.5, type: 'spring', stiffness: 220, damping: 18 }}
-              style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(0,212,255,0.18)`, borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, minWidth: 120 }}>
-              <span style={{ fontSize: 14 }}>{action.icon}</span>
+              style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid rgba(0,212,255,0.18)`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10, minWidth: 152 }}>
+              <span style={{ fontSize: 18 }}>{action.icon}</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 500, lineHeight: 1.3 }}>{action.label}</div>
+                <div style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: 500, lineHeight: 1.3 }}>{action.label}</div>
               </div>
               <motion.span initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: action.delay - 1.5 + 0.35, type: 'spring', stiffness: 300 }}
-                style={{ color: '#34d399', fontSize: 12, fontWeight: 700 }}>✓</motion.span>
+                style={{ color: '#34d399', fontSize: 15, fontWeight: 700 }}>✓</motion.span>
             </motion.div>
           ))}
         </div>
       )}
       {step >= 3 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-          style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
+          style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
           4 Aufgaben · <span style={{ color: '#34d399' }}>automatisch erledigt</span> · 0 Minuten manuell
         </motion.div>
       )}
@@ -436,7 +436,7 @@ function Scene3({ active, isMobile }: { active: boolean; isMobile: boolean }) {
 
   // Desktop layout
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '44px 16px 48px' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '50px 20px 60px' }}>
       <SceneLabel>Automatische Lead-Pipeline</SceneLabel>
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, width: '100%', justifyContent: 'center' }}>
         {PIPELINE_STEPS.map((s, i) => (
@@ -445,17 +445,17 @@ function Scene3({ active, isMobile }: { active: boolean; isMobile: boolean }) {
               initial={{ opacity: 0, scale: 0.7 }}
               animate={isActive(i) ? { opacity: 1, scale: 1 } : { opacity: 0.15, scale: 0.85 }}
               transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-              style={{ background: isActive(i) ? s.color : 'rgba(255,255,255,0.03)', border: `1px solid ${isActive(i) ? (isLast(i) ? 'rgba(52,211,153,0.4)' : `${C}30`) : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, padding: '10px 10px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 72, boxShadow: isActive(i) && i === visibleCount - 1 ? `0 0 16px ${C}25` : 'none' }}>
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{s.icon}</span>
-              <div style={{ fontFamily: F, fontSize: 9, color: isActive(i) ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{s.label}</div>
-              <div style={{ fontFamily: F, fontSize: 8, color: isActive(i) ? (isLast(i) ? '#34d399' : 'rgba(255,255,255,0.35)') : 'rgba(255,255,255,0.1)', textAlign: 'center' }}>{s.sub}</div>
+              style={{ background: isActive(i) ? s.color : 'rgba(255,255,255,0.03)', border: `1px solid ${isActive(i) ? (isLast(i) ? 'rgba(52,211,153,0.4)' : `${C}30`) : 'rgba(255,255,255,0.06)'}`, borderRadius: 12, padding: '14px 12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, minWidth: 96, boxShadow: isActive(i) && i === visibleCount - 1 ? `0 0 20px ${C}25` : 'none' }}>
+              <span style={{ fontSize: 24, lineHeight: 1 }}>{s.icon}</span>
+              <div style={{ fontFamily: F, fontSize: 12, color: isActive(i) ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{s.label}</div>
+              <div style={{ fontFamily: F, fontSize: 10, color: isActive(i) ? (isLast(i) ? '#34d399' : 'rgba(255,255,255,0.35)') : 'rgba(255,255,255,0.1)', textAlign: 'center' }}>{s.sub}</div>
             </motion.div>
             {i < PIPELINE_STEPS.length - 1 && (
               <motion.div initial={{ opacity: 0 }} animate={i + 1 < visibleCount ? { opacity: 1 } : { opacity: 0.12 }} transition={{ duration: 0.3 }}
-                style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-                <motion.div animate={i + 1 < visibleCount ? { x: [0, 3, 0] } : {}} transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}>
-                  <svg width="18" height="10" viewBox="0 0 18 10">
-                    <path d="M0 5 H13 M9 1 L14 5 L9 9" stroke={C} strokeWidth={1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                style={{ display: 'flex', alignItems: 'center', padding: '0 6px' }}>
+                <motion.div animate={i + 1 < visibleCount ? { x: [0, 4, 0] } : {}} transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}>
+                  <svg width="22" height="12" viewBox="0 0 22 12">
+                    <path d="M0 6 H16 M11 1 L18 6 L11 11" stroke={C} strokeWidth={1.8} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </motion.div>
               </motion.div>
@@ -465,9 +465,9 @@ function Scene3({ active, isMobile }: { active: boolean; isMobile: boolean }) {
       </div>
       <motion.div initial={{ opacity: 0 }} animate={visibleCount > 0 ? { opacity: 1 } : {}}
         style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <motion.div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399' }}
+        <motion.div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399' }}
           animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
-        <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>
+        <span style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>
           {visibleCount < PIPELINE_STEPS.length
             ? `Schritt ${visibleCount} von ${PIPELINE_STEPS.length} läuft…`
             : <span style={{ color: '#34d399' }}>Lead vollständig verarbeitet · 0 manuelle Schritte</span>
