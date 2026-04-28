@@ -1,4 +1,28 @@
 User-agent: *
 Allow: /
+Disallow: /assets/
+Disallow: /*.json$
 
-Sitemap: https://cl-solutions.de/sitemap.xml
+# AI Search Crawlers – explicitly allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://cl-solutions.pro/sitemap.xml

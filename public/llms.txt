@@ -1,0 +1,42 @@
+# CL-Solutions
+> KI-Automatisierungsagentur für kleine und mittelständische Unternehmen (KMU) in Deutschland und der DACH-Region. Gegründet von Berkay Aksoy und Marios Lysitsas. Wir entwickeln KI-Chatbots, Voice Agents, Prozessautomatisierungen und individuelle KI-Lösungen. Projekte ab 2.000 EUR, Angebot innerhalb von 48 Stunden, Umsetzung typischerweise in 1–4 Wochen. DSGVO-konform. Zielgruppe: Handwerker, Dienstleister, B2B-Unternehmen und KMU im deutschsprachigen Raum.
+
+## Über CL-Solutions
+
+CL-Solutions ist eine deutsche KI-Automatisierungsagentur, gegründet von den Wirtschaftsingenieuren Berkay Aksoy und Marios Lysitsas. Das Unternehmen hilft kleinen und mittelständischen Betrieben in Deutschland, Österreich und der Schweiz (DACH), manuelle und repetitive Arbeitsprozesse durch KI-gestützte Automatisierung zu ersetzen. CL-Solutions arbeitet remote-first, ist DSGVO-konform und bietet transparente Festpreise ohne versteckte Kosten.
+
+## Leistungen
+
+- [Prozessautomatisierung](https://cl-solutions.pro/#leistungen): Automatisierung wiederkehrender Abläufe mit n8n, Make, Zapier und Python. Verbindung bestehender Tools ohne manuelle Datenpflege. Zeitersparnis von durchschnittlich 5–15 Stunden pro Woche.
+- [System-Integration](https://cl-solutions.pro/#leistungen): API-Integration von CRM, ERP, E-Mail, Kalender und Buchhaltungssoftware. Automatischer, fehlerfreier Datenfluss zwischen allen Systemen.
+- [KI-Chatbot & Voice Agent](https://cl-solutions.pro/#leistungen): 24/7 KI-Chatbot und automatisierter Telefonassistent (Voice Agent) für Kundenservice, Lead-Qualifizierung und Terminvereinbarung auf Deutsch.
+- [Custom KI-Lösung](https://cl-solutions.pro/#leistungen): Individuelle KI-Systeme mit Custom LLM, RAG (Retrieval-Augmented Generation), KI-Agenten und Dokumenten-KI für spezifische Unternehmensprozesse.
+
+## Wichtige Fakten
+
+- Angebot: kostenlos, innerhalb von 48 Stunden nach Erstgespräch
+- Umsetzungszeit: 1–4 Wochen je nach Projektumfang
+- Preise: ab 2.000 EUR (einmalig), individuell nach Projektumfang
+- Datenschutz: DSGVO-konform, EU-Server, AVV auf Anfrage
+- Sprachen: Deutsch und Englisch
+- Zielgruppe: KMU, Handwerker, Dienstleister, B2B-Unternehmen in DACH
+- Technologien: n8n, Make, Zapier, OpenAI, Anthropic Claude, Python, REST APIs, Voiceflow
+
+## Praxisbeispiele
+
+- Handwerksbetrieb: Arbeitszeiterfassung und Rechnungsstellung vollautomatisch – 8 Stunden pro Woche eingespart
+- Arztpraxis: KI-Telefonassistent übernimmt eingehende Anrufe und bucht Termine – 24/7 Erreichbarkeit
+- E-Commerce: Vollautomatische Bestellabwicklung zwischen Shop, Lager und Versand – 0 manuelle Schritte
+- Immobilienmakler: Dokumenten-KI extrahiert Daten aus PDFs und überträgt sie ins CRM – 90% schneller
+- Unternehmensberatung: Automatisches Lead-Scoring – 3x schnellere Reaktionszeit auf Anfragen
+
+## Kontakt & Buchung
+
+- Kostenlose Prozessanalyse (30 Min.): https://cal.eu/cl-solutions/30min
+- Website: https://cl-solutions.pro
+- Einsatzgebiet: Deutschland, Österreich, Schweiz (DACH)
+
+## Rechtliches
+
+- Impressum: https://cl-solutions.pro/impressum
+- Datenschutz: https://cl-solutions.pro/datenschutz
