@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { getPostBySlug, formatDate } from '../data/blogPosts';
 import { CustomCursor } from '../components/CustomCursor';
@@ -5,6 +6,30 @@ import { CustomCursor } from '../components/CustomCursor';
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? getPostBySlug(slug) : undefined;
+
+  useEffect(() => {
+    if (!post) return;
+    const pageTitle = `${post.title} | CL-Solutions`;
+    document.title = pageTitle;
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', post.excerpt);
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', `https://cl-solutions.pro/blog/${post.slug}`);
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', pageTitle);
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute('content', post.excerpt);
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute('content', `https://cl-solutions.pro/blog/${post.slug}`);
+    return () => {
+      document.title = 'KI-Automatisierung für deutsche Unternehmen | CL-Solutions';
+      if (desc) desc.setAttribute('content', 'Wir automatisieren Prozesse, verbinden Systeme und bauen KI-Agenten für KMU in Deutschland. DSGVO-konform. Angebot in 48h.');
+      if (canonical) canonical.setAttribute('href', 'https://cl-solutions.pro/');
+      if (ogTitle) ogTitle.setAttribute('content', 'KI-Automatisierung für deutsche Unternehmen | CL-Solutions');
+      if (ogDesc) ogDesc.setAttribute('content', 'Wir automatisieren Prozesse, verbinden Systeme und bauen KI-Agenten für KMU in Deutschland. DSGVO-konform. Angebot in 48h.');
+      if (ogUrl) ogUrl.setAttribute('content', 'https://cl-solutions.pro/');
+    };
+  }, [post]);
 
   if (!post) {
     return <Navigate to="/blog" replace />;

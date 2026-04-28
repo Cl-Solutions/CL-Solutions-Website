@@ -1,8 +1,22 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { blogPosts, formatDate } from '../data/blogPosts';
 import { CustomCursor } from '../components/CustomCursor';
 
 export function Blog() {
+  useEffect(() => {
+    document.title = 'Blog – KI-Automatisierung & Prozesse | CL-Solutions';
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', 'Praxiswissen zu KI-Automatisierung, Chatbots und Prozessoptimierung für KMU in Deutschland.');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://cl-solutions.pro/blog');
+    return () => {
+      document.title = 'KI-Automatisierung für deutsche Unternehmen | CL-Solutions';
+      if (desc) desc.setAttribute('content', 'Wir automatisieren Prozesse, verbinden Systeme und bauen KI-Agenten für KMU in Deutschland. DSGVO-konform. Angebot in 48h.');
+      if (canonical) canonical.setAttribute('href', 'https://cl-solutions.pro/');
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <CustomCursor />

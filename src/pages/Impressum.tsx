@@ -1,8 +1,19 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { LogoMark } from '../components/Logo';
 
 export function Impressum() {
+  useEffect(() => {
+    document.title = 'Impressum | CL-Solutions';
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute('href', 'https://cl-solutions.pro/impressum');
+    return () => {
+      document.title = 'KI-Automatisierung für deutsche Unternehmen | CL-Solutions';
+      if (canonical) canonical.setAttribute('href', 'https://cl-solutions.pro/');
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-dark">
       <nav className="fixed top-0 left-0 right-0 z-40 bg-dark/90 backdrop-blur-md border-b border-dark-border">
@@ -55,7 +66,7 @@ export function Impressum() {
                 Kontakt
               </h2>
               <p>
-                E-Mail: webmaster@cr-solutions.pro
+                E-Mail: info@cl-solutions.pro
               </p>
             </section>
 
