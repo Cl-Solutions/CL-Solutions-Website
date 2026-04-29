@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react';
 
 export function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>();
   const mouse  = useRef({ x: -200, y: -200 });
   const visible = useRef(false);
 
@@ -24,16 +23,11 @@ export function CustomCursor() {
       setVisible(true);
     };
 
-    // Keep RAF loop alive so future enhancements can plug in easily
-    const tick = () => { rafRef.current = requestAnimationFrame(tick); };
-    rafRef.current = requestAnimationFrame(tick);
-
     window.addEventListener('mousemove', onMove);
     document.body.addEventListener('mouseleave', () => setVisible(false));
     document.body.addEventListener('mouseenter', () => setVisible(true));
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('mousemove', onMove);
     };
   }, []);

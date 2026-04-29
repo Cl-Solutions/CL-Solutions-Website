@@ -9,8 +9,8 @@ export default {
         dark: '#0a0a0a',
         'dark-lighter': '#111111',
         'dark-border': '#1a1a1a',
-        accent: '#00D4FF',
-        'accent-dim': 'rgba(0, 212, 255, 0.1)',
+        accent: '#00E5FF',
+        'accent-dim': 'rgba(0, 229, 255, 0.1)',
       },
       fontFamily: {
         syne: ['Syne', 'sans-serif'],

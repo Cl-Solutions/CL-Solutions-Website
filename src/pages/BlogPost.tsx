@@ -46,7 +46,7 @@ export function BlogPost() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,10,10,0.7)] backdrop-blur-[16px] border-b border-[rgba(0,229,255,0.08)]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />
+            <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" height={64} />
             <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">

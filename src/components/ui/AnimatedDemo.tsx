@@ -12,9 +12,9 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C  = '#00D4FF';
-const CL = 'rgba(0,212,255,0.14)';
-const CB = 'rgba(0,212,255,0.07)';
+const C  = '#00E5FF';
+const CL = 'rgba(0,229,255,0.14)';
+const CB = 'rgba(0,229,255,0.07)';
 const F  = 'Inter, sans-serif';
 const FS = 'Syne, sans-serif';
 

@@ -36,10 +36,11 @@
   }
 }
 
-@layer components {
-  .text-gradient {
-    @apply bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent;
-  }
+/* Global keyboard focus ring — covers all interactive elements */
+:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.55);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 [data-scroll-no-bar]::-webkit-scrollbar {
@@ -222,4 +223,9 @@
     animation: none !important;
   }
   .tw-cursor { opacity: 1; }
+  /* Suppress Framer Motion and GSAP transitions at CSS level */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -55,6 +55,8 @@ function useGsapCarousel(words: string[]) {
     el.textContent = words[0];
     gsap.set(el, { y: 0, opacity: 1 });
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     const schedule = () => {
       // Store the delayedCall so cleanup can kill it explicitly
       timerRef.current = gsap.delayedCall(2.6, () => {
@@ -301,6 +303,11 @@ function useSplitHeadline(inView: boolean) {
     done.current = true;
     const head = headRef.current;
     const sub  = subRef.current;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (head) gsap.set(head, { opacity: 1 });
+      if (sub)  gsap.set(sub,  { opacity: 1 });
+      return;
+    }
     if (head) {
       gsap.set(head, { opacity: 1 });
       const split = new SplitText(head, { type: 'words' });
@@ -382,7 +389,7 @@ function CountdownStat({ label, active }: { label: string; active: boolean }) {
       c -= 1;
       el.textContent = String(c);
       // Bounce on each tick
-      gsap.fromTo(el, { scale: 1.22 }, { scale: 1, duration: 0.24, ease: 'back.out(2.5)' });
+      gsap.fromTo(el, { scale: 1.22 }, { scale: 1, duration: 0.24, ease: 'power3.out' });
       if (c > 0) {
         // Accelerate: 380ms → 75ms over 10 steps
         const delay = Math.max(0.075, 0.38 - (10 - c) * 0.031);
@@ -470,7 +477,7 @@ function Nav() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-3">
-            <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" />
+            <img src="/logo.png" alt="CL-Solutions" className="h-16 w-auto" height={64} />
             <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
           </button>
 
@@ -539,6 +546,7 @@ function HeroSection() {
   useLayoutEffect(() => {
     if (gsapDone.current || !staticRef.current) return;
     gsapDone.current = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const split = new SplitText(staticRef.current, { type: 'words' });
     gsap.from(split.words, { y: -60, opacity: 0, duration: 0.7, stagger: 0.09, ease: 'power3.out', delay: 0.1 });
   }, []);
@@ -961,7 +969,7 @@ function ShowcaseSection() {
         {/* Controls */}
         <div className="flex items-center justify-center gap-4 mt-6">
           <button onClick={prev} aria-label="Vorheriges Projekt"
-            className="w-10 h-10 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
+            className="w-11 h-11 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
 
@@ -975,7 +983,7 @@ function ShowcaseSection() {
           ))}
 
           <button onClick={next} aria-label="Nächstes Projekt"
-            className="w-10 h-10 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
+            className="w-11 h-11 rounded-full glass-card glass-card-interactive flex items-center justify-center text-gray-400 hover:text-accent transition-colors">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -1142,7 +1150,7 @@ function FAQSection() {
                 <span className="font-syne font-semibold text-sm sm:text-base text-white group-hover:text-accent transition-colors pr-6">
                   {faq.q}
                 </span>
-                <div className="w-9 h-9 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-11 h-11 bg-white/[0.05] rounded-lg flex items-center justify-center flex-shrink-0">
                   {open === i
                     ? <Minus className="w-4 h-4 text-accent" />
                     : <Plus  className="w-4 h-4 text-gray-400 group-hover:text-accent transition-colors" />
@@ -1273,7 +1281,7 @@ function CTASection() {
 function GeoAboutBlock() {
   return (
     <div
-      aria-hidden="false"
+      aria-hidden="true"
       style={{
         position: 'absolute',
         width: '1px',
@@ -1337,7 +1345,7 @@ export function Home() {
         <div className="grid md:grid-cols-4 gap-8 sm:gap-12 mb-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-5">
-              <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" loading="lazy" decoding="async" />
+              <img src="/logo.png" alt="CL-Solutions Logo" className="h-16 w-auto" height={64} loading="lazy" decoding="async" />
               <span className="font-syne font-bold text-lg text-white">CL-Solutions</span>
             </div>
             <p className="font-inter text-gray-500 leading-relaxed max-w-sm text-sm">

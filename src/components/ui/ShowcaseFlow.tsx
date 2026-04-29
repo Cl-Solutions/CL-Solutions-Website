@@ -7,11 +7,11 @@
 import { motion } from 'framer-motion';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C  = '#00D4FF';
-const CD = 'rgba(0,212,255,0.32)';
+const C  = '#00E5FF';
+const CD = 'rgba(0,229,255,0.32)';
 const NB = 'rgba(0,0,0,0.50)';
 const NS = 'rgba(255,255,255,0.14)';
-const NA = 'rgba(0,212,255,0.42)';
+const NA = 'rgba(0,229,255,0.42)';
 const LD = 'rgba(255,255,255,0.78)';
 const LA = C;
 const F  = 'Inter, sans-serif';
