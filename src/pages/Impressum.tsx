@@ -48,7 +48,8 @@ export function Impressum() {
               </h2>
               <p>
                 CL-Solutions GbR<br />
-                [Adresse folgt]
+                75417 Mühlacker<br />
+                Baden-Württemberg, Deutschland
               </p>
             </section>
 
@@ -66,7 +67,8 @@ export function Impressum() {
                 Kontakt
               </h2>
               <p>
-                E-Mail: info@cl-solutions.pro
+                E-Mail: info@cl-solutions.pro<br />
+                WhatsApp: <a href="https://wa.me/491743067948" className="text-accent hover:text-accent/80 transition-colors">+49 174 3067948</a>
               </p>
             </section>
 
