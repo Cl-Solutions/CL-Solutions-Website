@@ -194,12 +194,12 @@ const showcaseCards = [
     badge: '90% schneller',
   },
   {
-    emoji: '📊',
-    category: 'Individuelle KI-Lösung',
-    branche: 'Unternehmensberatung',
-    title: 'Automatisches Lead-Scoring',
-    desc: 'Eine Beratungsfirma verlor Zeit damit, unqualifizierte Anfragen zu sichten. Der KI-Agent bewertet eingehende Leads automatisch nach Priorität und übergibt nur kaufbereite Kontakte — das Vertriebsteam fokussiert sich nur noch auf echte Chancen.',
-    badge: '3x schnellere Reaktionszeit',
+    emoji: '🎯',
+    category: 'CL LeadGen',
+    branche: 'B2B-Vertrieb',
+    title: 'Lead Scraping & Scoring',
+    desc: 'Ein B2B-Unternehmen verbrachte Stunden mit manueller Recherche nach potenziellen Kunden. LeadGen findet automatisch passende Leads inklusive aller relevanten Kontaktdaten — E-Mail, Telefon, Firmenprofil — und bewertet sie direkt nach Abschlusswahrscheinlichkeit.',
+    badge: 'Qualifizierte Leads auf Knopfdruck',
   },
   {
     emoji: '🌐',
