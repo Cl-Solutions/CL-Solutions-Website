@@ -56,12 +56,16 @@ const HERO_QUOTES = [
  * GSAP-powered vertical word carousel.
  * No React state → zero re-renders per tick.
  * Words slide out upward (y→-32, fade) and enter from below (y:36→0, fade).
+ * onCycle is called each time a new word fully lands — use it to sync other UI.
  */
-function useGsapCarousel(words: string[]) {
-  const wordRef  = useRef<HTMLSpanElement>(null);
-  const alive    = useRef(true);
-  const idxRef   = useRef(0);
-  const timerRef = useRef<gsap.core.Tween | null>(null);
+function useGsapCarousel(words: string[], onCycle?: () => void) {
+  const wordRef   = useRef<HTMLSpanElement>(null);
+  const alive     = useRef(true);
+  const idxRef    = useRef(0);
+  const timerRef  = useRef<gsap.core.Tween | null>(null);
+  // Keep a stable ref to onCycle so the GSAP closure never captures a stale value
+  const onCycleRef = useRef(onCycle);
+  useLayoutEffect(() => { onCycleRef.current = onCycle; });
 
   useLayoutEffect(() => {
     const el = wordRef.current;
@@ -85,7 +89,14 @@ function useGsapCarousel(words: string[]) {
             el.textContent = words[idxRef.current];
             gsap.fromTo(el,
               { y: 36, opacity: 0 },
-              { y: 0, opacity: 1, duration: 0.52, ease: 'power3.out', onComplete: schedule }
+              {
+                y: 0, opacity: 1, duration: 0.52, ease: 'power3.out',
+                onComplete() {
+                  // Fire sync callback once the new word is fully visible
+                  onCycleRef.current?.();
+                  schedule();
+                },
+              }
             );
           },
         });
@@ -611,45 +622,44 @@ function Nav() {
 }
 
 // ─── Hero rotating quote strip ────────────────────────────────────────────────
-function HeroQuoteStrip() {
-  const [idx, setIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIdx((i) => (i + 1) % HERO_QUOTES.length);
-        setVisible(true);
-      }, 350);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
-
-  const q = HERO_QUOTES[idx];
+function HeroQuoteStrip({ idx }: { idx: number }) {
+  const q = HERO_QUOTES[idx % HERO_QUOTES.length];
 
   return (
     /* Apex style: no card/border — raw text directly on the background */
-    <div
-      className="text-center max-w-sm sm:max-w-md mx-auto px-4"
-      style={{ transition: 'opacity 0.35s ease', opacity: visible ? 1 : 0 }}
-    >
-      {/* Fixed-height box keeps the avatar row from jumping when quote length differs */}
+    <div className="text-center max-w-sm sm:max-w-md mx-auto px-4">
+      {/* Fixed-height box prevents layout jump; AnimatePresence fades between quotes */}
       <div style={{ minHeight: '3.2rem' }} className="flex items-center justify-center mb-3">
-        <p className="font-inter italic text-white/75 text-sm sm:text-base leading-relaxed line-clamp-2">
-          „{q.quote}"
-        </p>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={idx}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.32 }}
+            className="font-inter italic text-white/75 text-sm sm:text-base leading-relaxed line-clamp-2">
+            „{q.quote}"
+          </motion.p>
+        </AnimatePresence>
       </div>
-      {/* Avatar + name + role */}
-      <div className="flex items-center justify-center gap-2.5">
-        <div className="w-7 h-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center flex-shrink-0">
-          <span className="font-syne font-bold text-[10px] text-accent">{q.initials}</span>
-        </div>
-        <span className="font-inter font-semibold text-white text-sm">{q.name}</span>
-        <span className="font-inter text-xs text-gray-400 bg-white/[0.06] px-2.5 py-0.5 rounded-full">
-          {q.role}
-        </span>
-      </div>
+      {/* Avatar + name + role — also fades in sync */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`meta-${idx}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.32 }}
+          className="flex items-center justify-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center flex-shrink-0">
+            <span className="font-syne font-bold text-[10px] text-accent">{q.initials}</span>
+          </div>
+          <span className="font-inter font-semibold text-white text-sm">{q.name}</span>
+          <span className="font-inter text-xs text-gray-400 bg-white/[0.06] px-2.5 py-0.5 rounded-full">
+            {q.role}
+          </span>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -658,7 +668,11 @@ function HeroQuoteStrip() {
 function HeroSection() {
   const staticRef      = useRef<HTMLSpanElement>(null);
   const gsapDone       = useRef(false);
-  const wordRef        = useGsapCarousel(TW_WORDS);
+  const [quoteIdx, setQuoteIdx] = useState(0);
+  const wordRef        = useGsapCarousel(
+    TW_WORDS,
+    useCallback(() => setQuoteIdx((i) => (i + 1) % HERO_QUOTES.length), []),
+  );
   const [arrowVisible, setArrowVisible] = useState(true);
 
   useLayoutEffect(() => {
@@ -722,7 +736,7 @@ function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.5 }}
           className="mt-10">
-          <HeroQuoteStrip />
+          <HeroQuoteStrip idx={quoteIdx} />
         </motion.div>
       </div>
 
