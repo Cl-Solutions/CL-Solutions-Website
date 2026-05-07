@@ -45,7 +45,7 @@ const HERO_QUOTES = [
     role: 'Vertriebsleiter',
   },
   {
-    quote: 'Erstes Ergebnis war nach 9 Tagen live. Kein IT-Aufwand, keine langen Abstimmungsrunden.',
+    quote: 'Erstes Ergebnis nach 9 Tagen live. Kein IT-Aufwand, keine langen Abstimmungen mehr.',
     initials: 'MS',
     name: 'Miriam S.',
     role: 'Geschäftsführerin',
@@ -634,10 +634,12 @@ function HeroQuoteStrip() {
       className="text-center max-w-sm sm:max-w-md mx-auto px-4"
       style={{ transition: 'opacity 0.35s ease', opacity: visible ? 1 : 0 }}
     >
-      {/* Italic quote text */}
-      <p className="font-inter italic text-white/75 text-sm sm:text-base leading-relaxed mb-3">
-        „{q.quote}"
-      </p>
+      {/* Fixed-height box keeps the avatar row from jumping when quote length differs */}
+      <div style={{ minHeight: '3.2rem' }} className="flex items-center justify-center mb-3">
+        <p className="font-inter italic text-white/75 text-sm sm:text-base leading-relaxed line-clamp-2">
+          „{q.quote}"
+        </p>
+      </div>
       {/* Avatar + name + role */}
       <div className="flex items-center justify-center gap-2.5">
         <div className="w-7 h-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center flex-shrink-0">
@@ -712,10 +714,6 @@ function HeroSection() {
             Kostenlose Prozessanalyse — 30 Min.
             <ArrowRight className="w-4 h-4" />
           </ShimmerButton>
-          <button onClick={() => scrollToId('prozess')}
-            className="inline-flex items-center gap-2 px-7 py-4 font-inter font-medium text-base text-white border border-white/10 rounded-xl hover:border-accent/40 hover:text-accent hover:bg-accent/5 transition-all duration-200">
-            Wie das funktioniert →
-          </button>
         </motion.div>
 
         {/* Social proof quote strip */}
