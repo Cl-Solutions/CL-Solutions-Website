@@ -258,8 +258,8 @@
       ]
     }
     </script>
-    <script type="module" crossorigin src="/assets/index-DbTGMuSq.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-WHUg7L3p.css">
+    <script type="module" crossorigin src="/assets/index-zT3PsX3R.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CPhsdFyl.css">
   </head>
   <body>
     <div id="root"></div>
@@ -270,5 +270,19 @@
       }
     </script>
     <script src="https://www.chatbase.co/embed.min.js" chatbotId="XvAzFByuE_LoEwv-aBbUc" domain="www.chatbase.co" defer></script>
+    <!-- On mobile: keep chatbot button but prevent the window from auto-opening -->
+    <script>
+      (function () {
+        if (window.innerWidth >= 768) return;
+        var attempts = 0;
+        var t = setInterval(function () {
+          if (typeof window.chatbase === 'function') {
+            window.chatbase('close');
+            clearInterval(t);
+          }
+          if (++attempts > 80) clearInterval(t); // give up after ~8s
+        }, 100);
+      })();
+    </script>
   </body>
 </html>

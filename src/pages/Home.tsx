@@ -857,13 +857,13 @@ function ServicesSection() {
         {/* 4 clickable tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           {services.map((s, i) => (
-            <FlyIn key={s.id} delay={0.05 + i * 0.09}>
+            <FlyIn key={s.id} delay={0.05 + i * 0.09} className="h-full">
               <motion.button
                 onClick={() => setActiveIdx(i)}
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                className={`w-full text-left p-4 rounded-2xl border transition-colors duration-300 ${
+                className={`w-full h-full text-left p-4 rounded-2xl border transition-colors duration-300 ${
                   activeIdx === i
                     ? 'bg-accent/10 border-accent/50 shadow-[0_0_24px_rgba(0,212,255,0.15),0_0_0_1px_rgba(0,212,255,0.3)]'
                     : 'glass-card glass-card-interactive'
@@ -898,6 +898,20 @@ function ServicesSection() {
                 </span>
               ))}
             </div>
+            {/* Chatbot hint — only on the communication tile */}
+            {activeIdx === 2 && (
+              <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-2.5">
+                <MessageSquare className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                <span className="font-inter text-sm text-gray-400">
+                  Unser KI-Chatbot ist live —{' '}
+                  <button
+                    onClick={() => (window as Window & { chatbase?: (a: string) => void }).chatbase?.('open')}
+                    className="text-accent hover:text-accent/70 transition-colors font-medium">
+                    jetzt rechts unten testen ↓
+                  </button>
+                </span>
+              </div>
+            )}
           </GlowCard>
           </motion.div>
         </AnimatePresence>
@@ -1007,6 +1021,24 @@ function DemoSection() {
         >
           <AnimatedDemo />
         </motion.div>
+
+        {/* Chatbot nudge — sits below demo, always visible */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="flex items-center justify-center gap-2 mt-5"
+        >
+          <MessageSquare className="w-4 h-4 text-accent flex-shrink-0" />
+          <p className="font-inter text-sm text-gray-400">
+            Den KI-Chatbot live erleben —{' '}
+            <button
+              onClick={() => (window as Window & { chatbase?: (a: string) => void }).chatbase?.('open')}
+              className="text-accent hover:text-accent/70 transition-colors font-medium">
+              jetzt rechts unten öffnen ↓
+            </button>
+          </p>
+        </motion.div>
       </div>
     </section>
   );
@@ -1080,12 +1112,12 @@ function ShowcaseSection() {
                 <ShowcaseFlow index={current} />
               </div>
 
-              {/* Metric + title row */}
-              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-                <h3 className="font-syne font-bold text-xl sm:text-2xl text-white leading-snug flex-1">{card.title}</h3>
+              {/* Metric + title row — no wrap so metric is always right */}
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h3 className="font-syne font-bold text-lg sm:text-2xl text-white leading-snug flex-1 min-w-0 pr-1">{card.title}</h3>
                 <div className="flex-shrink-0 text-right">
-                  <div className="font-syne font-bold text-3xl sm:text-4xl leading-none" style={{ color: '#00E5FF' }}>{card.metric}</div>
-                  <div className="font-inter text-gray-300 text-xs mt-0.5 whitespace-nowrap font-medium">{card.metricLabel}</div>
+                  <div className="font-syne font-bold text-2xl sm:text-4xl leading-none" style={{ color: '#00E5FF' }}>{card.metric}</div>
+                  <div className="font-inter text-gray-300 text-[10px] sm:text-xs mt-0.5 whitespace-nowrap font-medium">{card.metricLabel}</div>
                 </div>
               </div>
               <p className="font-inter text-gray-400 text-base sm:text-lg leading-relaxed mb-5">{card.desc}</p>
@@ -1132,7 +1164,7 @@ function ShowcaseSection() {
 // ─── SECTION 8 — Prozess ─────────────────────────────────────────────────────
 function ProcessSection() {
   const ref    = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-8% 0px' });
+  const inView = useInView(ref, { once: true, margin: '0px' });
   const { headRef, subRef } = useSplitHeadline(inView);
 
   return (
