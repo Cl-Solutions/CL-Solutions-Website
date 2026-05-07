@@ -1419,43 +1419,35 @@ function CTASection() {
               </div>
             </div>
 
-            {/* ── Right column ── */}
+            {/* ── Right column — softer entry point ── */}
             <div className="p-7 sm:p-10 flex flex-col">
-              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-2">Erstberatung anfragen</h3>
-              <p className="font-inter text-gray-400 text-sm sm:text-base mb-7">
-                Wir klären euren Bedarf persönlich, bevor ihr euch entscheidet.
+              <h3 className="font-syne font-bold text-xl sm:text-2xl text-white mb-3">
+                Noch nicht sicher?
+              </h3>
+              <p className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed mb-8">
+                Schreib uns kurz, was euch beschäftigt — wir antworten innerhalb von 24h und schauen gemeinsam, ob und wie wir helfen können. Kein Pitch, keine Verpflichtung.
               </p>
 
-              <div className="space-y-3 mb-8">
-                {['Kostenlose Analyse eurer Prozesse', 'Konkrete KI-Lösungsvorschläge', 'Transparente Kostenübersicht'].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
-                    <span className="font-inter text-gray-300 text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
+              <div className="mt-auto space-y-3">
+                <button
+                  onClick={() => {
+                    const el = document.querySelector('[data-tally-open="2Evere"]') as HTMLElement;
+                    if (el) { el.click(); } else { window.open('https://tally.so/r/2Evere', '_blank', 'noopener,noreferrer'); }
+                  }}
+                  className="w-full justify-center py-3.5 px-6 font-inter font-semibold text-base text-white border border-white/20 rounded-xl hover:border-accent/50 hover:text-accent hover:bg-accent/5 transition-all duration-200 flex items-center gap-2">
+                  Unverbindlich schreiben
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                {/* Hidden trigger for Tally */}
+                <button data-tally-open="2Evere" className="hidden" aria-hidden />
 
-              <ShimmerButton as="button" onClick={() => {
-                const el = document.querySelector('[data-tally-open="2Evere"]') as HTMLElement;
-                if (el) {
-                  el.click();
-                } else {
-                  // Fallback if Tally script hasn't loaded yet
-                  window.open('https://tally.so/r/2Evere', '_blank', 'noopener,noreferrer');
-                }
-              }} className="w-full justify-center py-3.5 mb-4">
-                Jetzt Anfrage stellen
-                <ArrowRight className="w-4 h-4" />
-              </ShimmerButton>
-              {/* Hidden trigger for Tally */}
-              <button data-tally-open="2Evere" className="hidden" aria-hidden />
-
-              {/* Chatbot hint */}
-              <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.06] mt-auto">
-                <MessageSquare className="w-4 h-4 text-accent flex-shrink-0" />
-                <p className="font-inter text-gray-400 text-xs sm:text-sm">
-                  Unser KI-Chatbot rechts unten beantwortet die meisten Fragen sofort.
-                </p>
+                {/* Chatbot hint */}
+                <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                  <MessageSquare className="w-4 h-4 text-accent flex-shrink-0" />
+                  <p className="font-inter text-gray-400 text-xs sm:text-sm">
+                    Schnelle Antwort? Unser KI-Chatbot rechts unten ist sofort da.
+                  </p>
+                </div>
               </div>
             </div>
 
