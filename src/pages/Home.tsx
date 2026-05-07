@@ -39,16 +39,16 @@ const TW_WORDS = ['Zeitverlust.', 'verpassten Anfragen.', 'manueller Arbeit.', '
 // ─── Hero social proof quotes ─────────────────────────────────────────────────
 const HERO_QUOTES = [
   {
-    quote: 'In zwei Wochen lief unser gesamter Auftragsprozess automatisch. 12 Stunden Zeitersparnis — jede Woche.',
-    initials: 'TM',
-    name: 'Thomas M.',
-    role: 'Geschäftsführer · Haustechnik GmbH',
+    quote: 'LeadGen hat unsere Vertriebsrecherche komplett ersetzt. 5× mehr qualifizierte Kontakte — vollautomatisch bewertet.',
+    initials: 'JK',
+    name: 'Jonas K.',
+    role: 'Vertriebsleiter',
   },
   {
-    quote: 'Unser KI-Chatbot qualifiziert mehr Leads als unser Sales-Team — und das rund um die Uhr.',
-    initials: 'SB',
-    name: 'Sandra B.',
-    role: 'Marketing-Leiterin · B2B-Immobilien',
+    quote: 'Erstes Ergebnis war nach 9 Tagen live. Kein IT-Aufwand, keine langen Abstimmungsrunden.',
+    initials: 'MS',
+    name: 'Miriam S.',
+    role: 'Geschäftsführerin',
   },
 ];
 
@@ -127,9 +127,9 @@ function scrollToId(id: string) {
 
 const NAV_ITEMS: { label: string; id?: string; href?: string }[] = [
   { label: 'Leistungen',  id: 'leistungen' },
+  { label: 'Über uns',    id: 'ueber-uns'  },
   { label: 'Referenzen',  id: 'showcase'   },
   { label: 'Prozess',     id: 'prozess'    },
-  { label: 'Über uns',    id: 'ueber-uns'  },
   { label: 'FAQ',         id: 'faq'        },
   { label: 'Blog',        href: '/blog'    },
   { label: 'Kontakt',     id: 'kontakt'    },
@@ -486,6 +486,42 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Scroll-triggered fly-in wrapper ─────────────────────────────────────────
+// Cards fly in from below (or sides) when they enter the viewport.
+// Use `delay` to stagger siblings.
+function FlyIn({
+  children, delay = 0, from = 'bottom', className = '',
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  from?: 'bottom' | 'left' | 'right';
+  className?: string;
+}) {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-6% 0px' });
+
+  const initial =
+    from === 'left'   ? { opacity: 0, x: -56, y: 0,  scale: 0.96 } :
+    from === 'right'  ? { opacity: 0, x:  56, y: 0,  scale: 0.96 } :
+                        { opacity: 0, x:   0, y: 56, scale: 0.96 };
+
+  const animate = inView
+    ? { opacity: 1, x: 0, y: 0, scale: 1 }
+    : initial;
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={initial}
+      animate={animate}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 // ─── Nav ─────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -593,25 +629,25 @@ function HeroQuoteStrip() {
   const q = HERO_QUOTES[idx];
 
   return (
+    /* Apex style: no card/border — raw text directly on the background */
     <div
-      className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-white/[0.12] bg-white/[0.07] backdrop-blur-sm max-w-lg mx-auto"
+      className="text-center max-w-sm sm:max-w-md mx-auto px-4"
       style={{ transition: 'opacity 0.35s ease', opacity: visible ? 1 : 0 }}
     >
-      {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
-        <span className="font-syne font-bold text-xs text-accent">{q.initials}</span>
+      {/* Italic quote text */}
+      <p className="font-inter italic text-white/75 text-sm sm:text-base leading-relaxed mb-3">
+        „{q.quote}"
+      </p>
+      {/* Avatar + name + role */}
+      <div className="flex items-center justify-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center flex-shrink-0">
+          <span className="font-syne font-bold text-[10px] text-accent">{q.initials}</span>
+        </div>
+        <span className="font-inter font-semibold text-white text-sm">{q.name}</span>
+        <span className="font-inter text-xs text-gray-400 bg-white/[0.06] px-2.5 py-0.5 rounded-full">
+          {q.role}
+        </span>
       </div>
-      {/* Quote + name */}
-      <div className="min-w-0 flex-1 text-left">
-        <p className="font-inter text-white/90 text-sm leading-snug line-clamp-2 italic">
-          „{q.quote}"
-        </p>
-        <p className="font-inter text-gray-400 text-xs mt-1 font-medium">
-          {q.name} · <span className="text-gray-500 font-normal">{q.role}</span>
-        </p>
-      </div>
-      {/* Five stars */}
-      <div className="flex-shrink-0 text-amber-400 text-sm tracking-tight leading-none">★★★★★</div>
     </div>
   );
 }
@@ -767,11 +803,7 @@ function ProblemSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {problems.map((p, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30, filter: 'blur(6px)' }}
-              animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.55, delay: 0.15 + i * 0.1 }}>
+            <FlyIn key={i} delay={0.1 + i * 0.1}>
               <GlowCard className="p-6 sm:p-7 h-full hover:-translate-y-1.5 transition-transform duration-300">
                 <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-5">
                   <p.icon className="w-5 h-5 text-accent" />
@@ -779,7 +811,7 @@ function ProblemSection() {
                 <h3 className="font-syne font-semibold text-base sm:text-lg text-white mb-2 leading-snug">{p.title}</h3>
                 <p className="font-inter text-gray-400 text-sm sm:text-base leading-relaxed">{p.desc}</p>
               </GlowCard>
-            </motion.div>
+            </FlyIn>
           ))}
         </div>
       </div>
@@ -813,20 +845,21 @@ function ServicesSection() {
         {/* 4 clickable tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
           {services.map((s, i) => (
-            <motion.button
-              key={s.id}
-              onClick={() => setActiveIdx(i)}
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-              className={`text-left p-4 rounded-2xl border transition-colors duration-300 ${
-                activeIdx === i
-                  ? 'bg-accent/10 border-accent/50 shadow-[0_0_24px_rgba(0,212,255,0.15),0_0_0_1px_rgba(0,212,255,0.3)]'
-                  : 'glass-card glass-card-interactive'
-              }`}>
-              <span className="text-xl mb-2 block">{s.emoji}</span>
-              <span className="font-syne font-semibold text-white text-sm sm:text-base leading-tight block">{s.title}</span>
-            </motion.button>
+            <FlyIn key={s.id} delay={0.05 + i * 0.09}>
+              <motion.button
+                onClick={() => setActiveIdx(i)}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                className={`w-full text-left p-4 rounded-2xl border transition-colors duration-300 ${
+                  activeIdx === i
+                    ? 'bg-accent/10 border-accent/50 shadow-[0_0_24px_rgba(0,212,255,0.15),0_0_0_1px_rgba(0,212,255,0.3)]'
+                    : 'glass-card glass-card-interactive'
+                }`}>
+                <span className="text-xl mb-2 block">{s.emoji}</span>
+                <span className="font-syne font-semibold text-white text-sm sm:text-base leading-tight block">{s.title}</span>
+              </motion.button>
+            </FlyIn>
           ))}
         </div>
 
@@ -899,39 +932,34 @@ function AboutSection() {
           {/* Right — 3 highlight cards + B/M avatar row (matches main layout exactly) */}
           <div className="space-y-3 sm:space-y-4">
             {aboutHighlights.map((h, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20, filter: 'blur(5px)' }}
-                animate={inView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-                whileHover={{ y: -3 }}
-                transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}>
-                <GlowCard className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
-                    <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
-                  </div>
-                </GlowCard>
-              </motion.div>
+              <FlyIn key={i} from="right" delay={0.15 + i * 0.1}>
+                <motion.div whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
+                  <GlowCard className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <h.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-syne font-semibold text-white text-sm sm:text-base mb-0.5">{h.title}</h3>
+                      <p className="font-inter text-gray-400 text-xs sm:text-sm">{h.desc}</p>
+                    </div>
+                  </GlowCard>
+                </motion.div>
+              </FlyIn>
             ))}
 
             {/* Avatar row — identical to main */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
-              <div className="flex -space-x-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">M</div>
+            <FlyIn from="right" delay={0.45}>
+              <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
+                <div className="flex -space-x-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-accent/50 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">B</div>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-gray-400 flex items-center justify-center text-dark font-syne font-bold ring-2 ring-[#0a0a0a]">M</div>
+                </div>
+                <div>
+                  <p className="font-inter text-white text-sm">Berkay &amp; Marios</p>
+                  <p className="font-inter text-gray-500 text-xs">Gründer, CL-Solutions</p>
+                </div>
               </div>
-              <div>
-                <p className="font-inter text-white text-sm">Berkay &amp; Marios</p>
-                <p className="font-inter text-gray-500 text-xs">Gründer, CL-Solutions</p>
-              </div>
-            </motion.div>
+            </FlyIn>
           </div>
 
         </div>
@@ -1247,11 +1275,8 @@ function FAQSection() {
           {/* ── Right: accordion ── */}
           <div className="space-y-2">
             {faqs.map((faq, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.4, delay: 0.1 + i * 0.07 }}
+              <FlyIn key={i} delay={0.07 + i * 0.06}>
+              <div
                 className="glass-card rounded-xl px-5 hover:border-accent/25 hover:shadow-[0_0_20px_rgba(0,212,255,0.06)] transition-all duration-300">
                 <button
                   onClick={() => setOpen(open === i ? null : i)}
@@ -1279,7 +1304,8 @@ function FAQSection() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
+              </FlyIn>
             ))}
           </div>
         </div>
